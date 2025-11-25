@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+import { getDatabase } from "@/lib/db"
+import { products } from "@/lib/schema"
+import { eq } from "drizzle-orm"
 
-## Getting Started
+const db = getDatabase()
 
-First, run the development server:
+export async function GET(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const id = Number.parseInt(params.id)
+    const product = db.query.products.findFirst({
+      where: eq(products.id, id),
+      with: {
+        shipping: true,
+      },
+    })
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+    if (!product) {
+      return Response.json({ error: "Product not found" }, { status: 404 })
+    }
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+    return Response.json(product)
+  } catch (error) {
+    console.error("Error fetching product:", error)
+    return Response.json({ error: "Failed to fetch product" }, { status: 500 })
+  }
+}
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const id = Number.parseInt(params.id)
+    const body = await request.json()
+    const {
+      product_name,
+      product_type,
+      original_price,
+      selling_price,
+      storage,
+      quantity,
+      weight,
+      sizes,
+      colors,
+      image,
+      box_number,
+      price_per_box,
+      shipping_id,
+      total_original_price,
+      size_of_box_at_ship,
+      total_box_size,
+      box_code,
+    } = body
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+    const result = db
+      .update(products)
+      .set({
+        product_name,
+        product_type,
+        original_price,
+        selling_price,
+        storage,
+        quantity,
+        weight,
+        sizes,
+        colors,
+        image,
+        box_number,
+        price_per_box,
+        shipping_id,
+        total_original_price,
+        size_of_box_at_ship,
+        total_box_size,
+        box_code,
+        updated_at: new Date().toISOString(),
+      })
+      .where(eq(products.id, id))
+      .returning()
 
-## Learn More
+    if (result.length === 0) {
+      return Response.json({ error: "Product not found" }, { status: 404 })
+    }
 
-To learn more about Next.js, take a look at the following resources:
+    return Response.json(result[0])
+  } catch (error) {
+    console.error("Error updating product:", error)
+    return Response.json({ error: "Failed to update product" }, { status: 500 })
+  }
+}
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const id = Number.parseInt(params.id)
+    db.delete(products).where(eq(products.id, id)).run()
+    return Response.json({ success: true })
+  } catch (error) {
+    console.error("Error deleting product:", error)
+    return Response.json({ error: "Failed to delete product" }, { status: 500 })
+  }
+}
