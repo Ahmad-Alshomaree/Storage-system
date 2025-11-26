@@ -1,4 +1,5 @@
 import { sqliteTable, integer, real, text, index } from "drizzle-orm/sqlite-core"
+import { relations } from "drizzle-orm"
 
 export const shipping = sqliteTable(
   "shipping",
@@ -13,6 +14,10 @@ export const shipping = sqliteTable(
     typeIdx: index("idx_shipping_type").on(table.type),
   }),
 )
+
+export const shippingRelations = relations(shipping, ({ many }) => ({
+  products: many(products),
+}))
 
 export const products = sqliteTable(
   "products",
@@ -45,3 +50,10 @@ export const products = sqliteTable(
     shippingIdIdx: index("idx_shipping_id").on(table.shipping_id),
   }),
 )
+
+export const productsRelations = relations(products, ({ one }) => ({
+  shipping: one(shipping, {
+    fields: [products.shipping_id],
+    references: [shipping.id],
+  }),
+}))
