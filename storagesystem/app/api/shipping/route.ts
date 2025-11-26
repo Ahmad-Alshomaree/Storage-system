@@ -5,7 +5,7 @@ const db = getDatabase()
 
 export async function GET() {
   try {
-    const allShipping = db.query.shipping.findMany({
+    const allShipping = await db.query.shipping.findMany({
       orderBy: (shipping, { desc }) => desc(shipping.created_at),
     })
 
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "Invalid shipping type" }, { status: 400 })
     }
 
-    const result = db
+    const result = await db
       .insert(shipping)
       .values({
         type,

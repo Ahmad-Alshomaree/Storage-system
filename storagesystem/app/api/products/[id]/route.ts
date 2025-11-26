@@ -7,7 +7,7 @@ const db = getDatabase()
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
     const id = Number.parseInt(params.id)
-    const product = db.query.products.findFirst({
+    const product = await db.query.products.findFirst({
       where: eq(products.id, id),
       with: {
         shipping: true,
@@ -49,7 +49,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       box_code,
     } = body
 
-    const result = db
+    const result = await db
       .update(products)
       .set({
         product_name,
@@ -88,7 +88,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
     const id = Number.parseInt(params.id)
-    db.delete(products).where(eq(products.id, id)).run()
+    await db.delete(products).where(eq(products.id, id))
     return Response.json({ success: true })
   } catch (error) {
     console.error("Error deleting product:", error)

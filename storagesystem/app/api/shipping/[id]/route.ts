@@ -7,7 +7,7 @@ const db = getDatabase()
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
     const id = Number.parseInt(params.id)
-    const record = db.query.shipping.findFirst({
+    const record = await db.query.shipping.findFirst({
       where: eq(shipping.id, id),
     })
 
@@ -32,7 +32,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       return Response.json({ error: "Invalid shipping type" }, { status: 400 })
     }
 
-    const result = db
+    const result = await db
       .update(shipping)
       .set({
         type,
@@ -56,7 +56,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
     const id = Number.parseInt(params.id)
-    db.delete(shipping).where(eq(shipping.id, id)).run()
+    await db.delete(shipping).where(eq(shipping.id, id))
     return Response.json({ success: true })
   } catch (error) {
     console.error("Error deleting shipping record:", error)

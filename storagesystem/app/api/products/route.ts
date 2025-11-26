@@ -5,7 +5,7 @@ const db = getDatabase()
 
 export async function GET() {
   try {
-    const allProducts = db.query.products.findMany({
+    const allProducts = await db.query.products.findMany({
       with: {
         shipping: true,
       },
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
 
     const now = new Date().toISOString()
 
-    const result = db
+    const result = await db
       .insert(products)
       .values({
         product_name,
