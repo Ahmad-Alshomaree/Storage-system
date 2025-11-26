@@ -1,97 +1,39 @@
-import { getDatabase } from "@/lib/db"
-import { products } from "@/lib/schema"
-import { eq } from "drizzle-orm"
+# Storage System
 
-const db = getDatabase()
+This is a Next.js application for a storage system.
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
-  try {
-    const id = Number.parseInt(params.id)
-    const product = db.query.products.findFirst({
-      where: eq(products.id, id),
-      with: {
-        shipping: true,
-      },
-    })
+## Getting Started
 
-    if (!product) {
-      return Response.json({ error: "Product not found" }, { status: 404 })
-    }
+To get the application up and running, follow these simple steps.
 
-    return Response.json(product)
-  } catch (error) {
-    console.error("Error fetching product:", error)
-    return Response.json({ error: "Failed to fetch product" }, { status: 500 })
-  }
-}
+### Prerequisites
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
-  try {
-    const id = Number.parseInt(params.id)
-    const body = await request.json()
-    const {
-      product_name,
-      product_type,
-      original_price,
-      selling_price,
-      storage,
-      quantity,
-      weight,
-      sizes,
-      colors,
-      image,
-      box_number,
-      price_per_box,
-      shipping_id,
-      total_original_price,
-      size_of_box_at_ship,
-      total_box_size,
-      box_code,
-    } = body
+You will need to have [Node.js](https://nodejs.org/) installed on your machine.
 
-    const result = db
-      .update(products)
-      .set({
-        product_name,
-        product_type,
-        original_price,
-        selling_price,
-        storage,
-        quantity,
-        weight,
-        sizes,
-        colors,
-        image,
-        box_number,
-        price_per_box,
-        shipping_id,
-        total_original_price,
-        size_of_box_at_ship,
-        total_box_size,
-        box_code,
-        updated_at: new Date().toISOString(),
-      })
-      .where(eq(products.id, id))
-      .returning()
+### Installation
 
-    if (result.length === 0) {
-      return Response.json({ error: "Product not found" }, { status: 404 })
-    }
+1.  Clone the repository:
+    ```bash
+    git clone <repository-url>
+    ```
+2.  Navigate to the `storagesystem` directory:
+    ```bash
+    cd storagesystem
+    ```
+3.  Install the dependencies:
+    ```bash
+    npm install
+    ```
 
-    return Response.json(result[0])
-  } catch (error) {
-    console.error("Error updating product:", error)
-    return Response.json({ error: "Failed to update product" }, { status: 500 })
-  }
-}
+### Running the Application
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
-  try {
-    const id = Number.parseInt(params.id)
-    db.delete(products).where(eq(products.id, id)).run()
-    return Response.json({ success: true })
-  } catch (error) {
-    console.error("Error deleting product:", error)
-    return Response.json({ error: "Failed to delete product" }, { status: 500 })
-  }
-}
+1.  First, run the database migrations to set up the database schema:
+    ```bash
+    npm run db:migrate
+    ```
+2.  Then, start the development server:
+    ```bash
+    npm run dev
+    ```
+
+The application will be available at [http://localhost:3000](http://localhost:3000).
