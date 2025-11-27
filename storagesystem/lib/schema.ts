@@ -45,7 +45,6 @@ export const products = sqliteTable(
   },
   (table) => ({
     productNameIdx: index("idx_product_name").on(table.product_name),
-    productTypeIdx: index("idx_product_type").on(table.product_type),
     boxCodeIdx: index("idx_box_code").on(table.box_code),
     shippingIdIdx: index("idx_shipping_id").on(table.shipping_id),
   }),

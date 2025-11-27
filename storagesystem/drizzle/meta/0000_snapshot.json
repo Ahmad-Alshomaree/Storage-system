@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "41b5eb68-9e3f-491b-b52d-37160ceec9cf",
+  "id": "db51c907-5ca9-492d-b7a6-8b2d633134bc",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "products": {
@@ -14,22 +14,36 @@
           "notNull": true,
           "autoincrement": true
         },
+        "shipping_id": {
+          "name": "shipping_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "box_code": {
+          "name": "box_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "product_name": {
           "name": "product_name",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "product_type": {
-          "name": "product_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "original_price": {
           "name": "original_price",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "total_original_price": {
+          "name": "total_original_price",
           "type": "real",
           "primaryKey": false,
           "notNull": true,
@@ -46,33 +60,12 @@
           "name": "storage",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "quantity": {
-          "name": "quantity",
-          "type": "integer",
-          "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
         "weight": {
           "name": "weight",
           "type": "real",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "sizes": {
-          "name": "sizes",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "colors": {
-          "name": "colors",
-          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -84,36 +77,22 @@
           "notNull": false,
           "autoincrement": false
         },
-        "box_number": {
-          "name": "box_number",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "price_per_box": {
-          "name": "price_per_box",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "shipping_id": {
-          "name": "shipping_id",
+        "pice_per_box": {
+          "name": "pice_per_box",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "total_original_price": {
-          "name": "total_original_price",
-          "type": "real",
+        "Total_pices": {
+          "name": "Total_pices",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
-        "size_of_box_at_ship": {
-          "name": "size_of_box_at_ship",
+        "size_of_box": {
+          "name": "size_of_box",
           "type": "real",
           "primaryKey": false,
           "notNull": true,
@@ -126,9 +105,9 @@
           "notNull": true,
           "autoincrement": false
         },
-        "box_code": {
-          "name": "box_code",
-          "type": "text",
+        "number_of_boxes": {
+          "name": "number_of_boxes",
+          "type": "real",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -137,14 +116,14 @@
           "name": "created_at",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "updated_at": {
           "name": "updated_at",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         }
       },
@@ -153,13 +132,6 @@
           "name": "idx_product_name",
           "columns": [
             "product_name"
-          ],
-          "isUnique": false
-        },
-        "idx_product_type": {
-          "name": "idx_product_type",
-          "columns": [
-            "product_type"
           ],
           "isUnique": false
         },

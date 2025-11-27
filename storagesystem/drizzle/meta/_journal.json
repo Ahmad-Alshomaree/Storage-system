@@ -1,12 +1,10 @@
 {
-  "version": "7",
-  "dialect": "sqlite",
   "entries": [
     {
       "idx": 0,
       "version": "6",
-      "when": 1764095489561,
-      "tag": "0000_strong_thanos",
+      "when": 1764231454762,
+      "tag": "0000_complex_post",
       "breakpoints": true
     }
   ]
