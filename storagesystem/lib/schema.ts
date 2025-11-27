@@ -8,6 +8,7 @@ export const shipping = sqliteTable(
     type: text("type").notNull(), // "input load" or "output load"
     shipping_date: text("shipping_date").notNull(),
     receiver: text("receiver").notNull(),
+    file_path: text("file_path"),
     created_at: text("created_at").notNull(),
   },
   (table) => ({

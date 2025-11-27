@@ -6,8 +6,9 @@ import { ProductTable } from "@/components/product-table"
 import { AddProductForm } from "@/components/add-product-form"
 import { ShippingTable } from "@/components/shipping-table"
 import { ShippingForm } from "@/components/shipping-form"
+import { UploadExcelForm } from "@/components/upload-excel-form"
 import { Button } from "@/components/ui/button"
-import { Plus, Loader2, Package, Truck } from "lucide-react"
+import { Plus, Loader2, Package, Truck, Upload } from "lucide-react"
 
 interface Product {
   id: number
@@ -36,6 +37,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true)
   const [showProductForm, setShowProductForm] = useState(false)
   const [showShippingForm, setShowShippingForm] = useState(false)
+  const [showUploadForm, setShowUploadForm] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState<"products" | "shipping">("products")
 
@@ -157,6 +159,22 @@ export default function Home() {
                   }}
                 />
               </div>
+            )}
+
+            <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-end">
+                 <Button variant="outline" onClick={() => setShowUploadForm(!showUploadForm)} className="gap-2 w-full md:w-auto">
+                    <Upload className="w-4 h-4" />
+                    {showUploadForm ? "Cancel Upload" : "Upload Excel"}
+                 </Button>
+            </div>
+
+            {showUploadForm && (
+                <div className="mb-8">
+                    <UploadExcelForm onSuccess={() => {
+                        setShowUploadForm(false)
+                        fetchData()
+                    }} />
+                </div>
             )}
 
             {isLoading ? (

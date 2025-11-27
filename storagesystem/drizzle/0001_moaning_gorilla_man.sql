@@ -1,0 +1,1 @@
+ALTER TABLE `shipping` ADD `file_path` text;

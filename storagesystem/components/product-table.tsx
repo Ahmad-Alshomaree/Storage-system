@@ -8,11 +8,13 @@ interface Product {
   product_name: string
   product_type: string
   original_price: number
+  total_original_price?: number
+  pice_per_box?: number
+  total_pices?: number
   selling_price: number
   storage: string
   box_code: string
-  box_number: number
-  quantity: number
+  number_of_boxes?: number
   shipping_id: number | null
   shipping_type?: string
   shipping_receiver?: string
@@ -55,7 +57,8 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Original Price</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Selling Price</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Storage</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Qty</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Number or boxes</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Pice per box</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Shipping</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Actions</th>
           </tr>
