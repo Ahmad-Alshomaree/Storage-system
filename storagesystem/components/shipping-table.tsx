@@ -10,6 +10,7 @@ interface Shipping {
   receiving_date: string
   receiver: string
   created_at: string
+  file_path?: string | null
 }
 
 interface ShippingTableProps {
@@ -22,9 +23,34 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editValues, setEditValues] = useState<Partial<Shipping>>({})
 
+  const convertToDatetimeLocal = (dateString: string) => {
+    try {
+      // Handle different date formats
+      if (dateString.includes("/")) {
+        // Format: "12/12/2025" -> convert to ISO
+        const [month, day, year] = dateString.split('/')
+        return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00`).toISOString().slice(0, 16)
+      } else if (dateString.includes("-") && !dateString.includes("T")) {
+        // Format: "2024-01-01" -> add time
+        return `${dateString}T00:00`
+      } else if (dateString.includes("T")) {
+        // Already ISO format
+        return dateString.slice(0, 16)
+      }
+      // Default fallback
+      return new Date().toISOString().slice(0, 16)
+    } catch {
+      return new Date().toISOString().slice(0, 16)
+    }
+  }
+
   const startEdit = (record: Shipping) => {
     setEditingId(record.id)
-    setEditValues({ ...record })
+    setEditValues({
+      ...record,
+      shipping_date: convertToDatetimeLocal(record.shipping_date),
+      receiving_date: convertToDatetimeLocal(record.receiving_date),
+    })
   }
 
   const saveEdit = async (id: number) => {
@@ -51,7 +77,6 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Shipping Date</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Receiving Date</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Receiver</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Created At</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Actions</th>
           </tr>
         </thead>
@@ -68,6 +93,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                     >
                       <option value="input load">Input Load</option>
                       <option value="output load">Output Load</option>
+                      <option value="comming">Coming</option>
                     </select>
                   </td>
                   <td className="px-4 py-3">
@@ -80,7 +106,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                   </td>
                   <td className="px-4 py-3">
                     <input
-                      type="text"
+                      type="datetime-local"
                       value={editValues.receiving_date || ""}
                       onChange={(e) => setEditValues({ ...editValues, receiving_date: e.target.value })}
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
@@ -94,7 +120,6 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
                     />
                   </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">{formatDate(record.created_at)}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
                       <button
@@ -117,8 +142,8 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                     </span>
                   </td>
                   <td className="px-4 py-3 text-foreground text-xs">{formatDate(record.shipping_date)}</td>
+                  <td className="px-4 py-3 text-foreground text-xs">{formatDate(record.receiving_date)}</td>
                   <td className="px-4 py-3 text-foreground text-xs">{record.receiver}</td>
-                  <td className="px-4 py-3 text-foreground text-xs">{formatDate(record.created_at)}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
                       <button

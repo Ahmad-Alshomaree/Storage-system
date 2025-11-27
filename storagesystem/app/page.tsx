@@ -27,6 +27,7 @@ interface Shipping {
   id: number
   type: string
   shipping_date: string
+  receiving_date: string
   receiver: string
   created_at: string
 }

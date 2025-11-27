@@ -2,11 +2,11 @@ import { db } from "@/lib/db"
 import { shipping } from "@/lib/schema"
 import { eq } from "drizzle-orm"
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = Number.parseInt(params.id)
+    const { id } = await params
     const record = await db.query.shipping.findFirst({
-      where: eq(shipping.id, id),
+      where: eq(shipping.id, Number.parseInt(id)),
     })
 
     if (!record) {
@@ -20,13 +20,13 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = Number.parseInt(params.id)
+    const { id } = await params
     const body = await request.json()
-    const { type, shipping_date, receiver } = body
+    const { type, shipping_date, receiving_date, receiver } = body
 
-    if (!["input load", "output load"].includes(type)) {
+    if (!["Going","Comming"].includes(type)) {
       return Response.json({ error: "Invalid shipping type" }, { status: 400 })
     }
 
@@ -35,9 +35,10 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       .set({
         type,
         shipping_date,
+        receiving_date,
         receiver,
       })
-      .where(eq(shipping.id, id))
+      .where(eq(shipping.id, Number.parseInt(id)))
       .returning()
 
     if (result.length === 0) {
@@ -51,10 +52,10 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = Number.parseInt(params.id)
-    await db.delete(shipping).where(eq(shipping.id, id))
+    const { id } = await params
+    await db.delete(shipping).where(eq(shipping.id, Number.parseInt(id)))
     return Response.json({ success: true })
   } catch (error) {
     console.error("Error deleting shipping record:", error)

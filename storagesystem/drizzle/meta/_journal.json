@@ -13,6 +13,13 @@
       "when": 1764231926029,
       "tag": "0001_moaning_gorilla_man",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1764240408515,
+      "tag": "0002_tricky_callisto",
+      "breakpoints": true
     }
   ]
 }

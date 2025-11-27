@@ -23,15 +23,19 @@ export async function POST(request: Request) {
       return Response.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    if (!["input load", "output load"].includes(type)) {
+    if (!["Going", "Comming"].includes(type)) {
       return Response.json({ error: "Invalid shipping type" }, { status: 400 })
     }
+
+    // Set receiving_date to the same as shipping_date if not provided
+    const receiving_date = shipping_date
 
     const result = await db
       .insert(shipping)
       .values({
         type,
         shipping_date,
+        receiving_date,
         receiver,
         created_at: new Date().toISOString(),
       })
