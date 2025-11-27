@@ -7,6 +7,7 @@ export const shipping = sqliteTable(
     id: integer("id").primaryKey({ autoIncrement: true }),
     type: text("type").notNull(), // "input load" or "output load"
     shipping_date: text("shipping_date").notNull(),
+    receiving_date: text("receiving_date").notNull(),
     receiver: text("receiver").notNull(),
     file_path: text("file_path"),
     created_at: text("created_at").notNull(),

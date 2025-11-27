@@ -7,6 +7,7 @@ interface Shipping {
   id: number
   type: string
   shipping_date: string
+  receiving_date: string
   receiver: string
   created_at: string
 }
@@ -48,6 +49,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
           <tr className="border-b border-border bg-muted">
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Type</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Shipping Date</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Receiving Date</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Receiver</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Created At</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Actions</th>
@@ -73,6 +75,14 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                       type="datetime-local"
                       value={editValues.shipping_date || ""}
                       onChange={(e) => setEditValues({ ...editValues, shipping_date: e.target.value })}
+                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                    />
+                  </td>
+                  <td className="px-4 py-3">
+                    <input
+                      type="text"
+                      value={editValues.receiving_date || ""}
+                      onChange={(e) => setEditValues({ ...editValues, receiving_date: e.target.value })}
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
                     />
                   </td>

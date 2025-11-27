@@ -4,9 +4,10 @@ import { eq } from "drizzle-orm"
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const id = Number.parseInt(params.id)
+    const { id } = await params
+    const idNum = Number.parseInt(id)
     const product = await db.query.products.findFirst({
-      where: eq(products.id, id),
+      where: eq(products.id, idNum),
       with: {
         shipping: true,
       },
@@ -25,51 +26,46 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    const id = Number.parseInt(params.id)
+    const { id } = await params
+    const idNum = Number.parseInt(id)
     const body = await request.json()
     const {
+      box_code,
       product_name,
-      product_type,
       original_price,
+      total_original_price,
       selling_price,
       storage,
-      quantity,
       weight,
-      sizes,
-      colors,
       image,
-      box_number,
-      price_per_box,
-      shipping_id,
-      total_original_price,
-      size_of_box_at_ship,
+      pice_per_box,
+      Total_pices,
+      size_of_box,
       total_box_size,
-      box_code,
+      number_of_boxes,
+      shipping_id,
     } = body
 
     const result = await db
       .update(products)
       .set({
+        box_code,
         product_name,
-        product_type,
         original_price,
+        total_original_price,
         selling_price,
         storage,
-        quantity,
         weight,
-        sizes,
-        colors,
         image,
-        box_number,
-        price_per_box,
-        shipping_id,
-        total_original_price,
-        size_of_box_at_ship,
+        pice_per_box,
+        Total_pices,
+        size_of_box,
         total_box_size,
-        box_code,
+        number_of_boxes,
+        shipping_id,
         updated_at: new Date().toISOString(),
       })
-      .where(eq(products.id, id))
+      .where(eq(products.id, idNum))
       .returning()
 
     if (result.length === 0) {
@@ -85,8 +81,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const id = Number.parseInt(params.id)
-    await db.delete(products).where(eq(products.id, id))
+    const { id } = await params
+    const idNum = Number.parseInt(id)
+    await db.delete(products).where(eq(products.id, idNum))
     return Response.json({ success: true })
   } catch (error) {
     console.error("Error deleting product:", error)
