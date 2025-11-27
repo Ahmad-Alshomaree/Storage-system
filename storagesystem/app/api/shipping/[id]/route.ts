@@ -1,8 +1,6 @@
-import { getDatabase } from "@/lib/db"
+import { db } from "@/lib/db"
 import { shipping } from "@/lib/schema"
 import { eq } from "drizzle-orm"
-
-const db = getDatabase()
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {

@@ -1,7 +1,5 @@
-import { getDatabase } from "@/lib/db"
+import { db } from "@/lib/db"
 import { shipping } from "@/lib/schema"
-
-const db = getDatabase()
 
 export async function GET() {
   try {
