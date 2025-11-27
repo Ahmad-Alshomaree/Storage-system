@@ -13,8 +13,10 @@ export async function POST(req: NextRequest) {
     const receiver = formData.get("receiver") as string
     const shippingDate = formData.get("shipping_date") as string
     const type = formData.get("type") as string
+    const cost = formData.get("cost") as string
+    const paid = formData.get("paid") as string
 
-    if (!file || !receiver || !shippingDate || !type) {
+    if (!file || !receiver || !shippingDate || !type || !cost || !paid) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -44,8 +46,11 @@ export async function POST(req: NextRequest) {
     const newShipping = await db.insert(shipping).values({
       type,
       shipping_date: shippingDate,
+      receiving_date: new Date().toISOString(),
       receiver,
       file_path: `/uploads/${filename}`,
+      paid: parseFloat(paid),
+      ship_price: parseFloat(cost),
       created_at: new Date().toISOString(),
     }).returning()
 

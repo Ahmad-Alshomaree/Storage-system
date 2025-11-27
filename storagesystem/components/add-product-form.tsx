@@ -15,6 +15,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
     product_type: "",
     original_price: 0,
     selling_price: 0,
+    group_item_price: 0,
     storage: "",
     quantity: 0,
     weight: 0,
@@ -51,26 +52,27 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: ["quantity", "box_number", "price_per_box"].includes(name)
-        ? Number.parseInt(value) || 0
-        : [
-              "original_price",
-              "selling_price",
-              "weight",
-              "sizes",
-              "total_original_price",
-              "size_of_box_at_ship",
-              "total_box_size",
-            ].includes(name)
-          ? Number.parseFloat(value) || 0
-          : name === "shipping_id"
-            ? value === ""
-              ? null
-              : Number.parseInt(value)
-            : value,
-    }))
+      setFormData((prev) => ({
+        ...prev,
+        [name]: ["quantity", "box_number", "price_per_box"].includes(name)
+          ? Number.parseInt(value) || 0
+          : [
+                "original_price",
+                "selling_price",
+                "group_item_price",
+                "weight",
+                "sizes",
+                "total_original_price",
+                "size_of_box_at_ship",
+                "total_box_size",
+              ].includes(name)
+            ? Number.parseFloat(value) || 0
+            : name === "shipping_id"
+              ? value === ""
+                ? null
+                : Number.parseInt(value)
+              : value,
+      }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -95,6 +97,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
         product_type: "",
         original_price: 0,
         selling_price: 0,
+        group_item_price: 0,
         storage: "",
         quantity: 0,
         weight: 0,
@@ -172,6 +175,19 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
             value={formData.selling_price}
             onChange={handleChange}
             required
+            step="0.01"
+            placeholder="0.00"
+            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">Group Item Price</label>
+          <input
+            type="number"
+            name="group_item_price"
+            value={formData.group_item_price}
+            onChange={handleChange}
             step="0.01"
             placeholder="0.00"
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
@@ -268,18 +284,19 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Total Original Price *</label>
+        <div className="col-span-2">
+          <label className="block text-sm font-medium text-foreground mb-2">Total Original Price (Auto-calculated)</label>
           <input
             type="number"
-            name="total_original_price"
-            value={formData.total_original_price}
-            onChange={handleChange}
-            required
+            value={(formData.price_per_box || 0) * (formData.box_number || 0) * (formData.original_price || 0)}
+            readOnly
             step="0.01"
             placeholder="0.00"
-            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-3 py-2 border border-input rounded-lg bg-muted text-muted-foreground"
           />
+          <p className="text-xs text-muted-foreground mt-1">
+            Calculated as: (Price Per Box × Box Number × Original Price)
+          </p>
         </div>
 
         <div>

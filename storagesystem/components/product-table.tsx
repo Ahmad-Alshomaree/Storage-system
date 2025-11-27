@@ -21,6 +21,9 @@ interface Product {
   size_of_box: number
   total_box_size: number
   number_of_boxes: number
+  extracted_pieces?: number | null
+  status: string
+  group_item_price?: number | null
   created_at?: string
   updated_at?: string
   shipping?: {
@@ -71,11 +74,13 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Type</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Original Price</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Selling Price</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Group Item Price</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Storage</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Number or boxes</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Pice per box</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Extracted Pieces</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Status</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Shipping ID</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Shipping Type</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Actions</th>
           </tr>
         </thead>
@@ -132,6 +137,17 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
                   </td>
                   <td className="px-3 py-3">
                     <input
+                      type="number"
+                      value={editValues.group_item_price || 0}
+                      onChange={(e) =>
+                        setEditValues({ ...editValues, group_item_price: Number.parseFloat(e.target.value) })
+                      }
+                      step="0.01"
+                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                    />
+                  </td>
+                  <td className="px-3 py-3">
+                    <input
                       type="text"
                       value={editValues.storage || ""}
                       onChange={(e) => setEditValues({ ...editValues, storage: e.target.value })}
@@ -154,6 +170,25 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
                       onChange={(e) => setEditValues({ ...editValues, pice_per_box: Number.parseInt(e.target.value) })}
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
                     />
+                  </td>
+                  <td className="px-3 py-3">
+                    <input
+                      type="number"
+                      value={editValues.extracted_pieces || 0}
+                      onChange={(e) => setEditValues({ ...editValues, extracted_pieces: Number.parseInt(e.target.value) })}
+                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                      min="0"
+                    />
+                  </td>
+                  <td className="px-3 py-3">
+                    <select
+                      value={editValues.status || "available"}
+                      onChange={(e) => setEditValues({ ...editValues, status: e.target.value })}
+                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                    >
+                      <option value="available">Available</option>
+                      <option value="out_of_stock">Out of Stock</option>
+                    </select>
                   </td>
                   <td className="px-3 py-3 text-xs text-muted-foreground">{product.shipping_id || "None"}</td>
                   <td className="px-3 py-3">
@@ -181,11 +216,21 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
                   </td>
                   <td className="px-3 py-3 text-foreground text-xs">{product.original_price.toFixed(2)}</td>
                   <td className="px-3 py-3 text-foreground text-xs font-medium">{product.selling_price.toFixed(2)}</td>
+                  <td className="px-3 py-3 text-foreground text-xs">{product.group_item_price ? product.group_item_price.toFixed(2) : "0.00"}</td>
                   <td className="px-3 py-3 text-foreground text-xs">{product.storage}</td>
                   <td className="px-3 py-3 text-foreground text-xs">{product.number_of_boxes}</td>
                   <td className="px-3 py-3 text-foreground text-xs">{product.pice_per_box}</td>
+                  <td className="px-3 py-3 text-foreground text-xs">{product.extracted_pieces || 0}</td>
+                  <td className="px-3 py-3 text-xs">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      product.status === 'available'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                    }`}>
+                      {product.status === 'available' ? 'Available' : 'Out of Stock'}
+                    </span>
+                  </td>
                   <td className="px-3 py-3 text-xs text-muted-foreground">{product.shipping_id || "None"}</td>
-                  <td className="px-3 py-3 text-xs text-muted-foreground">{product.shipping?.type || "None"}</td>
                   <td className="px-3 py-3">
                     <div className="flex gap-1">
                       <button

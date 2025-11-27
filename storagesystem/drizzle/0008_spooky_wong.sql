@@ -1,0 +1,1 @@
+ALTER TABLE `products` ADD `extracted_pieces` integer DEFAULT 0;

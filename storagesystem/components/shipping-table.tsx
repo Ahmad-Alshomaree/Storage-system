@@ -1,7 +1,22 @@
 "use client"
 
 import { useState } from "react"
-import { Trash2, Edit2, Check, X } from "lucide-react"
+import { Trash2, Edit2, Check, X, Eye } from "lucide-react"
+import { ShippingDetailsModal } from "./shipping-details-modal"
+
+interface Product {
+  id: number
+  box_code: string
+  product_name?: string | null
+  original_price: number
+  selling_price: number
+  Total_pices?: number | null
+  number_of_boxes: number
+  size_of_box: number
+  total_box_size: number
+  weight?: number | null
+  image?: string | null
+}
 
 interface Shipping {
   id: number
@@ -9,8 +24,11 @@ interface Shipping {
   shipping_date: string
   receiving_date: string
   receiver: string
+  paid?: number
+  ship_price?: number
   created_at: string
   file_path?: string | null
+  products?: Product[]
 }
 
 interface ShippingTableProps {
@@ -22,6 +40,8 @@ interface ShippingTableProps {
 export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTableProps) {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editValues, setEditValues] = useState<Partial<Shipping>>({})
+  const [selectedShipping, setSelectedShipping] = useState<Shipping | null>(null)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
 
   const convertToDatetimeLocal = (dateString: string) => {
     try {
@@ -77,6 +97,9 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Shipping Date</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Receiving Date</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Receiver</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Products</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Paid</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Ship Price</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Actions</th>
           </tr>
         </thead>
@@ -121,6 +144,36 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                     />
                   </td>
                   <td className="px-4 py-3">
+                    <div className="text-xs text-muted-foreground">
+                      {record.products && record.products.length > 0
+                        ? record.products.map(p =>
+                            `${p.product_name || p.box_code} (${p.number_of_boxes} boxes${p.Total_pices ? `, ${p.Total_pices} pcs` : ''})`
+                          ).join("; ")
+                        : "No products"
+                      }
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editValues.paid || ""}
+                      onChange={(e) => setEditValues({ ...editValues, paid: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                      placeholder="0.00"
+                    />
+                  </td>
+                  <td className="px-4 py-3">
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editValues.ship_price || ""}
+                      onChange={(e) => setEditValues({ ...editValues, ship_price: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                      placeholder="0.00"
+                    />
+                  </td>
+                  <td className="px-4 py-3">
                     <div className="flex gap-2">
                       <button
                         onClick={() => saveEdit(record.id)}
@@ -144,8 +197,29 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                   <td className="px-4 py-3 text-foreground text-xs">{formatDate(record.shipping_date)}</td>
                   <td className="px-4 py-3 text-foreground text-xs">{formatDate(record.receiving_date)}</td>
                   <td className="px-4 py-3 text-foreground text-xs">{record.receiver}</td>
+                  <td className="px-4 py-3 text-foreground text-xs">
+                    <div className="text-xs max-w-xs truncate">
+                      {record.products && record.products.length > 0
+                        ? record.products.map(p =>
+                            `${p.product_name || p.box_code} (${p.number_of_boxes} boxes${p.Total_pices ? `, ${p.Total_pices} pcs` : ''})`
+                          ).join("; ")
+                        : "No products"
+                      }
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-foreground text-xs">{record.paid ?? 0}</td>
+                  <td className="px-4 py-3 text-foreground text-xs">{record.ship_price ?? 0}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedShipping(record)
+                          setShowDetailsModal(true)
+                        }}
+                        className="p-1 hover:bg-primary/10 rounded text-primary transition-colors"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
                       <button
                         onClick={() => startEdit(record)}
                         className="p-1 hover:bg-primary/10 rounded text-primary transition-colors"
@@ -166,6 +240,12 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
           ))}
         </tbody>
       </table>
+
+      <ShippingDetailsModal
+        shipping={selectedShipping}
+        open={showDetailsModal}
+        onOpenChange={setShowDetailsModal}
+      />
     </div>
   )
 }

@@ -4,6 +4,9 @@ import { shipping } from "@/lib/schema"
 export async function GET() {
   try {
     const allShipping = await db.query.shipping.findMany({
+      with: {
+        products: true,
+      },
       orderBy: (shipping, { desc }) => desc(shipping.created_at),
     })
 
@@ -17,7 +20,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { type, shipping_date, receiver } = body
+    const { type, shipping_date, receiver, paid, ship_price } = body
 
     if (!type || !shipping_date || !receiver) {
       return Response.json({ error: "Missing required fields" }, { status: 400 })
@@ -37,6 +40,8 @@ export async function POST(request: Request) {
         shipping_date,
         receiving_date,
         receiver,
+        paid: paid || 0,
+        ship_price: ship_price || 0,
         created_at: new Date().toISOString(),
       })
       .returning()

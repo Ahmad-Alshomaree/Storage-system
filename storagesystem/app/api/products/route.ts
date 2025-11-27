@@ -22,9 +22,9 @@ export async function POST(request: Request) {
     const body = await request.json()
     const {
       product_name,
-      product_type,
       original_price,
       selling_price,
+      group_item_price,
       storage,
       quantity,
       weight,
@@ -34,13 +34,12 @@ export async function POST(request: Request) {
       box_number,
       price_per_box,
       shipping_id,
-      total_original_price,
       size_of_box_at_ship,
       total_box_size,
       box_code,
     } = body
 
-    if (!product_name || !product_type || !storage || !box_code) {
+    if (!product_name || !storage || !box_code) {
       return Response.json({ error: "Missing required fields" }, { status: 400 })
     }
 
@@ -50,22 +49,18 @@ export async function POST(request: Request) {
       .insert(products)
       .values({
         product_name,
-        product_type,
         original_price: original_price || 0,
         selling_price: selling_price || 0,
+        Grope_Item_price: group_item_price || 0,
         storage,
-        quantity: quantity || 0,
         weight: weight || 0,
-        sizes: sizes || 0,
-        colors: colors || "",
         image: image || null,
-        box_number,
-        price_per_box,
-        shipping_id: shipping_id || null,
-        total_original_price: total_original_price || 0,
-        size_of_box_at_ship: size_of_box_at_ship || 0,
+        pice_per_box: price_per_box,
+        size_of_box: size_of_box_at_ship || 0,
         total_box_size: total_box_size || 0,
+        number_of_boxes: box_number || 0,
         box_code,
+        status: "available",
         created_at: now,
         updated_at: now,
       })

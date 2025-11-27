@@ -20,6 +20,83 @@
       "when": 1764240408515,
       "tag": "0002_tricky_callisto",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1764245276446,
+      "tag": "0003_new_mac_gargan",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1764247424610,
+      "tag": "0004_natural_rogue",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1764248477952,
+      "tag": "0005_bright_doctor_strange",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1764249172562,
+      "tag": "0006_polite_toad",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1764265412108,
+      "tag": "0007_faulty_meggan",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1764267741850,
+      "tag": "0008_spooky_wong",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1764271171643,
+      "tag": "0009_thin_blue_shield",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1764272162030,
+      "tag": "0010_giant_jimmy_woo",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1764272802533,
+      "tag": "0011_glorious_nicolaos",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1764276303920,
+      "tag": "0012_remarkable_wonder_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1764277003358,
+      "tag": "0013_shallow_steve_rogers",
+      "breakpoints": true
     }
   ]
 }

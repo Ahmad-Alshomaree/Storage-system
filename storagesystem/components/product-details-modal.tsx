@@ -24,6 +24,9 @@ interface Product {
   size_of_box: number
   total_box_size: number
   number_of_boxes: number
+  extracted_pieces?: number | null
+  status: string
+  Grope_Item_price?: number | null
   created_at?: string
   updated_at?: string
   shipping?: {
@@ -77,18 +80,22 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
           </div>
 
           {/* Pricing */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Original Price</label>
-              <p className="text-sm font-semibold text-green-600">${product.original_price.toFixed(2)}</p>
+              <p className="text-sm font-semibold text-green-600">{product.original_price.toFixed(2)}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Selling Price</label>
-              <p className="text-sm font-semibold text-blue-600">${product.selling_price.toFixed(2)}</p>
+              <p className="text-sm font-semibold text-blue-600">{product.selling_price.toFixed(2)}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Group Item Price</label>
+              <p className="text-sm font-semibold text-purple-600">{product.Grope_Item_price ? product.Grope_Item_price.toFixed(2) : "N/A"}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Total Original Price</label>
-              <p className="text-sm">${product.total_original_price?.toFixed(2) || "N/A"}</p>
+              <p className="text-sm">{product.total_original_price?.toFixed(2) || "N/A"}</p>
             </div>
           </div>
 
@@ -101,6 +108,30 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
             <div>
               <label className="text-sm font-medium text-muted-foreground">Total Pieces</label>
               <p className="text-sm">{product.Total_pices || "N/A"}</p>
+            </div>
+          </div>
+
+          {/* Inventory Status */}
+          <div className="grid grid-cols-3 gap-4 border-t pt-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Extracted Pieces</label>
+              <p className="text-sm font-semibold">{product.extracted_pieces || 0}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Remaining Pieces</label>
+              <p className="text-sm font-semibold">
+                {(product.Total_pices || 0) - (product.extracted_pieces || 0)}
+              </p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Status</label>
+              <p className={`text-sm font-bold ${
+                product.status === 'available'
+                  ? 'text-green-600'
+                  : 'text-red-600'
+              }`}>
+                {product.status === 'available' ? 'Available' : 'Out of Stock'}
+              </p>
             </div>
           </div>
 
@@ -153,7 +184,7 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
           {/* Timestamps */}
           <div className="grid grid-cols-2 gap-4 border-t pt-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Created At</label>
+              <label className="text-sm font-medium text-muted-foreground">Received At</label>
               <p className="text-sm">{product.created_at ? new Date(product.created_at).toLocaleString() : "N/A"}</p>
             </div>
             <div>

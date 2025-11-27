@@ -14,12 +14,14 @@ export function UploadExcelForm({ onSuccess }: UploadExcelFormProps) {
   const [receiver, setReceiver] = useState("")
   const [shippingDate, setShippingDate] = useState("")
   const [type, setType] = useState("input load")
+  const [cost, setCost] = useState("")
+  const [paid, setPaid] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!file || !receiver || !shippingDate) {
+    if (!file || !receiver || !shippingDate || !cost || !paid) {
       setError("Please fill all fields")
       return
     }
@@ -32,6 +34,8 @@ export function UploadExcelForm({ onSuccess }: UploadExcelFormProps) {
     formData.append("receiver", receiver)
     formData.append("shipping_date", shippingDate)
     formData.append("type", type)
+    formData.append("cost", cost)
+    formData.append("paid", paid)
 
     try {
       const res = await fetch("/api/upload", {
@@ -46,6 +50,8 @@ export function UploadExcelForm({ onSuccess }: UploadExcelFormProps) {
       setFile(null)
       setReceiver("")
       setShippingDate("")
+      setCost("")
+      setPaid("")
       onSuccess()
     } catch (err) {
       console.error(err)
@@ -98,6 +104,30 @@ export function UploadExcelForm({ onSuccess }: UploadExcelFormProps) {
                 <option value="input load">Input Load</option>
                 <option value="output load">Output Load</option>
             </select>
+        </div>
+
+        <div>
+            <label className="block text-sm font-medium mb-1">Cost</label>
+            <input
+                type="number"
+                step="0.01"
+                value={cost}
+                onChange={(e) => setCost(e.target.value)}
+                className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                required
+            />
+        </div>
+
+        <div>
+            <label className="block text-sm font-medium mb-1">Paid</label>
+            <input
+                type="number"
+                step="0.01"
+                value={paid}
+                onChange={(e) => setPaid(e.target.value)}
+                className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                required
+            />
         </div>
 
         <div>

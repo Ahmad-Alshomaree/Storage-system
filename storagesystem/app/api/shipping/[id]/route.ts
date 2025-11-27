@@ -7,6 +7,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params
     const record = await db.query.shipping.findFirst({
       where: eq(shipping.id, Number.parseInt(id)),
+      with: {
+        products: true,
+      },
     })
 
     if (!record) {
@@ -24,7 +27,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params
     const body = await request.json()
-    const { type, shipping_date, receiving_date, receiver } = body
+    const { type, shipping_date, receiving_date, receiver, paid, ship_price } = body
 
     if (!["Going","Comming"].includes(type)) {
       return Response.json({ error: "Invalid shipping type" }, { status: 400 })
@@ -37,6 +40,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         shipping_date,
         receiving_date,
         receiver,
+        paid,
+        ship_price,
       })
       .where(eq(shipping.id, Number.parseInt(id)))
       .returning()

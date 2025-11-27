@@ -1,0 +1,1 @@
+ALTER TABLE `products` ADD `Grope_Item_price` real;
