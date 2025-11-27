@@ -1,23 +1,36 @@
 "use client"
 
 import { useState } from "react"
-import { Trash2, Edit2, Check, X } from "lucide-react"
+import { Trash2, Edit2, Check, X, Eye } from "lucide-react"
+import { ProductDetailsModal } from "./product-details-modal"
 
 interface Product {
   id: number
-  product_name: string
-  product_type: string
-  original_price: number
-  total_original_price?: number
-  pice_per_box?: number
-  total_pices?: number
-  selling_price: number
-  storage: string
+  shipping_id?: number | null
   box_code: string
-  number_of_boxes?: number
-  shipping_id: number | null
-  shipping_type?: string
-  shipping_receiver?: string
+  product_name?: string
+  product_type?: string
+  original_price: number
+  total_original_price: number
+  selling_price: number
+  storage?: string
+  weight?: number
+  image?: string | null
+  pice_per_box?: number | null
+  Total_pices?: number | null
+  size_of_box: number
+  total_box_size: number
+  number_of_boxes: number
+  created_at?: string
+  updated_at?: string
+  shipping?: {
+    id: number
+    type: string
+    shipping_date: string
+    receiver: string
+    file_path?: string | null
+    created_at: string
+  }
 }
 
 interface ProductTableProps {
@@ -29,6 +42,8 @@ interface ProductTableProps {
 export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps) {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editValues, setEditValues] = useState<Partial<Product>>({})
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
 
   const startEdit = (product: Product) => {
     setEditingId(product.id)
@@ -59,7 +74,8 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Storage</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Number or boxes</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Pice per box</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Shipping</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Shipping ID</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Shipping Type</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Actions</th>
           </tr>
         </thead>
@@ -125,12 +141,21 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
                   <td className="px-3 py-3">
                     <input
                       type="number"
-                      value={editValues.quantity || 0}
-                      onChange={(e) => setEditValues({ ...editValues, quantity: Number.parseInt(e.target.value) })}
+                      value={editValues.number_of_boxes || 0}
+                      onChange={(e) => setEditValues({ ...editValues, number_of_boxes: Number.parseFloat(e.target.value) })}
+                      step="0.01"
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
                     />
                   </td>
-                  <td className="px-3 py-3 text-xs text-muted-foreground">{product.shipping_type || "None"}</td>
+                  <td className="px-3 py-3">
+                    <input
+                      type="number"
+                      value={editValues.pice_per_box || 0}
+                      onChange={(e) => setEditValues({ ...editValues, pice_per_box: Number.parseInt(e.target.value) })}
+                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                    />
+                  </td>
+                  <td className="px-3 py-3 text-xs text-muted-foreground">{product.shipping_id || "None"}</td>
                   <td className="px-3 py-3">
                     <div className="flex gap-1">
                       <button
@@ -154,13 +179,24 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
                       {product.product_type}
                     </span>
                   </td>
-                  <td className="px-3 py-3 text-foreground text-xs">${product.original_price.toFixed(2)}</td>
-                  <td className="px-3 py-3 text-foreground text-xs font-medium">${product.selling_price.toFixed(2)}</td>
+                  <td className="px-3 py-3 text-foreground text-xs">{product.original_price.toFixed(2)}</td>
+                  <td className="px-3 py-3 text-foreground text-xs font-medium">{product.selling_price.toFixed(2)}</td>
                   <td className="px-3 py-3 text-foreground text-xs">{product.storage}</td>
-                  <td className="px-3 py-3 text-foreground text-xs">{product.quantity}</td>
-                  <td className="px-3 py-3 text-xs text-muted-foreground">{product.shipping_type || "None"}</td>
+                  <td className="px-3 py-3 text-foreground text-xs">{product.number_of_boxes}</td>
+                  <td className="px-3 py-3 text-foreground text-xs">{product.pice_per_box}</td>
+                  <td className="px-3 py-3 text-xs text-muted-foreground">{product.shipping_id || "None"}</td>
+                  <td className="px-3 py-3 text-xs text-muted-foreground">{product.shipping?.type || "None"}</td>
                   <td className="px-3 py-3">
                     <div className="flex gap-1">
+                      <button
+                        onClick={() => {
+                          setSelectedProduct(product)
+                          setShowDetailsModal(true)
+                        }}
+                        className="p-1 hover:bg-primary/10 rounded text-primary transition-colors"
+                      >
+                        <Eye className="w-3 h-3" />
+                      </button>
                       <button
                         onClick={() => startEdit(product)}
                         className="p-1 hover:bg-primary/10 rounded text-primary transition-colors"
@@ -181,6 +217,11 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
           ))}
         </tbody>
       </table>
+      <ProductDetailsModal
+        product={selectedProduct}
+        open={showDetailsModal}
+        onOpenChange={setShowDetailsModal}
+      />
     </div>
   )
 }
