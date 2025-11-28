@@ -11,28 +11,34 @@ interface AddProductFormProps {
 
 export function AddProductForm({ onSuccess }: AddProductFormProps) {
   const [formData, setFormData] = useState({
+    shipping_id: null as number | null,
+    box_code: "",
     product_name: "",
-    product_type: "",
     original_price: 0,
     selling_price: 0,
-    group_item_price: 0,
     storage: "",
-    quantity: 0,
     weight: 0,
-    sizes: 0,
-    colors: "",
     image: "",
-    box_number: 0,
-    price_per_box: 0,
-    shipping_id: "",
-    total_original_price: 0,
-    size_of_box_at_ship: 0,
+    pice_per_box: 0,
+    size_of_box: 0,
     total_box_size: 0,
-    box_code: "",
+    number_of_boxes: 0,
+    extracted_pieces: 0,
+    status: "available",
+    group_item_price: 0,
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [shippingOptions, setShippingOptions] = useState<any[]>([])
+  const [showNewShippingForm, setShowNewShippingForm] = useState(false)
+  const [newShippingData, setNewShippingData] = useState({
+    type: "input load",
+    shipping_date: "",
+    receiving_date: "",
+    receiver: "",
+    paid: 0,
+    ship_price: 0,
+  })
 
   useEffect(() => {
     fetchShippingOptions()
@@ -50,29 +56,62 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
     }
   }
 
+  const handleShippingChange = (value: string) => {
+    if (value === "create-new") {
+      setShowNewShippingForm(true)
+      setFormData(prev => ({ ...prev, shipping_id: null }))
+    } else {
+      setShowNewShippingForm(false)
+      setFormData(prev => ({ ...prev, shipping_id: value === "" ? null : Number.parseInt(value) }))
+    }
+  }
+
+  const handleNewShippingChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target
+    setNewShippingData(prev => ({
+      ...prev,
+      [name]: type === 'number' ? Number.parseFloat(value) || 0 : value
+    }))
+  }
+
+  const createShipping = async (): Promise<number | null> => {
+    try {
+      const shippingFormData = {
+        ...newShippingData,
+        receiving_date: newShippingData.receiving_date || new Date(newShippingData.shipping_date).toISOString().replace('T', ' ').split('.')[0], // Use shipping date if receiving date not set
+      }
+      const response = await fetch("/api/shipping", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(shippingFormData),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to create shipping record")
+      }
+
+      const newShipping = await response.json()
+      setShippingOptions(prev => [...prev, newShipping])
+      return newShipping.id
+    } catch (error) {
+      console.error("Error creating shipping:", error)
+      throw error
+    }
+  }
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-      setFormData((prev) => ({
-        ...prev,
-        [name]: ["quantity", "box_number", "price_per_box"].includes(name)
-          ? Number.parseInt(value) || 0
-          : [
-                "original_price",
-                "selling_price",
-                "group_item_price",
-                "weight",
-                "sizes",
-                "total_original_price",
-                "size_of_box_at_ship",
-                "total_box_size",
-              ].includes(name)
-            ? Number.parseFloat(value) || 0
-            : name === "shipping_id"
-              ? value === ""
-                ? null
-                : Number.parseInt(value)
-              : value,
-      }))
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        ["original_price", "selling_price", "group_item_price", "weight", "pice_per_box", "size_of_box", "total_box_size", "number_of_boxes", "extracted_pieces"].includes(name)
+          ? Number.parseFloat(value) || 0
+          : name === "shipping_id"
+            ? value === ""
+              ? null
+              : Number.parseInt(value)
+            : value,
+    }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -81,10 +120,32 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
     setError("")
 
     try {
+      let shippingId = formData.shipping_id
+
+      // If creating new shipping, create it first
+      if (showNewShippingForm) {
+        if (!newShippingData.shipping_date || !newShippingData.receiver) {
+          setError("Please fill in required shipping fields")
+          setIsLoading(false)
+          return
+        }
+        shippingId = await createShipping()
+        if (!shippingId) {
+          setError("Failed to create shipping record")
+          setIsLoading(false)
+          return
+        }
+      }
+
+      const productData = {
+        ...formData,
+        shipping_id: shippingId,
+      }
+
       const response = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(productData),
       })
 
       if (!response.ok) {
@@ -93,25 +154,31 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
 
       const newProduct = await response.json()
       setFormData({
+        shipping_id: null,
+        box_code: "",
         product_name: "",
-        product_type: "",
         original_price: 0,
         selling_price: 0,
-        group_item_price: 0,
         storage: "",
-        quantity: 0,
         weight: 0,
-        sizes: 0,
-        colors: "",
         image: "",
-        box_number: 0,
-        price_per_box: 0,
-        shipping_id: "",
-        total_original_price: 0,
-        size_of_box_at_ship: 0,
+        pice_per_box: 0,
+        size_of_box: 0,
         total_box_size: 0,
-        box_code: "",
+        number_of_boxes: 0,
+        extracted_pieces: 0,
+        status: "available",
+        group_item_price: 0,
       })
+      setNewShippingData({
+        type: "input load",
+        shipping_date: "",
+        receiving_date: "",
+        receiver: "",
+        paid: 0,
+        ship_price: 0,
+      })
+      setShowNewShippingForm(false)
       onSuccess(newProduct)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
@@ -128,27 +195,26 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Product Name *</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Box Code *</label>
           <input
             type="text"
-            name="product_name"
-            value={formData.product_name}
+            name="box_code"
+            value={formData.box_code}
             onChange={handleChange}
             required
-            placeholder="Enter product name"
+            placeholder="e.g., BOX-001"
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Product Type *</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Product Name</label>
           <input
             type="text"
-            name="product_type"
-            value={formData.product_type}
+            name="product_name"
+            value={formData.product_name}
             onChange={handleChange}
-            required
-            placeholder="e.g., Electronics, Clothing"
+            placeholder="Enter product name"
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
@@ -182,19 +248,6 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Group Item Price</label>
-          <input
-            type="number"
-            name="group_item_price"
-            value={formData.group_item_price}
-            onChange={handleChange}
-            step="0.01"
-            placeholder="0.00"
-            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-        </div>
-
-        <div>
           <label className="block text-sm font-medium text-foreground mb-2">Storage *</label>
           <input
             type="text"
@@ -203,18 +256,6 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
             onChange={handleChange}
             required
             placeholder="e.g., Warehouse A, Shelf 3"
-            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Quantity</label>
-          <input
-            type="number"
-            name="quantity"
-            value={formData.quantity}
-            onChange={handleChange}
-            placeholder="0"
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
@@ -233,78 +274,35 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Sizes</label>
-          <input
-            type="number"
-            name="sizes"
-            value={formData.sizes}
-            onChange={handleChange}
-            step="0.01"
-            placeholder="0.00"
-            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Colors</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Image URL</label>
           <input
             type="text"
-            name="colors"
-            value={formData.colors}
+            name="image"
+            value={formData.image}
             onChange={handleChange}
-            placeholder="e.g., Red, Blue, Green"
+            placeholder="https://example.com/image.jpg"
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Box Number *</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Pieces Per Box</label>
           <input
             type="number"
-            name="box_number"
-            value={formData.box_number}
+            name="pice_per_box"
+            value={formData.pice_per_box}
             onChange={handleChange}
-            required
-            step="0.01"
-            placeholder="0.00"
-            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Price Per Box *</label>
-          <input
-            type="number"
-            name="price_per_box"
-            value={formData.price_per_box}
-            onChange={handleChange}
-            required
             placeholder="0"
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
 
-        <div className="col-span-2">
-          <label className="block text-sm font-medium text-foreground mb-2">Total Original Price (Auto-calculated)</label>
-          <input
-            type="number"
-            value={(formData.price_per_box || 0) * (formData.box_number || 0) * (formData.original_price || 0)}
-            readOnly
-            step="0.01"
-            placeholder="0.00"
-            className="w-full px-3 py-2 border border-input rounded-lg bg-muted text-muted-foreground"
-          />
-          <p className="text-xs text-muted-foreground mt-1">
-            Calculated as: (Price Per Box × Box Number × Original Price)
-          </p>
-        </div>
-
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Size of Box at Ship *</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Size of Box *</label>
           <input
             type="number"
-            name="size_of_box_at_ship"
-            value={formData.size_of_box_at_ship}
+            name="size_of_box"
+            value={formData.size_of_box}
             onChange={handleChange}
             required
             step="0.01"
@@ -328,47 +326,180 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Box Code *</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Number of Boxes *</label>
           <input
-            type="text"
-            name="box_code"
-            value={formData.box_code}
+            type="number"
+            name="number_of_boxes"
+            value={formData.number_of_boxes}
             onChange={handleChange}
             required
-            placeholder="e.g., BOX-001"
+            step="0.01"
+            placeholder="0.00"
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Shipping</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Extracted Pieces</label>
+          <input
+            type="number"
+            name="extracted_pieces"
+            value={formData.extracted_pieces}
+            onChange={handleChange}
+            placeholder="0"
+            min="0"
+            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">Status</label>
           <select
-            name="shipping_id"
-            value={formData.shipping_id}
+            name="status"
+            value={formData.status}
             onChange={handleChange}
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <option value="">Select Shipping (Optional)</option>
-            {shippingOptions.map((shipping) => (
-              <option key={shipping.id} value={shipping.id}>
-                {shipping.type} - {shipping.receiver}
-              </option>
-            ))}
+            <option value="available">Available</option>
+            <option value="out_of_stock">Out of Stock</option>
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Image URL</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Group Item Price</label>
           <input
-            type="text"
-            name="image"
-            value={formData.image}
+            type="number"
+            name="group_item_price"
+            value={formData.group_item_price}
             onChange={handleChange}
-            placeholder="https://example.com/image.jpg"
+            step="0.01"
+            placeholder="0.00"
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">Total Pieces (Auto-calculated)</label>
+          <input
+            type="number"
+            value={Math.round((formData.pice_per_box || 0) * (formData.number_of_boxes || 0))}
+            readOnly
+            placeholder="0"
+            className="w-full px-3 py-2 border border-input rounded-lg bg-muted text-muted-foreground"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Calculated as: (Pieces Per Box × Number of Boxes)
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">Total Original Price (Auto-calculated)</label>
+          <input
+            type="number"
+            value={((formData.number_of_boxes || 0) * (formData.pice_per_box || 0) * (formData.original_price || 0)).toFixed(2)}
+            readOnly
+            step="0.01"
+            placeholder="0.00"
+            className="w-full px-3 py-2 border border-input rounded-lg bg-muted text-muted-foreground"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Calculated as: (Number of Boxes × Pieces Per Box × Original Price)
+          </p>
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-foreground mb-2">Shipping</label>
+          <select
+            value={showNewShippingForm ? "create-new" : (formData.shipping_id ?? "")}
+            onChange={(e) => handleShippingChange(e.target.value)}
+            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="">Select Shipping (Optional)</option>
+            {shippingOptions.map((shipping) => (
+              <option key={shipping.id} value={shipping.id.toString()}>
+                {shipping.type} - {shipping.receiver}
+              </option>
+            ))}
+            <option value="create-new" className="font-medium text-primary">+ Create New Shipping</option>
+          </select>
+        </div>
       </div>
+
+      {/* New Shipping Form - Shows when "Create New Shipping" is selected */}
+      {showNewShippingForm && (
+        <div className="border border-border rounded-lg p-4 bg-muted/30">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-medium text-foreground">Create New Shipping</h3>
+            <button
+              type="button"
+              onClick={() => {
+                setShowNewShippingForm(false)
+                setFormData(prev => ({ ...prev, shipping_id: null }))
+              }}
+              className="text-destructive hover:text-destructive/80"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <select
+              name="type"
+              value={newShippingData.type}
+              onChange={handleNewShippingChange}
+              className="px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="input load">Input Load</option>
+              <option value="output load">Output Load</option>
+            </select>
+            <input
+              type="text"
+              name="receiver"
+              placeholder="Receiver *"
+              value={newShippingData.receiver}
+              onChange={handleNewShippingChange}
+              className="px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              required
+            />
+            <input
+              type="datetime-local"
+              name="shipping_date"
+              placeholder="Shipping Date *"
+              value={newShippingData.shipping_date}
+              onChange={handleNewShippingChange}
+              className="px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              required
+            />
+            <input
+              type="datetime-local"
+              name="receiving_date"
+              placeholder="Receiving Date"
+              value={newShippingData.receiving_date}
+              onChange={handleNewShippingChange}
+              className="px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            <input
+              type="number"
+              name="paid"
+              placeholder="Paid (0 or 1)"
+              value={newShippingData.paid || ''}
+              onChange={handleNewShippingChange}
+              min="0"
+              max="1"
+              className="px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            <input
+              type="number"
+              step="0.01"
+              name="ship_price"
+              placeholder="Shipping Price"
+              value={newShippingData.ship_price || ''}
+              onChange={handleNewShippingChange}
+              className="px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-2 pt-4">
         <Button type="submit" disabled={isLoading} className="gap-2">

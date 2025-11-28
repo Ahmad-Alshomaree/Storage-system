@@ -328,12 +328,12 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
           ))}
         </tbody>
       </table>
+      </div>
       <ProductDetailsModal
         product={selectedProduct}
         open={showDetailsModal}
         onOpenChange={setShowDetailsModal}
       />
-    </div>
     </>
   )
 }
