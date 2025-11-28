@@ -42,6 +42,19 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
   const [editValues, setEditValues] = useState<Partial<Shipping>>({})
   const [selectedShipping, setSelectedShipping] = useState<Shipping | null>(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [filters, setFilters] = useState({
+    type: '',
+    receiver: '',
+    shippingDate: '',
+  })
+
+  const filteredShipping = shipping.filter(record => {
+    return (
+      (filters.type === '' || record.type === filters.type) &&
+      (filters.receiver === '' || record.receiver.toLowerCase().includes(filters.receiver.toLowerCase())) &&
+      (filters.shippingDate === '' || formatDate(record.shipping_date).toLowerCase().includes(filters.shippingDate.toLowerCase()))
+    )
+  })
 
   const convertToDatetimeLocal = (dateString: string) => {
     try {
@@ -89,6 +102,42 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
   }
 
   return (
+    <>
+      <div className="mb-4 p-4 bg-muted rounded-lg">
+        <h3 className="text-sm font-semibold mb-3">Filter Shipping</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <select
+            className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+            value={filters.type}
+            onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+          >
+            <option value="">All Types</option>
+            <option value="input load">Input Load</option>
+            <option value="output load">Output Load</option>
+            <option value="comming">Coming</option>
+          </select>
+          <input
+            type="text"
+            placeholder="Receiver"
+            className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+            value={filters.receiver}
+            onChange={(e) => setFilters({ ...filters, receiver: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Shipping Date"
+            className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+            value={filters.shippingDate}
+            onChange={(e) => setFilters({ ...filters, shippingDate: e.target.value })}
+          />
+        </div>
+        <button
+          className="mt-3 px-3 py-1 bg-black text-white text-xs rounded hover:bg-gray-800"
+          onClick={() => setFilters({ type: '', receiver: '', shippingDate: '' })}
+        >
+          Clear Filters
+        </button>
+      </div>
     <div className="overflow-x-auto border border-border rounded-lg">
       <table className="w-full text-sm">
         <thead>
@@ -104,7 +153,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
           </tr>
         </thead>
         <tbody>
-          {shipping.map((record) => (
+          {filteredShipping.map((record) => (
             <tr key={record.id} className="border-b border-border hover:bg-muted/50 transition-colors">
               {editingId === record.id ? (
                 <>
@@ -247,5 +296,6 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
         onOpenChange={setShowDetailsModal}
       />
     </div>
+    </>
   )
 }

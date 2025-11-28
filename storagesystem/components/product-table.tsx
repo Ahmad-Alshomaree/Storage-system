@@ -47,6 +47,23 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
   const [editValues, setEditValues] = useState<Partial<Product>>({})
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [filters, setFilters] = useState({
+    storage: '',
+    shippingId: '',
+    status: '',
+    productName: '',
+    productType: '',
+  })
+
+  const filteredProducts = products.filter(product => {
+    return (
+      (filters.storage === '' || product.storage?.toLowerCase().includes(filters.storage.toLowerCase())) &&
+      (filters.shippingId === '' || product.shipping_id?.toString().includes(filters.shippingId)) &&
+      (filters.status === '' || product.status === filters.status) &&
+      (filters.productName === '' || product.product_name?.toLowerCase().includes(filters.productName.toLowerCase())) &&
+      (filters.productType === '' || product.product_type?.toLowerCase().includes(filters.productType.toLowerCase()))
+    )
+  })
 
   const startEdit = (product: Product) => {
     setEditingId(product.id)
@@ -65,6 +82,55 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
   }
 
   return (
+    <>
+      <div className="mb-4 p-4 bg-muted rounded-lg">
+        <h3 className="text-sm font-semibold mb-3">Filter Products</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+          <input
+            type="text"
+            placeholder="Product Name"
+            className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+            value={filters.productName}
+            onChange={(e) => setFilters({ ...filters, productName: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Product Type"
+            className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+            value={filters.productType}
+            onChange={(e) => setFilters({ ...filters, productType: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Storage"
+            className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+            value={filters.storage}
+            onChange={(e) => setFilters({ ...filters, storage: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Shipping ID"
+            className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+            value={filters.shippingId}
+            onChange={(e) => setFilters({ ...filters, shippingId: e.target.value })}
+          />
+          <select
+            className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+            value={filters.status}
+            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+          >
+            <option value="">All Status</option>
+            <option value="available">Available</option>
+            <option value="out_of_stock">Out of Stock</option>
+          </select>
+        </div>
+        <button
+          className="mt-3 px-3 py-1 bg-black text-white text-xs rounded hover:bg-gray-800"
+          onClick={() => setFilters({ storage: '', shippingId: '', status: '', productName: '', productType: '' })}
+        >
+          Clear Filters
+        </button>
+      </div>
     <div className="overflow-x-auto border border-border rounded-lg">
       <table className="w-full text-sm">
         <thead>
@@ -85,7 +151,7 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
           </tr>
         </thead>
         <tbody>
-          {products.map((product) => (
+          {filteredProducts.map((product) => (
             <tr key={product.id} className="border-b border-border hover:bg-muted/50 transition-colors">
               {editingId === product.id ? (
                 <>
@@ -268,5 +334,6 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
         onOpenChange={setShowDetailsModal}
       />
     </div>
+    </>
   )
 }
