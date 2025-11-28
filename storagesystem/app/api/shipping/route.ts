@@ -6,6 +6,8 @@ export async function GET() {
     const allShipping = await db.query.shipping.findMany({
       with: {
         products: true,
+        receiver: true,
+        sender: true,
       },
       orderBy: (shipping, { desc }) => desc(shipping.created_at),
     })
@@ -20,18 +22,15 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { type, shipping_date, receiver, paid, ship_price } = body
+    const { type, shipping_date, receiving_date, receiver_client_id, sender_client_id, paid, ship_price } = body
 
-    if (!type || !shipping_date || !receiver) {
+    if (!type || !shipping_date || !receiving_date || !receiver_client_id || !sender_client_id) {
       return Response.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    if (!["Going", "Comming"].includes(type)) {
+    if (!["input load", "output load", "comming"].includes(type)) {
       return Response.json({ error: "Invalid shipping type" }, { status: 400 })
     }
-
-    // Set receiving_date to the same as shipping_date if not provided
-    const receiving_date = shipping_date
 
     const result = await db
       .insert(shipping)
@@ -39,7 +38,8 @@ export async function POST(request: Request) {
         type,
         shipping_date,
         receiving_date,
-        receiver,
+        receiver_client_id,
+        sender_client_id,
         paid: paid || 0,
         ship_price: ship_price || 0,
         created_at: new Date().toISOString(),

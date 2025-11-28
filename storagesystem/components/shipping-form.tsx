@@ -36,6 +36,7 @@ interface NewProductItem {
   weight: number
   pice_per_box: number
   grope_item_price: number
+  image: string
 }
 
 interface Client {
@@ -60,6 +61,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
     shipping_date: "",
     receiving_date: "",
     receiver: "",
+    sender: "",
     paid: 0,
     ship_price: 0,
   })
@@ -78,6 +80,8 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
     phone_number: "",
     history: "",
   })
+  const [isLoadingNewClient, setIsLoadingNewClient] = useState(false)
+  const [targetField, setTargetField] = useState<'receiver' | 'sender'>('receiver')
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -137,6 +141,17 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
     }))
   }
 
+  const handleClientSelectChange = (field: 'receiver' | 'sender', value: string) => {
+    if (value === 'add-new-client') {
+      setTargetField(field)
+      setShowNewClientForm(true)
+      setFormData(prev => ({ ...prev, [field]: '' }))
+    } else {
+      setShowNewClientForm(false)
+      setFormData(prev => ({ ...prev, [field]: value }))
+    }
+  }
+
   const addNewProduct = () => {
     const newProduct: NewProductItem = {
       id: `temp-${nextProductId}`,
@@ -152,6 +167,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
       weight: 0,
       pice_per_box: 1,
       grope_item_price: 0,
+      image: "",
     }
     setNewProducts(prev => [...prev, newProduct])
     setNextProductId(prev => prev + 1)
@@ -167,7 +183,54 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
     ))
   }
 
+  const handleNewClientSubmit = async () => {
+    if (!newClientData.client_name.trim()) {
+      return
+    }
 
+    setIsLoadingNewClient(true)
+    try {
+      const clientData = {
+        client_name: newClientData.client_name,
+        phone_number: newClientData.phone_number || null,
+        shipping_id: null,
+        history: newClientData.history || null,
+        debt: 0,
+        total_debts: 0,
+      }
+
+      const response = await fetch("/api/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(clientData),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to create client")
+      }
+
+      const newClient = await response.json()
+
+      // Update clients list
+      setExistingClients(prev => [...prev, newClient])
+
+      // Set the target field
+      setFormData(prev => ({ ...prev, [targetField]: newClient.client_name }))
+
+      // Hide form and reset
+      setShowNewClientForm(false)
+      setNewClientData({
+        client_name: "",
+        phone_number: "",
+        history: "",
+      })
+    } catch (err) {
+      console.error("Failed to add new client:", err)
+      // Optionally set an error state here
+    } finally {
+      setIsLoadingNewClient(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -189,10 +252,30 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         return
       }
 
+      // Find client IDs by name
+      const receiverClient = existingClients.find(client => client.client_name === formData.receiver)
+      const senderClient = existingClients.find(client => client.client_name === formData.sender)
+
+      if (!receiverClient || !senderClient) {
+        setError("Please select valid clients for both receiver and sender")
+        setIsLoading(false)
+        return
+      }
+
+      const shippingData = {
+        type: formData.type,
+        shipping_date: formData.shipping_date,
+        receiving_date: formData.receiving_date,
+        receiver_client_id: receiverClient.id,
+        sender_client_id: senderClient.id,
+        paid: formData.paid || 0,
+        ship_price: formData.ship_price || 0,
+      }
+
       const response = await fetch("/api/shipping", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(shippingData),
       })
 
       if (!response.ok) {
@@ -201,24 +284,9 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
 
       const newShipping = await response.json()
 
-      // Handle client assignment - if new client form is shown, create the new client
-      if (showNewClientForm && newClientData.client_name.trim()) {
-        const clientData = {
-          client_name: newClientData.client_name,
-          phone_number: newClientData.phone_number || null,
-          shipping_id: newShipping.id,
-          history: newClientData.history || null,
-          debt: 0,
-          total_debts: 0,
-        }
-
-        await fetch("/api/clients", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(clientData),
-        })
-      } else if (formData.receiver) {
-        // Assign existing client to shipping - find client by name
+      // Handle client assignment
+      if (formData.receiver) {
+        // Assign client to shipping - find client by name
         const existingClient = existingClients.find(client => client.client_name === formData.receiver)
         if (existingClient) {
           await fetch(`/api/clients/${existingClient.id}`, {
@@ -234,7 +302,6 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         const productPromises = newProducts.map(product => {
           const productData = {
             product_name: product.product_name,
-            product_type: product.product_type,
             box_code: product.box_code,
             original_price: product.original_price,
             selling_price: product.selling_price,
@@ -245,10 +312,8 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
             weight: product.weight,
             pice_per_box: product.pice_per_box,
             grope_item_price: product.grope_item_price,
+            image: product.image || null,
             shipping_id: newShipping.id,
-            status: 'available',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
           }
 
           return fetch("/api/products", {
@@ -280,6 +345,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         shipping_date: "",
         receiving_date: "",
         receiver: "",
+        sender: "",
         paid: 0,
         ship_price: 0,
       })
@@ -325,9 +391,21 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">Shipping Date *</label>
           <input
-            type="datetime-local"
+            type="date"
             name="shipping_date"
             value={formData.shipping_date}
+            onChange={handleChange}
+            required
+            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">Receiving Date *</label>
+          <input
+            type="date"
+            name="receiving_date"
+            value={formData.receiving_date}
             onChange={handleChange}
             required
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
@@ -338,20 +416,29 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
           <label className="block text-sm font-medium text-foreground mb-2">Receiver *</label>
           <select
             value={formData.receiver}
-            onChange={(e) => {
-              const value = e.target.value
-              if (value === 'add-new-client') {
-                setShowNewClientForm(true)
-                setFormData(prev => ({ ...prev, receiver: '' }))
-              } else {
-                setShowNewClientForm(false)
-                setFormData(prev => ({ ...prev, receiver: value }))
-              }
-            }}
+            onChange={(e) => handleClientSelectChange('receiver', e.target.value)}
             required
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">Select Receiver</option>
+            {existingClients.map((client) => (
+              <option key={client.id} value={client.client_name}>
+                {client.client_name} {client.phone_number ? `(${client.phone_number})` : ''}
+              </option>
+            ))}
+            <option value="add-new-client" className="font-medium text-primary">+ Add New Client</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">Sender *</label>
+          <select
+            value={formData.sender}
+            onChange={(e) => handleClientSelectChange('sender', e.target.value)}
+            required
+            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="">Select Sender</option>
             {existingClients.map((client) => (
               <option key={client.id} value={client.client_name}>
                 {client.client_name} {client.phone_number ? `(${client.phone_number})` : ''}
@@ -402,6 +489,13 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
               />
             </div>
           </div>
+
+          <div className="flex gap-2 pt-4">
+            <Button type="button" onClick={handleNewClientSubmit} disabled={isLoadingNewClient} size="sm">
+              {isLoadingNewClient ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              Save Client
+            </Button>
+          </div>
         </div>
       )}
 
@@ -436,97 +530,140 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <input
-                      type="text"
-                      placeholder="Product Name *"
-                      value={product.product_name}
-                      onChange={(e) => updateNewProduct(product.id, 'product_name', e.target.value)}
-                      className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-                      required
-                    />
-                    <input
-                      type="text"
-                      placeholder="Product Type *"
-                      value={product.product_type}
-                      onChange={(e) => updateNewProduct(product.id, 'product_type', e.target.value)}
-                      className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-                      required
-                    />
-                    <input
-                      type="text"
-                      placeholder="Box Code *"
-                      value={product.box_code}
-                      onChange={(e) => updateNewProduct(product.id, 'box_code', e.target.value)}
-                      className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-                      required
-                    />
-                    <input
-                      type="number"
-                      step="0.01"
-                      placeholder="Original Price *"
-                      value={product.original_price || ''}
-                      onChange={(e) => updateNewProduct(product.id, 'original_price', parseFloat(e.target.value) || 0)}
-                      className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-                      required
-                    />
-                    <input
-                      type="number"
-                      step="0.01"
-                      placeholder="Selling Price *"
-                      value={product.selling_price || ''}
-                      onChange={(e) => updateNewProduct(product.id, 'selling_price', parseFloat(e.target.value) || 0)}
-                      className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-                      required
-                    />
-                    <input
-                      type="text"
-                      placeholder="Storage Location"
-                      value={product.storage}
-                      onChange={(e) => updateNewProduct(product.id, 'storage', e.target.value)}
-                      className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Number of Boxes *"
-                      value={product.number_of_boxes || ''}
-                      onChange={(e) => updateNewProduct(product.id, 'number_of_boxes', parseInt(e.target.value) || 1)}
-                      className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-                      required
-                      min="1"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Pieces per Box *"
-                      value={product.pice_per_box || ''}
-                      onChange={(e) => updateNewProduct(product.id, 'pice_per_box', parseInt(e.target.value) || 1)}
-                      className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-                      required
-                      min="1"
-                    />
-                    <input
-                      type="number"
-                      step="0.01"
-                      placeholder="Size of Box"
-                      value={product.size_of_box || ''}
-                      onChange={(e) => updateNewProduct(product.id, 'size_of_box', parseFloat(e.target.value) || 0)}
-                      className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    <input
-                      type="number"
-                      step="0.01"
-                      placeholder="Weight"
-                      value={product.weight || ''}
-                      onChange={(e) => updateNewProduct(product.id, 'weight', parseFloat(e.target.value) || 0)}
-                      className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    <input
-                      type="number"
-                      step="0.01"
-                      placeholder="Group Item Price"
-                      value={product.grope_item_price || ''}
-                      onChange={(e) => updateNewProduct(product.id, 'grope_item_price', parseFloat(e.target.value) || 0)}
-                      className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">Product Name *</label>
+                      <input
+                        type="text"
+                        placeholder="Product Name *"
+                        value={product.product_name}
+                        onChange={(e) => updateNewProduct(product.id, 'product_name', e.target.value)}
+                        className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">Product Type</label>
+                      <input
+                        type="text"
+                        placeholder="Product Type"
+                        value={product.product_type}
+                        onChange={(e) => updateNewProduct(product.id, 'product_type', e.target.value)}
+                        className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">Box Code *</label>
+                      <input
+                        type="text"
+                        placeholder="Box Code *"
+                        value={product.box_code}
+                        onChange={(e) => updateNewProduct(product.id, 'box_code', e.target.value)}
+                        className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">Original Price *</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="Original Price *"
+                        value={product.original_price || ''}
+                        onChange={(e) => updateNewProduct(product.id, 'original_price', parseFloat(e.target.value) || 0)}
+                        className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">Selling Price *</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="Selling Price *"
+                        value={product.selling_price || ''}
+                        onChange={(e) => updateNewProduct(product.id, 'selling_price', parseFloat(e.target.value) || 0)}
+                        className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">Storage Location</label>
+                      <input
+                        type="text"
+                        placeholder="Storage Location"
+                        value={product.storage}
+                        onChange={(e) => updateNewProduct(product.id, 'storage', e.target.value)}
+                        className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">Number of Boxes *</label>
+                      <input
+                        type="number"
+                        placeholder="Number of Boxes *"
+                        value={product.number_of_boxes || ''}
+                        onChange={(e) => updateNewProduct(product.id, 'number_of_boxes', parseInt(e.target.value) || 1)}
+                        className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                        required
+                        min="1"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">Pieces per Box *</label>
+                      <input
+                        type="number"
+                        placeholder="Pieces per Box *"
+                        value={product.pice_per_box || ''}
+                        onChange={(e) => updateNewProduct(product.id, 'pice_per_box', parseInt(e.target.value) || 1)}
+                        className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                        required
+                        min="1"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">Size of Box *</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="Size of Box *"
+                        value={product.size_of_box || ''}
+                        onChange={(e) => updateNewProduct(product.id, 'size_of_box', parseFloat(e.target.value) || 0)}
+                        className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">Image URL</label>
+                      <input
+                        type="text"
+                        placeholder="Image URL"
+                        value={product.image}
+                        onChange={(e) => updateNewProduct(product.id, 'image', e.target.value)}
+                        className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">Weight</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="Weight"
+                        value={product.weight || ''}
+                        onChange={(e) => updateNewProduct(product.id, 'weight', parseFloat(e.target.value) || 0)}
+                        className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">Group Item Price</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="Group Item Price"
+                        value={product.grope_item_price || ''}
+                        onChange={(e) => updateNewProduct(product.id, 'grope_item_price', parseFloat(e.target.value) || 0)}
+                        className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                      />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -578,7 +715,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
       <div className="flex gap-2 pt-4">
         <Button type="submit" disabled={isLoading} className="gap-2">
           {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-          Create Shipping Record
+          Save Shipping Information
         </Button>
       </div>
     </form>

@@ -105,13 +105,11 @@ export async function POST(req: NextRequest) {
             box_code,
             product_name,
             original_price: safeFloat(row.H),
-            total_original_price: safeFloat(row.I),
             selling_price: 0, // Default
             storage: "Default",
             weight: 0,
             image: "", // Manually entered later
             pice_per_box: safeInt(row.F),
-            Total_pices: safeInt(row.G),
             size_of_box: safeFloat(row.J),
             total_box_size: safeFloat(row.K),
             number_of_boxes: safeFloat(row.E),

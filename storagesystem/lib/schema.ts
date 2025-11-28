@@ -8,7 +8,8 @@ export const shipping = sqliteTable(
     type: text("type").notNull(), // "input load" or "output load"
     shipping_date: text("shipping_date").notNull(),
     receiving_date: text("receiving_date").notNull(),
-    receiver: text("receiver").notNull(),
+    receiver_client_id: integer("receiver_client_id").references(() => client.id).notNull(),
+    sender_client_id: integer("sender_client_id").references(() => client.id).notNull(),
     file_path: text("file_path"),
     paid: integer("paid").default(0),
     ship_price: real("ship_price").default(0),
@@ -19,8 +20,16 @@ export const shipping = sqliteTable(
   }),
 )
 
-export const shippingRelations = relations(shipping, ({ many }) => ({
+export const shippingRelations = relations(shipping, ({ many, one }) => ({
   products: many(products),
+  receiver: one(client, {
+    fields: [shipping.receiver_client_id],
+    references: [client.id],
+  }),
+  sender: one(client, {
+    fields: [shipping.sender_client_id],
+    references: [client.id],
+  }),
 }))
 
 export const products = sqliteTable(
@@ -32,9 +41,6 @@ export const products = sqliteTable(
     product_name: text("product_name"),
     //product_type: text("product_type").notNull(),
     original_price: real("original_price").notNull(),
-    total_original_price: real("total_original_price").generatedAlwaysAs(
-      sql`Total_pices * original_price`
-    ),
     selling_price: real("selling_price").notNull(),
     storage: text("storage"),
     weight: real("weight"),
@@ -42,9 +48,8 @@ export const products = sqliteTable(
     //colors: text("colors"),
     image: text("image"),
     pice_per_box: integer("pice_per_box"),
-    Total_pices: integer("Total_pices").generatedAlwaysAs(
-      sql`CAST(ROUND(pice_per_box * number_of_boxes) AS INTEGER)`
-    ),
+    Total_pices: integer("Total_pices").default(0),
+    total_original_price: real("total_original_price").default(0),
     size_of_box: real("size_of_box").notNull(),
     total_box_size: real("total_box_size").notNull(),
     number_of_boxes: real("number_of_boxes").notNull(),

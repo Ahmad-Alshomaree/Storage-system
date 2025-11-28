@@ -24,6 +24,7 @@ interface Shipping {
   shipping_date: string
   receiving_date: string
   receiver: string
+  sender: string
   paid?: number
   ship_price?: number
   created_at: string
@@ -146,6 +147,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Shipping Date</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Receiving Date</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Receiver</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Sender</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Products</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Paid</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Ship Price</th>
@@ -189,6 +191,14 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                       type="text"
                       value={editValues.receiver || ""}
                       onChange={(e) => setEditValues({ ...editValues, receiver: e.target.value })}
+                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                    />
+                  </td>
+                  <td className="px-4 py-3">
+                    <input
+                      type="text"
+                      value={editValues.sender || ""}
+                      onChange={(e) => setEditValues({ ...editValues, sender: e.target.value })}
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
                     />
                   </td>
@@ -246,6 +256,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                   <td className="px-4 py-3 text-foreground text-xs">{formatDate(record.shipping_date)}</td>
                   <td className="px-4 py-3 text-foreground text-xs">{formatDate(record.receiving_date)}</td>
                   <td className="px-4 py-3 text-foreground text-xs">{record.receiver}</td>
+                  <td className="px-4 py-3 text-foreground text-xs">{record.sender}</td>
                   <td className="px-4 py-3 text-foreground text-xs">
                     <div className="text-xs max-w-xs truncate">
                       {record.products && record.products.length > 0

@@ -78,7 +78,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
     try {
       const shippingFormData = {
         ...newShippingData,
-        receiving_date: newShippingData.receiving_date || new Date(newShippingData.shipping_date).toISOString().replace('T', ' ').split('.')[0], // Use shipping date if receiving date not set
+        receiving_date: newShippingData.receiving_date || newShippingData.shipping_date, // Use shipping date if receiving date not set
       }
       const response = await fetch("/api/shipping", {
         method: "POST",
@@ -443,60 +443,72 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <select
-              name="type"
-              value={newShippingData.type}
-              onChange={handleNewShippingChange}
-              className="px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="input load">Input Load</option>
-              <option value="output load">Output Load</option>
-            </select>
-            <input
-              type="text"
-              name="receiver"
-              placeholder="Receiver *"
-              value={newShippingData.receiver}
-              onChange={handleNewShippingChange}
-              className="px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              required
-            />
-            <input
-              type="datetime-local"
-              name="shipping_date"
-              placeholder="Shipping Date *"
-              value={newShippingData.shipping_date}
-              onChange={handleNewShippingChange}
-              className="px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              required
-            />
-            <input
-              type="datetime-local"
-              name="receiving_date"
-              placeholder="Receiving Date"
-              value={newShippingData.receiving_date}
-              onChange={handleNewShippingChange}
-              className="px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            <input
-              type="number"
-              name="paid"
-              placeholder="Paid (0 or 1)"
-              value={newShippingData.paid || ''}
-              onChange={handleNewShippingChange}
-              min="0"
-              max="1"
-              className="px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            <input
-              type="number"
-              step="0.01"
-              name="ship_price"
-              placeholder="Shipping Price"
-              value={newShippingData.ship_price || ''}
-              onChange={handleNewShippingChange}
-              className="px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            />
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">Type</label>
+              <select
+                name="type"
+                value={newShippingData.type}
+                onChange={handleNewShippingChange}
+                className="w-full px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="input load">Input Load</option>
+                <option value="output load">Output Load</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">Receiver *</label>
+              <input
+                type="text"
+                name="receiver"
+                value={newShippingData.receiver}
+                onChange={handleNewShippingChange}
+                className="w-full px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">Shipping Date *</label>
+              <input
+                type="date"
+                name="shipping_date"
+                value={newShippingData.shipping_date}
+                onChange={handleNewShippingChange}
+                className="w-full px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">Receiving Date</label>
+              <input
+                type="date"
+                name="receiving_date"
+                value={newShippingData.receiving_date}
+                onChange={handleNewShippingChange}
+                className="w-full px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">Paid Amount</label>
+              <input
+                type="number"
+                name="paid"
+                value={newShippingData.paid || ''}
+                onChange={handleNewShippingChange}
+                step="0.01"
+                className="w-full px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">Shipping Cost</label>
+              <input
+                type="number"
+                step="0.01"
+                name="ship_price"
+                value={newShippingData.ship_price || ''}
+                onChange={handleNewShippingChange}
+                className="w-full px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
           </div>
         </div>
       )}
