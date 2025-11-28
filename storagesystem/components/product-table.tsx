@@ -3,38 +3,7 @@
 import { useState } from "react"
 import { Trash2, Edit2, Check, X, Eye } from "lucide-react"
 import { ProductDetailsModal } from "./product-details-modal"
-
-interface Product {
-  id: number
-  shipping_id?: number | null
-  box_code: string
-  product_name?: string
-  product_type?: string
-  original_price: number
-  total_original_price: number
-  selling_price: number
-  storage?: string
-  weight?: number
-  image?: string | null
-  pice_per_box?: number | null
-  Total_pices?: number | null
-  size_of_box: number
-  total_box_size: number
-  number_of_boxes: number
-  extracted_pieces?: number | null
-  status: string
-  group_item_price?: number | null
-  created_at?: string
-  updated_at?: string
-  shipping?: {
-    id: number
-    type: string
-    shipping_date: string
-    receiver: string
-    file_path?: string | null
-    created_at: string
-  }
-}
+import type { Product } from "@/lib/types"
 
 interface ProductTableProps {
   products: Product[]
@@ -142,8 +111,8 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Selling Price</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Group Item Price</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Storage</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Number or boxes</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Pice per box</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Number of boxes</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Pieces per box</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Extracted Pieces</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Status</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Shipping ID</th>

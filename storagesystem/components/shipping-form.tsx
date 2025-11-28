@@ -421,7 +421,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">Select Receiver</option>
-            {existingClients.map((client) => (
+            {!isLoadingClients && existingClients.map((client) => (
               <option key={client.id} value={client.client_name}>
                 {client.client_name} {client.phone_number ? `(${client.phone_number})` : ''}
               </option>
@@ -439,7 +439,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">Select Sender</option>
-            {existingClients.map((client) => (
+            {!isLoadingClients && existingClients.map((client) => (
               <option key={client.id} value={client.client_name}>
                 {client.client_name} {client.phone_number ? `(${client.phone_number})` : ''}
               </option>
