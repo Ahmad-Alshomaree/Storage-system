@@ -126,7 +126,7 @@ export function AddClientForm({ onSuccess }: AddClientFormProps) {
             <option value="">Select Shipping (Optional)</option>
             {shippingOptions.map((shipping) => (
               <option key={shipping.id} value={shipping.id}>
-                {shipping.type} - {shipping.receiver}
+                {shipping.type} - {typeof shipping.receiver === 'object' && shipping.receiver !== null ? shipping.receiver.client_name : shipping.receiver}
               </option>
             ))}
           </select>

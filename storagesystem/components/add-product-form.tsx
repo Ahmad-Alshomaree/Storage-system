@@ -417,7 +417,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
             <option value="">Select Shipping (Optional)</option>
             {shippingOptions.map((shipping) => (
               <option key={shipping.id} value={shipping.id.toString()}>
-                {shipping.type} - {shipping.receiver}
+                {shipping.type} - {typeof shipping.receiver === 'object' && shipping.receiver !== null ? shipping.receiver.client_name : shipping.receiver}
               </option>
             ))}
             <option value="create-new" className="font-medium text-primary">+ Create New Shipping</option>
