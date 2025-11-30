@@ -29,7 +29,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params
     const body = await request.json()
-    const { type, shipping_date, receiving_date, receiver_client_id, sender_client_id, paid, ship_price } = body
+    const { type, shipping_date, receiving_date, receiver_client_id, sender_client_id, paid, ship_price, currency, note } = body
 
     if (!["input load", "output load", "comming"].includes(type)) {
       return Response.json({ error: "Invalid shipping type" }, { status: 400 })
@@ -45,6 +45,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         sender_client_id,
         paid,
         ship_price,
+        currency,
+        note,
       })
       .where(eq(shipping.id, Number.parseInt(id)))
       .returning()

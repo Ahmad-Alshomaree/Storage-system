@@ -38,6 +38,8 @@ export async function POST(request: Request) {
       total_box_size,
       box_code,
       extracted_pieces,
+      currency,
+      note,
     } = body
 
     if (!box_code || original_price === undefined || original_price === null || selling_price === undefined || selling_price === null) {
@@ -72,6 +74,8 @@ export async function POST(request: Request) {
         box_code,
         shipping_id: shipping_id || null,
         status: "available",
+        currency,
+        note: note || null,
         created_at: now,
         updated_at: now,
       })

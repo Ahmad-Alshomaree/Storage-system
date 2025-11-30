@@ -21,7 +21,6 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
     shippingId: '',
     status: '',
     productName: '',
-    productType: '',
   })
 
   const filteredProducts = products.filter(product => {
@@ -29,8 +28,7 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
       (filters.storage === '' || product.storage?.toLowerCase().includes(filters.storage.toLowerCase())) &&
       (filters.shippingId === '' || product.shipping_id?.toString().includes(filters.shippingId)) &&
       (filters.status === '' || product.status === filters.status) &&
-      (filters.productName === '' || product.product_name?.toLowerCase().includes(filters.productName.toLowerCase())) &&
-      (filters.productType === '' || product.product_type?.toLowerCase().includes(filters.productType.toLowerCase()))
+      (filters.productName === '' || product.product_name?.toLowerCase().includes(filters.productName.toLowerCase()))
     )
   })
 
@@ -64,13 +62,6 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
           />
           <input
             type="text"
-            placeholder="Product Type"
-            className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-            value={filters.productType}
-            onChange={(e) => setFilters({ ...filters, productType: e.target.value })}
-          />
-          <input
-            type="text"
             placeholder="Storage"
             className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
             value={filters.storage}
@@ -95,7 +86,7 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
         </div>
         <button
           className="mt-3 px-3 py-1 bg-black text-white text-xs rounded hover:bg-gray-800"
-          onClick={() => setFilters({ storage: '', shippingId: '', status: '', productName: '', productType: '' })}
+          onClick={() => setFilters({ storage: '', shippingId: '', status: '', productName: '' })}
         >
           Clear Filters
         </button>
@@ -106,7 +97,6 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
           <tr className="border-b border-border bg-muted">
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Box Code</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Product Name</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Type</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Original Price</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Selling Price</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Group Item Price</th>
@@ -137,14 +127,6 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
                       type="text"
                       value={editValues.product_name || ""}
                       onChange={(e) => setEditValues({ ...editValues, product_name: e.target.value })}
-                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                    />
-                  </td>
-                  <td className="px-3 py-3">
-                    <input
-                      type="text"
-                      value={editValues.product_type || ""}
-                      onChange={(e) => setEditValues({ ...editValues, product_type: e.target.value })}
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
                     />
                   </td>
@@ -244,11 +226,6 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
                 <>
                   <td className="px-3 py-3 font-medium text-foreground text-xs">{product.box_code}</td>
                   <td className="px-3 py-3 text-foreground text-xs">{product.product_name}</td>
-                  <td className="px-3 py-3 text-xs">
-                    <span className="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">
-                      {product.product_type}
-                    </span>
-                  </td>
                   <td className="px-3 py-3 text-foreground text-xs">{product.original_price.toFixed(2)}</td>
                   <td className="px-3 py-3 text-foreground text-xs font-medium">{product.selling_price.toFixed(2)}</td>
                   <td className="px-3 py-3 text-foreground text-xs">{product.group_item_price ? product.group_item_price.toFixed(2) : "0.00"}</td>

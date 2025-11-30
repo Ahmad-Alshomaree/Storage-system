@@ -26,6 +26,8 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
     extracted_pieces: 0,
     status: "available",
     group_item_price: 0,
+    currency: "Dollar",
+    note: "",
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
@@ -36,9 +38,15 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
     shipping_date: "",
     receiving_date: "",
     receiver: "",
+    sender: "",
     paid: 0,
     ship_price: 0,
   })
+  const [productCostData, setProductCostData] = useState({
+    product_total_cost: 0,
+    amount_paid: 0,
+  })
+  const [selectedShippingData, setSelectedShippingData] = useState<any>(null)
 
   useEffect(() => {
     fetchShippingOptions()
@@ -60,9 +68,18 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
     if (value === "create-new") {
       setShowNewShippingForm(true)
       setFormData(prev => ({ ...prev, shipping_id: null }))
+      setSelectedShippingData(null)
+    } else if (value === "") {
+      setShowNewShippingForm(false)
+      setFormData(prev => ({ ...prev, shipping_id: null }))
+      setSelectedShippingData(null)
     } else {
       setShowNewShippingForm(false)
-      setFormData(prev => ({ ...prev, shipping_id: value === "" ? null : Number.parseInt(value) }))
+      const shippingId = Number.parseInt(value)
+      setFormData(prev => ({ ...prev, shipping_id: shippingId }))
+      // Find and set the selected shipping data
+      const selected = shippingOptions.find(s => s.id === shippingId)
+      setSelectedShippingData(selected || null)
     }
   }
 
@@ -71,6 +88,14 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
     setNewShippingData(prev => ({
       ...prev,
       [name]: type === 'number' ? Number.parseFloat(value) || 0 : value
+    }))
+  }
+
+  const handleProductCostChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setProductCostData(prev => ({
+      ...prev,
+      [name]: Number.parseFloat(value) || 0
     }))
   }
 
@@ -124,7 +149,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
 
       // If creating new shipping, create it first
       if (showNewShippingForm) {
-        if (!newShippingData.shipping_date || !newShippingData.receiver) {
+        if (!newShippingData.shipping_date || !newShippingData.receiver || !newShippingData.sender) {
           setError("Please fill in required shipping fields")
           setIsLoading(false)
           return
@@ -135,6 +160,13 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           setIsLoading(false)
           return
         }
+      }
+
+      // If shipping is selected, validate product cost inputs
+      if (shippingId && (productCostData.product_total_cost <= 0 || productCostData.amount_paid < 0)) {
+        setError("Please enter valid product cost and payment amount")
+        setIsLoading(false)
+        return
       }
 
       const productData = {
@@ -153,6 +185,36 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
       }
 
       const newProduct = await response.json()
+
+      // Update shipping record with product costs if shipping is provided
+      if (shippingId && (productCostData.product_total_cost > 0 || productCostData.amount_paid > 0)) {
+        try {
+          // First fetch current shipping data
+          const shippingResponse = await fetch(`/api/shipping/${shippingId}`)
+          if (shippingResponse.ok) {
+            const currentShipping = await shippingResponse.json()
+
+            // Calculate new totals
+            const newShipPrice = (currentShipping.ship_price || 0) + productCostData.product_total_cost
+            const newPaid = (currentShipping.paid || 0) + productCostData.amount_paid
+
+            // Update shipping record
+            await fetch(`/api/shipping/${shippingId}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                ...currentShipping,
+                ship_price: newShipPrice,
+                paid: newPaid,
+              }),
+            })
+          }
+        } catch (shippingError) {
+          console.error("Error updating shipping costs:", shippingError)
+          // Don't fail the whole operation if shipping update fails
+        }
+      }
+
       setFormData({
         shipping_id: null,
         box_code: "",
@@ -169,16 +231,24 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
         extracted_pieces: 0,
         status: "available",
         group_item_price: 0,
+        currency: "Dollar",
+        note: "",
       })
       setNewShippingData({
         type: "input load",
         shipping_date: "",
         receiving_date: "",
         receiver: "",
+        sender: "",
         paid: 0,
         ship_price: 0,
       })
+      setProductCostData({
+        product_total_cost: 0,
+        amount_paid: 0,
+      })
       setShowNewShippingForm(false)
+      setSelectedShippingData(null)
       onSuccess(newProduct)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
@@ -407,6 +477,32 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           </p>
         </div>
 
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">Currency *</label>
+          <select
+            name="currency"
+            value={formData.currency}
+            onChange={handleChange}
+            required
+            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="Dollar">Dollar</option>
+            <option value="Iraqi Dinar">Iraqi Dinar</option>
+          </select>
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-foreground mb-2">Note</label>
+          <textarea
+            name="note"
+            value={formData.note}
+            onChange={handleChange}
+            placeholder="Enter any additional notes"
+            rows={3}
+            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-foreground mb-2">Shipping</label>
           <select
@@ -417,7 +513,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
             <option value="">Select Shipping (Optional)</option>
             {shippingOptions.map((shipping) => (
               <option key={shipping.id} value={shipping.id.toString()}>
-                {shipping.type} - {typeof shipping.receiver === 'object' && shipping.receiver !== null ? shipping.receiver.client_name : shipping.receiver}
+                {shipping.type} - {new Date(shipping.shipping_date).toLocaleDateString()} - {typeof shipping.receiver === 'object' && shipping.receiver !== null ? shipping.receiver.client_name : shipping.receiver} / {typeof shipping.sender === 'object' && shipping.sender !== null ? shipping.sender.client_name : shipping.sender}
               </option>
             ))}
             <option value="create-new" className="font-medium text-primary">+ Create New Shipping</option>
@@ -467,6 +563,17 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
               />
             </div>
             <div>
+              <label className="block text-sm font-medium text-foreground mb-2">Sender *</label>
+              <input
+                type="text"
+                name="sender"
+                value={newShippingData.sender}
+                onChange={handleNewShippingChange}
+                className="w-full px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                required
+              />
+            </div>
+            <div>
               <label className="block text-sm font-medium text-foreground mb-2">Shipping Date *</label>
               <input
                 type="date"
@@ -508,6 +615,45 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
                 onChange={handleNewShippingChange}
                 className="w-full px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Product Cost Inputs - Show when shipping is selected or being created */}
+      {(formData.shipping_id || showNewShippingForm) && (
+        <div className="border border-border rounded-lg p-4 bg-blue-50/30 dark:bg-blue-950/30">
+          <h3 className="text-lg font-medium text-foreground mb-3">Product Cost Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">Total Product Cost *</label>
+              <input
+                type="number"
+                name="product_total_cost"
+                value={productCostData.product_total_cost || ''}
+                onChange={handleProductCostChange}
+                step="0.01"
+                placeholder="0.00"
+                className="w-full px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                The total cost of the products being added to this shipping
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">Amount Paid *</label>
+              <input
+                type="number"
+                name="amount_paid"
+                value={productCostData.amount_paid || ''}
+                onChange={handleProductCostChange}
+                step="0.01"
+                placeholder="0.00"
+                className="w-full px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                How much has been paid for these products
+              </p>
             </div>
           </div>
         </div>

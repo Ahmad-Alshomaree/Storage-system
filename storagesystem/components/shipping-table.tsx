@@ -8,14 +8,18 @@ interface Product {
   id: number
   box_code: string
   product_name?: string | null
+  product_type?: string | null
   original_price: number
   selling_price: number
   Total_pices?: number | null
+  total_original_price?: number | null
   number_of_boxes: number
   size_of_box: number
   total_box_size: number
   weight?: number | null
   image?: string | null
+  currency?: string | null
+  note?: string | null
 }
 
 interface Shipping {
@@ -27,6 +31,8 @@ interface Shipping {
   sender: string
   paid?: number
   ship_price?: number
+  currency?: string
+  note?: string | null
   created_at: string
   file_path?: string | null
   products?: Product[]
@@ -151,6 +157,8 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Products</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Paid</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Ship Price</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Currency</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Note</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Actions</th>
           </tr>
         </thead>
@@ -233,6 +241,25 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                     />
                   </td>
                   <td className="px-4 py-3">
+                    <select
+                      value={editValues.currency || ""}
+                      onChange={(e) => setEditValues({ ...editValues, currency: e.target.value })}
+                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                    >
+                      <option value="Dollar">Dollar</option>
+                      <option value="Iraqi Dinar">Iraqi Dinar</option>
+                    </select>
+                  </td>
+                  <td className="px-4 py-3">
+                    <textarea
+                      value={editValues.note || ""}
+                      onChange={(e) => setEditValues({ ...editValues, note: e.target.value })}
+                      rows={2}
+                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                      placeholder="Notes"
+                    />
+                  </td>
+                  <td className="px-4 py-3">
                     <div className="flex gap-2">
                       <button
                         onClick={() => saveEdit(record.id)}
@@ -269,6 +296,8 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                   </td>
                   <td className="px-4 py-3 text-foreground text-xs">{record.paid ?? 0}</td>
                   <td className="px-4 py-3 text-foreground text-xs">{record.ship_price ?? 0}</td>
+                  <td className="px-4 py-3 text-foreground text-xs">{record.currency || "Dollar"}</td>
+                  <td className="px-4 py-3 text-foreground text-xs max-w-xs truncate">{record.note || ""}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
                       <button

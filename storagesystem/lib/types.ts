@@ -18,6 +18,8 @@ export interface Product {
   extracted_pieces?: number | null
   status: string
   group_item_price?: number | null
+  currency: string
+  note?: string | null
   created_at?: string
   updated_at?: string
   shipping?: {
@@ -73,6 +75,18 @@ export interface Client {
   history?: string | null
   debt: number
   total_debts: number
+}
+
+export interface StoreProduct {
+  id: number
+  product_id: number
+  product_name: string
+  individual_item_selling_price: number
+  image?: string | null
+  group_item_price?: number | null
+  number_of_items: number
+  entered_at: string
+  product?: Product
 }
 
 export type TabType = "products" | "shipping" | "clients" | "debits"

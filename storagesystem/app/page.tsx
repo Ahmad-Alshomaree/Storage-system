@@ -1,12 +1,14 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Header } from "@/components/header"
 import { ProductsTab } from "@/components/ProductsTab"
 import { ShippingTab } from "@/components/ShippingTab"
 import { ClientsTab } from "@/components/ClientsTab"
 import { DebitsTab } from "@/components/DebitsTab"
-import { Package, Truck, Users, CreditCard } from "lucide-react"
+import { Package, Truck, Users, CreditCard, Warehouse } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { useAppData } from "@/lib/useAppData"
 import type { TabType } from "@/lib/types"
 
@@ -39,6 +41,12 @@ export default function Home() {
             <h1 className="text-3xl font-bold text-foreground text-balance">Product Storage System</h1>
             <p className="text-muted-foreground mt-1">Manage products, shipping, clients, and financial records efficiently</p>
           </div>
+          <Link href="/store" passHref>
+            <Button variant="secondary" className="gap-2">
+              <Warehouse className="w-4 h-4" />
+              Store Overview
+            </Button>
+          </Link>
         </div>
 
         <div className="mb-6 flex gap-2 border-b border-border">

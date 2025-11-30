@@ -11,14 +11,18 @@ interface Product {
   id: number
   box_code: string
   product_name?: string | null
+  product_type?: string | null
   original_price: number
   selling_price: number
   Total_pices?: number | null
+  total_original_price?: number | null
   number_of_boxes: number
   size_of_box: number
   total_box_size: number
   weight?: number | null
   image?: string | null
+  currency?: string | null
+  note?: string | null
 }
 
 interface Shipping {
@@ -27,6 +31,11 @@ interface Shipping {
   shipping_date: string
   receiving_date: string
   receiver: string
+  sender: string
+  paid?: number
+  ship_price?: number
+  currency?: string
+  note?: string | null
   created_at: string
   file_path?: string | null
   products?: Product[]
@@ -67,8 +76,37 @@ export function ShippingDetailsModal({ shipping, open, onOpenChange }: ShippingD
               <p className="text-sm">{shipping.receiver}</p>
             </div>
             <div>
+              <label className="text-sm font-medium text-muted-foreground">Sender</label>
+              <p className="text-sm">{shipping.sender}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Currency</label>
+              <p className="text-sm">{shipping.currency || "Dollar"}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Paid</label>
+              <p className="text-sm">{shipping.paid ?? 0} {shipping.currency || "Dollar"}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Ship Price</label>
+              <p className="text-sm">{shipping.ship_price ?? 0} {shipping.currency || "Dollar"}</p>
+            </div>
+            <div>
               <label className="text-sm font-medium text-muted-foreground">Created At</label>
               <p className="text-sm">{new Date(shipping.created_at).toLocaleString()}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Note</label>
+              <p className="text-sm">{shipping.note || "No notes"}</p>
             </div>
           </div>
 
@@ -111,26 +149,62 @@ export function ShippingDetailsModal({ shipping, open, onOpenChange }: ShippingD
                         <p className="text-sm">{product.box_code}</p>
                       </div>
                     </div>
+
+                    <div className="grid grid-cols-2 gap-4 mt-2">
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Product Type</label>
+                        <p className="text-sm">{product.product_type || "N/A"}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Currency</label>
+                        <p className="text-sm">{product.currency || "Dollar"}</p>
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-4 gap-4 mt-3">
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">Boxes</label>
                         <p className="text-sm font-bold">{product.number_of_boxes}</p>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Pieces</label>
+                        <label className="text-xs font-medium text-muted-foreground">Total Pieces</label>
                         <p className="text-sm font-bold">{product.Total_pices ?? 0}</p>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Price</label>
-                        <p className="text-sm font-bold">${(product.selling_price || product.original_price).toFixed(2)}</p>
+                        <label className="text-xs font-medium text-muted-foreground">Original Price</label>
+                        <p className="text-sm font-bold">{(product.original_price).toFixed(2)}</p>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Total</label>
-                        <p className="text-sm font-bold">
-                          ${(((product.selling_price || product.original_price) * product.Total_pices!) || 0).toFixed(2)}
-                        </p>
+                        <label className="text-xs font-medium text-muted-foreground">Total Original Price</label>
+                        <p className="text-sm font-bold">{(product.total_original_price ?? 0).toFixed(2)}</p>
                       </div>
                     </div>
+
+                    <div className="grid grid-cols-4 gap-4 mt-3">
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Selling Price</label>
+                        <p className="text-sm font-bold">{product.selling_price.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Box Size</label>
+                        <p className="text-sm font-bold">{product.size_of_box}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Total Box Size</label>
+                        <p className="text-sm font-bold">{product.total_box_size}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Weight</label>
+                        <p className="text-sm font-bold">{product.weight ?? 0}</p>
+                      </div>
+                    </div>
+
+                    {product.note && (
+                      <div className="mt-3">
+                        <label className="text-xs font-medium text-muted-foreground">Note</label>
+                        <p className="text-sm mt-1">{product.note}</p>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

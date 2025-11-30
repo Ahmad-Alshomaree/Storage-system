@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react"
-import type { Product, Shipping, Client, Debit } from "./types"
+import type { Product, Shipping, Client, Debit, StoreProduct } from "./types"
 
 interface UseAppDataReturn {
   products: Product[]
   shipping: Shipping[]
   clients: Client[]
   debits: Debit[]
+  storeProducts: StoreProduct[]
   isLoading: boolean
   error: string | null
   refetch: () => void
@@ -16,6 +17,7 @@ export function useAppData(): UseAppDataReturn {
   const [shipping, setShipping] = useState<Shipping[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [debits, setDebits] = useState<Debit[]>([])
+  const [storeProducts, setStoreProducts] = useState<StoreProduct[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -24,11 +26,12 @@ export function useAppData(): UseAppDataReturn {
     setError(null)
 
     try {
-      const [productsRes, shippingRes, clientsRes, debitsRes] = await Promise.all([
+      const [productsRes, shippingRes, clientsRes, debitsRes, storeProductsRes] = await Promise.all([
         fetch("/api/products"),
         fetch("/api/shipping"),
         fetch("/api/clients"),
-        fetch("/api/debits")
+        fetch("/api/debits"),
+        fetch("/api/store-products")
       ])
 
       // Process products
@@ -78,6 +81,12 @@ export function useAppData(): UseAppDataReturn {
           } : d.shipping
         })) : [])
       }
+
+      // Process store products
+      if (storeProductsRes.ok) {
+        const data = await storeProductsRes.json()
+        setStoreProducts(Array.isArray(data) ? data : [])
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch data")
       console.error("Error fetching data:", err)
@@ -95,6 +104,7 @@ export function useAppData(): UseAppDataReturn {
     shipping,
     clients,
     debits,
+    storeProducts,
     isLoading,
     error,
     refetch: fetchData

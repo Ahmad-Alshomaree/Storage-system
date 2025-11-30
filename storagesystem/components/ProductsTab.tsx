@@ -49,10 +49,16 @@ export function ProductsTab({ products, isLoading, refetch }: ProductsTabProps) 
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1 px-4 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
         />
-        <Button onClick={() => setShowProductForm(!showProductForm)} className="gap-2 w-full md:w-auto">
-          <Plus className="w-4 h-4" />
-          {showProductForm ? "Cancel" : "Add Product"}
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+          <Button onClick={() => setShowProductForm(!showProductForm)} className="gap-2">
+            <Plus className="w-4 h-4" />
+            {showProductForm ? "Cancel" : "Add Product"}
+          </Button>
+          <Button variant="outline" onClick={() => setShowUploadForm(!showUploadForm)} className="gap-2">
+            <Upload className="w-4 h-4" />
+            {showUploadForm ? "Cancel Upload" : "Upload Excel"}
+          </Button>
+        </div>
       </div>
 
       {showProductForm && (
@@ -65,13 +71,6 @@ export function ProductsTab({ products, isLoading, refetch }: ProductsTabProps) 
           />
         </div>
       )}
-
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-end">
-        <Button variant="outline" onClick={() => setShowUploadForm(!showUploadForm)} className="gap-2 w-full md:w-auto">
-          <Upload className="w-4 h-4" />
-          {showUploadForm ? "Cancel Upload" : "Upload Excel"}
-        </Button>
-      </div>
 
       {showUploadForm && (
         <div className="mb-8">

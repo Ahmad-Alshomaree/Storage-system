@@ -13,6 +13,8 @@ export const shipping = sqliteTable(
     file_path: text("file_path"),
     paid: integer("paid").default(0),
     ship_price: real("ship_price").default(0),
+    currency: text("currency").default("Dollar"),
+    note: text("note"),
     created_at: text("created_at").notNull(),
   },
   (table) => ({
@@ -56,6 +58,8 @@ export const products = sqliteTable(
     extracted_pieces: integer("extracted_pieces").default(0),
     status: text("status").default("available"),
     Grope_Item_price: real("Grope_Item_price"),
+    currency: text("currency").notNull(),
+    note: text("note"),
     created_at: text("created_at"),
     updated_at: text("updated_at"),
   },
@@ -125,5 +129,29 @@ export const debitsRelations = relations(debits, ({ one }) => ({
   shipping: one(shipping, {
     fields: [debits.shipping_id],
     references: [shipping.id],
+  }),
+}))
+
+export const storeProducts = sqliteTable(
+  "store_products",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    product_id: integer("product_id").references(() => products.id).notNull(),
+    product_name: text("product_name").notNull(),
+    individual_item_selling_price: real("individual_item_selling_price").notNull(),
+    image: text("image"),
+    group_item_price: real("group_item_price"),
+    number_of_items: integer("number_of_items").notNull(),
+    entered_at: text("entered_at").notNull().default(sql`(datetime('now'))`),
+  },
+  (table) => ({
+    productIdIdx: index("idx_store_product_id").on(table.product_id),
+  }),
+)
+
+export const storeProductsRelations = relations(storeProducts, ({ one }) => ({
+  product: one(products, {
+    fields: [storeProducts.product_id],
+    references: [products.id],
   }),
 }))

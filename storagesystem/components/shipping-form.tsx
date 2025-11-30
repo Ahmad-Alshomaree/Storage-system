@@ -3,6 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Loader2, Plus, Trash2 } from "lucide-react"
 
 interface Product {
@@ -12,10 +13,17 @@ interface Product {
   product_type?: string
   original_price: number
   selling_price: number
+  Total_pices?: number | null
+  total_original_price?: number | null
   storage?: string
   number_of_boxes: number
+  size_of_box: number
+  total_box_size: number
+  weight?: number | null
   status: string
   shipping_id?: number | null
+  currency?: string
+  note?: string | null
 }
 
 interface ShippingFormProps {
@@ -37,6 +45,12 @@ interface NewProductItem {
   pice_per_box: number
   grope_item_price: number
   image: string
+  Total_pices: number
+  total_original_price: number
+  currency: string
+  note: string
+  isSaved?: boolean
+  savedProductId?: number
 }
 
 interface Client {
@@ -55,6 +69,14 @@ interface NewClientData {
   history: string
 }
 
+interface OutputLoadProductSelection {
+  productId: number
+  quantityType: 'pieces' | 'kilos'
+  quantity: number
+  sellingPrice: number
+  product?: Product
+}
+
 export function ShippingForm({ onSuccess }: ShippingFormProps) {
   const [formData, setFormData] = useState({
     type: "input load",
@@ -64,6 +86,9 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
     sender: "",
     paid: 0,
     ship_price: 0,
+    currency: "Dollar",
+    note: "",
+    shipToStore: false,
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
@@ -82,6 +107,11 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
   })
   const [isLoadingNewClient, setIsLoadingNewClient] = useState(false)
   const [targetField, setTargetField] = useState<'receiver' | 'sender'>('receiver')
+  const [currentShippingId, setCurrentShippingId] = useState<number | null>(null)
+  const [savingProductId, setSavingProductId] = useState<string | null>(null)
+  const [selectedOutputProducts, setSelectedOutputProducts] = useState<OutputLoadProductSelection[]>([])
+  const [productDialogOpen, setProductDialogOpen] = useState(false)
+  const [currentProductSelection, setCurrentProductSelection] = useState<OutputLoadProductSelection | null>(null)
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -133,7 +163,50 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
     )
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const openProductSelectionDialog = (product: Product) => {
+    const existingSelection = selectedOutputProducts.find(s => s.productId === product.id)
+    setCurrentProductSelection(existingSelection || {
+      productId: product.id,
+      quantityType: 'pieces',
+      quantity: 1,
+      sellingPrice: product.selling_price,
+      product: product
+    })
+    setProductDialogOpen(true)
+  }
+
+  const saveProductSelection = () => {
+    if (!currentProductSelection) return
+
+    const existingIndex = selectedOutputProducts.findIndex(s => s.productId === currentProductSelection.productId)
+    if (existingIndex >= 0) {
+      setSelectedOutputProducts(prev => prev.map((s, i) =>
+        i === existingIndex ? currentProductSelection : s
+      ))
+    } else {
+      setSelectedOutputProducts(prev => [...prev, currentProductSelection])
+    }
+
+    // Also update selectedProductIds for backward compatibility with the form submission
+    if (!selectedProductIds.includes(currentProductSelection.productId)) {
+      setSelectedProductIds(prev => [...prev, currentProductSelection.productId])
+    }
+
+    setProductDialogOpen(false)
+    setCurrentProductSelection(null)
+  }
+
+  const closeProductSelectionDialog = () => {
+    setProductDialogOpen(false)
+    setCurrentProductSelection(null)
+  }
+
+  const removeProductSelection = (productId: number) => {
+    setSelectedOutputProducts(prev => prev.filter(s => s.productId !== productId))
+    setSelectedProductIds(prev => prev.filter(id => id !== productId))
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target
     setFormData((prev) => ({
       ...prev,
@@ -168,6 +241,10 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
       pice_per_box: 1,
       grope_item_price: 0,
       image: "",
+      Total_pices: 1,
+      total_original_price: 0,
+      currency: "Dollar",
+      note: "",
     }
     setNewProducts(prev => [...prev, newProduct])
     setNextProductId(prev => prev + 1)
@@ -177,10 +254,123 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
     setNewProducts(prev => prev.filter(p => p.id !== id))
   }
 
+  const ensureShippingRecord = async () => {
+    // If shipping record already exists, return it
+    if (currentShippingId) {
+      return currentShippingId
+    }
+
+    // Validate that required fields are filled
+    if (!formData.shipping_date || !formData.receiving_date || !formData.receiver || !formData.sender) {
+      throw new Error("Please fill in all required shipping information (dates, receiver, sender) before saving products")
+    }
+
+    // Find client IDs
+    const receiverClient = existingClients.find(client => client.client_name === formData.receiver)
+    const senderClient = existingClients.find(client => client.client_name === formData.sender)
+
+    if (!receiverClient || !senderClient) {
+      throw new Error("Please select valid clients for both receiver and sender")
+    }
+
+    // Create shipping record
+    const shippingData = {
+      type: formData.type,
+      shipping_date: formData.shipping_date,
+      receiving_date: formData.receiving_date,
+      receiver_client_id: receiverClient.id,
+      sender_client_id: senderClient.id,
+      paid: formData.paid || 0,
+      ship_price: formData.ship_price || 0,
+      currency: formData.currency,
+      note: formData.note || null,
+    }
+
+    const response = await fetch("/api/shipping", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(shippingData),
+    })
+
+    if (!response.ok) {
+      throw new Error("Failed to create shipping record")
+    }
+
+    const newShipping = await response.json()
+    setCurrentShippingId(newShipping.id)
+    return newShipping.id
+  }
+
+  const saveIndividualProduct = async (product: NewProductItem) => {
+    setSavingProductId(product.id)
+
+    try {
+      // Ensure shipping record exists
+      const shippingId = await ensureShippingRecord()
+
+      // Prepare product data
+      const productData = {
+        product_name: product.product_name,
+        box_code: product.box_code,
+        original_price: product.original_price,
+        selling_price: product.selling_price,
+        storage: product.storage,
+        number_of_boxes: product.number_of_boxes,
+        size_of_box: product.size_of_box,
+        total_box_size: product.total_box_size,
+        weight: product.weight,
+        pice_per_box: product.pice_per_box,
+        grope_item_price: product.grope_item_price,
+        image: product.image || null,
+        Total_pices: product.Total_pices,
+        total_original_price: product.total_original_price,
+        currency: product.currency,
+        note: product.note || null,
+        shipping_id: shippingId,
+      }
+
+      const response = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(productData),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to save product")
+      }
+
+      const savedProduct = await response.json()
+
+      // Update the product in the list to mark it as saved
+      setNewProducts(prev => prev.map(p =>
+        p.id === product.id
+          ? { ...p, isSaved: true, savedProductId: savedProduct.id }
+          : p
+      ))
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save product")
+    } finally {
+      setSavingProductId(null)
+    }
+  }
+
   const updateNewProduct = (id: string, field: keyof NewProductItem, value: string | number) => {
-    setNewProducts(prev => prev.map(p =>
-      p.id === id ? { ...p, [field]: value } : p
-    ))
+    setNewProducts(prev => prev.map(p => {
+      if (p.id === id) {
+        const updated = { ...p, [field]: value }
+
+        // Recalculate derived fields
+        if (field === 'number_of_boxes' || field === 'pice_per_box' || field === 'original_price' || field === 'size_of_box') {
+          updated.Total_pices = updated.number_of_boxes * updated.pice_per_box
+          updated.total_original_price = updated.original_price * updated.number_of_boxes
+          updated.total_box_size = updated.size_of_box * updated.number_of_boxes
+        }
+
+        return updated
+      }
+      return p
+    }))
   }
 
   const handleNewClientSubmit = async () => {
@@ -270,6 +460,8 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         sender_client_id: senderClient.id,
         paid: formData.paid || 0,
         ship_price: formData.ship_price || 0,
+        currency: formData.currency,
+        note: formData.note || null,
       }
 
       const response = await fetch("/api/shipping", {
@@ -308,11 +500,15 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
             storage: product.storage,
             number_of_boxes: product.number_of_boxes,
             size_of_box: product.size_of_box,
-            total_box_size: product.size_of_box * product.number_of_boxes,
+            total_box_size: product.total_box_size,
             weight: product.weight,
             pice_per_box: product.pice_per_box,
             grope_item_price: product.grope_item_price,
             image: product.image || null,
+            Total_pices: product.Total_pices,
+            total_original_price: product.total_original_price,
+            currency: product.currency,
+            note: product.note || null,
             shipping_id: newShipping.id,
           }
 
@@ -337,6 +533,35 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
 
           await Promise.all(assignPromises)
         }
+
+        // If shipping to store, populate store_products table
+        if (formData.receiver === "STORE" && selectedProductIds.length > 0) {
+          // Get the full product details for selected products
+          const productsResponse = await fetch("/api/products")
+          if (productsResponse.ok) {
+            const allProducts = await productsResponse.json()
+            const storeProductsToAdd = allProducts
+              .filter((product: any) => selectedProductIds.includes(product.id))
+              .map((product: any) => ({
+                product_id: product.id,
+                product_name: product.product_name || "",
+                individual_item_selling_price: product.selling_price,
+                image: product.image,
+                group_item_price: product.Grope_Item_price,
+                number_of_items: (product.pice_per_box || 1) * product.number_of_boxes,
+              }))
+
+            const storeProductsPromises = storeProductsToAdd.map((storeProduct: any) =>
+              fetch("/api/store-products", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(storeProduct),
+              })
+            )
+
+            await Promise.all(storeProductsPromises)
+          }
+        }
       }
 
       // Reset form
@@ -348,6 +573,9 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         sender: "",
         paid: 0,
         ship_price: 0,
+        currency: "Dollar",
+        note: "",
+        shipToStore: false,
       })
       setSelectedProductIds([])
       setNewProducts([])
@@ -358,6 +586,8 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         phone_number: "",
         history: "",
       })
+      setCurrentShippingId(null)
+      setSavingProductId(null)
 
       onSuccess(newShipping)
     } catch (err) {
@@ -447,6 +677,56 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
             <option value="add-new-client" className="font-medium text-primary">+ Add New Client</option>
           </select>
         </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">Currency *</label>
+          <select
+            name="currency"
+            value={formData.currency}
+            onChange={handleChange}
+            required
+            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="Dollar">Dollar</option>
+            <option value="Iraqi Dinar">Iraqi Dinar</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">Ship Price</label>
+          <input
+            type="number"
+            step="0.01"
+            name="ship_price"
+            value={formData.ship_price || ''}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">Paid</label>
+          <input
+            type="number"
+            step="0.01"
+            name="paid"
+            value={formData.paid || ''}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-2">Note</label>
+        <textarea
+          name="note"
+          value={formData.note}
+          onChange={handleChange}
+          rows={2}
+          placeholder="Optional notes about the shipping"
+          className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+        />
       </div>
 
       {/* New Client Form - Shows when "Add New Client" is selected */}
@@ -664,6 +944,86 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                         className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
                       />
                     </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">Currency *</label>
+                      <select
+                        value={product.currency}
+                        onChange={(e) => updateNewProduct(product.id, 'currency', e.target.value)}
+                        className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                        required
+                      >
+                        <option value="Dollar">Dollar</option>
+                        <option value="Iraqi Dinar">Iraqi Dinar</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">Total Pieces</label>
+                      <input
+                        type="number"
+                        placeholder="Total Pieces"
+                        value={product.Total_pices || ''}
+                        className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs w-full"
+                        readOnly
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">Total Original Price</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="Total Original Price"
+                        value={product.total_original_price || ''}
+                        className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs w-full"
+                        readOnly
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">Total Box Size</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="Total Box Size"
+                        value={product.total_box_size || ''}
+                        className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs w-full"
+                        readOnly
+                      />
+                    </div>
+                    <div className="md:col-span-2 lg:col-span-3">
+                      <label className="block text-xs font-medium text-foreground mb-1">Note</label>
+                      <textarea
+                        placeholder="Product notes"
+                        value={product.note}
+                        onChange={(e) => updateNewProduct(product.id, 'note', e.target.value)}
+                        rows={2}
+                        className="w-full px-3 py-2 border border-input rounded bg-background text-foreground text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Save Product Button */}
+                  <div className="flex items-center justify-between pt-2 border-t border-border">
+                    <div className={`text-xs ${product.isSaved ? 'text-green-600' : 'text-muted-foreground'}`}>
+                      {product.isSaved ? `✓ Saved to products table (ID: ${product.savedProductId})` : 'Not saved yet'}
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={() => saveIndividualProduct(product)}
+                      disabled={product.isSaved || savingProductId === product.id}
+                      variant="outline"
+                      size="sm"
+                      className={`gap-1 ${product.isSaved ? 'bg-green-50 border-green-200 hover:bg-green-100' : ''}`}
+                    >
+                      {savingProductId === product.id ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          Saving...
+                        </>
+                      ) : product.isSaved ? (
+                        'Saved ✓'
+                      ) : (
+                        'Save Product'
+                      )}
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -673,7 +1033,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
       ) : (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Select Available Products</label>
+            <label className="block text-sm font-medium text-foreground mb-2">Select Products for Shipment</label>
             {isLoadingProducts ? (
               <div className="p-4 text-center text-muted-foreground">Loading products...</div>
             ) : availableProducts.length === 0 ? (
@@ -681,34 +1041,143 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                 No available products to select for output load
               </div>
             ) : (
-              <div className="border border-border rounded-lg max-h-60 overflow-y-auto">
-                <div className="p-3 space-y-2">
-                  {availableProducts.map((product) => (
-                    <div key={product.id} className="flex items-center space-x-3 p-2 hover:bg-muted/50 rounded">
-                      <input
-                        type="checkbox"
-                        id={`product-${product.id}`}
-                        checked={selectedProductIds.includes(product.id)}
-                        onChange={(e) => handleProductSelection(product.id, e.target.checked)}
-                        className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary"
-                      />
-                      <label htmlFor={`product-${product.id}`} className="flex-1 text-sm cursor-pointer">
-                        <div className="font-medium text-foreground">{product.box_code}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {product.product_name} - {product.product_type} - {product.number_of_boxes} boxes
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {availableProducts.map((product) => {
+                  const selection = selectedOutputProducts.find(s => s.productId === product.id)
+                  return (
+                    <div key={product.id} className="border border-border rounded-lg p-4 bg-muted/30">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h4 className="text-sm font-medium text-foreground">{product.box_code}</h4>
+                          <p className="text-xs text-muted-foreground">{product.product_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {product.number_of_boxes} boxes • {product.Total_pices} pieces total
+                          </p>
                         </div>
-                      </label>
+                        <button
+                          type="button"
+                          onClick={() => openProductSelectionDialog(product)}
+                          className="text-primary hover:text-primary/80"
+                        >
+                          {selection ? 'Edit' : 'Select'}
+                        </button>
+                      </div>
+
+                      {selection && (
+                        <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
+                          <div>Quantity: {selection.quantity} {selection.quantityType}</div>
+                          <div>Selling Price: ${selection.sellingPrice}</div>
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {selectedProductIds.length > 0 && (
-              <div className="mt-2 text-sm text-primary">
-                {selectedProductIds.length} product{selectedProductIds.length !== 1 ? 's' : ''} selected
+                  )
+                })}
               </div>
             )}
           </div>
+
+          {/* Selected Products Summary */}
+          {selectedOutputProducts.length > 0 && (
+            <div className="border-t pt-4">
+              <label className="block text-sm font-medium text-foreground mb-3">Selected Products ({selectedOutputProducts.length})</label>
+              <div className="space-y-2">
+                {selectedOutputProducts.map((selection) => (
+                  <div key={selection.productId} className="flex items-center justify-between bg-muted p-3 rounded">
+                    <div className="flex-1">
+                      <span className="font-medium text-sm">{selection.product?.box_code} - {selection.product?.product_name}</span>
+                      <span className="text-xs text-muted-foreground ml-2">
+                        {selection.quantity} {selection.quantityType} @ ${selection.sellingPrice}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeProductSelection(selection.productId)}
+                      className="text-destructive hover:text-destructive/80 ml-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Product Selection Dialog */}
+          <Dialog open={productDialogOpen} onOpenChange={closeProductSelectionDialog}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>
+                  {currentProductSelection?.product?.product_name || 'Select Product Quantity'}
+                </DialogTitle>
+              </DialogHeader>
+              {currentProductSelection && (
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <label htmlFor="quantity-type" className="text-right">
+                      Type
+                    </label>
+                    <select
+                      id="quantity-type"
+                      value={currentProductSelection.quantityType}
+                      onChange={(e) => setCurrentProductSelection({
+                        ...currentProductSelection,
+                        quantityType: e.target.value as 'pieces' | 'kilos'
+                      })}
+                      className="col-span-3 px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="pieces">Pieces</option>
+                      <option value="kilos">Kilos</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <label htmlFor="quantity" className="text-right">
+                      Quantity
+                    </label>
+                    <input
+                      id="quantity"
+                      type="number"
+                      min="0.1"
+                      step="0.1"
+                      value={currentProductSelection.quantity}
+                      onChange={(e) => setCurrentProductSelection({
+                        ...currentProductSelection,
+                        quantity: parseFloat(e.target.value) || 0
+                      })}
+                      className="col-span-3 px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <label htmlFor="selling-price" className="text-right">
+                      Price
+                    </label>
+                    <input
+                      id="selling-price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={currentProductSelection.sellingPrice}
+                      onChange={(e) => setCurrentProductSelection({
+                        ...currentProductSelection,
+                        sellingPrice: parseFloat(e.target.value) || 0
+                      })}
+                      className="col-span-3 px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button type="button" variant="outline" onClick={closeProductSelectionDialog}>
+                      Cancel
+                    </Button>
+                    <Button type="button" onClick={saveProductSelection}>
+                      {selectedOutputProducts.find(s => s.productId === currentProductSelection.productId) ? 'Update' : 'Add'} Product
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       )}
 

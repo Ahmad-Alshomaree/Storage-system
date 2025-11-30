@@ -27,6 +27,8 @@ interface Product {
   extracted_pieces?: number | null
   status: string
   Grope_Item_price?: number | null
+  currency: string
+  note?: string | null
   created_at?: string
   updated_at?: string
   shipping?: {
@@ -179,6 +181,18 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
           <div>
             <label className="text-sm font-medium text-muted-foreground">Shipping Receiver</label>
             <p className="text-sm">{product.shipping?.receiver || "N/A"}</p>
+          </div>
+
+          {/* Currency and Note */}
+          <div className="grid grid-cols-2 gap-4 border-t pt-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Currency</label>
+              <p className="text-sm">{product.currency}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Note</label>
+              <p className="text-sm">{product.note || "No note"}</p>
+            </div>
           </div>
 
           {/* Timestamps */}

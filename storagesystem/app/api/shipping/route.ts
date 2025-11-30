@@ -1,5 +1,6 @@
 import { db } from "@/lib/db"
-import { shipping } from "@/lib/schema"
+import { shipping, storeProducts, products } from "@/lib/schema"
+import { eq } from "drizzle-orm"
 
 export async function GET() {
   try {
@@ -22,7 +23,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { type, shipping_date, receiving_date, receiver_client_id, sender_client_id, paid, ship_price } = body
+    const { type, shipping_date, receiving_date, receiver_client_id, sender_client_id, paid, ship_price, currency, note } = body
 
     if (!type || !shipping_date || !receiving_date || !receiver_client_id || !sender_client_id) {
       return Response.json({ error: "Missing required fields" }, { status: 400 })
@@ -42,6 +43,8 @@ export async function POST(request: Request) {
         sender_client_id,
         paid: paid || 0,
         ship_price: ship_price || 0,
+        currency: currency || "Dollar",
+        note: note || null,
         created_at: new Date().toISOString(),
       })
       .returning()
