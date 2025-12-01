@@ -37,7 +37,7 @@ export const shippingRelations = relations(shipping, ({ many, one }) => ({
 export const products = sqliteTable(
   "products",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: integer("id").primaryKey(),
     shipping_id: integer("shipping_id").references(() => shipping.id),
     box_code: text("box_code").notNull(),
     product_name: text("product_name"),

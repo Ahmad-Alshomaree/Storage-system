@@ -340,7 +340,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                       }
                     </div>
                   </td>
-                  <td className="px-2 py-3 text-foreground text-xs">{record.ship_price ?? 0}</td>
+                  <td className="px-2 py-3 text-foreground text-xs">{record.paid ?? 0}</td>
                   <td className="px-2 py-3 text-foreground text-xs">{record.ship_price ?? 0}</td>
                   <td className="px-2 py-3 text-foreground text-xs">{record.currency || "Dollar"}</td>
                   <td className="px-2 py-3 text-foreground text-xs max-w-xs truncate">{record.note || ""}</td>
