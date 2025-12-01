@@ -7,6 +7,8 @@ import { DebitTable } from "@/components/debit-table"
 import { AddDebitForm } from "@/components/add-debit-form"
 import { DebitDetailsModal } from "@/components/debit-details-modal"
 import type { Debit } from "@/lib/types"
+import { useTranslation } from "react-i18next"
+import "../i18n.client"
 
 interface DebitsTabProps {
   debits: Debit[]
@@ -17,6 +19,7 @@ interface DebitsTabProps {
 export function DebitsTab({ debits, isLoading, refetch }: DebitsTabProps) {
   const [showDebitForm, setShowDebitForm] = useState(false)
   const [selectedDebitForModal, setSelectedDebitForModal] = useState<Debit | null>(null)
+  const { t } = useTranslation()
 
   // Filter out any corrupted debit records
   const validDebits = debits.filter(debit => debit && debit.receiver && debit.receiver.client_name)
@@ -40,7 +43,7 @@ export function DebitsTab({ debits, isLoading, refetch }: DebitsTabProps) {
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-end">
         <Button onClick={() => setShowDebitForm(!showDebitForm)} className="gap-2 w-full md:w-auto">
           <Plus className="w-4 h-4" />
-          {showDebitForm ? "Cancel" : "Add Transaction"}
+          {showDebitForm ? t("Cancel") : t("Add Transaction")}
         </Button>
       </div>
 
@@ -62,7 +65,7 @@ export function DebitsTab({ debits, isLoading, refetch }: DebitsTabProps) {
       ) : validDebits.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground text-lg">
-            No financial transactions found. Start by adding a transaction!
+            {t("No financial transactions found. Start by adding a transaction!")}
           </p>
         </div>
       ) : (

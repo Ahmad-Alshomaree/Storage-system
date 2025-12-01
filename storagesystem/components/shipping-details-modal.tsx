@@ -10,6 +10,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { useTranslation } from "react-i18next"
+import "../i18n.client"
 
 interface Client {
   id: number
@@ -66,6 +68,7 @@ export function ShippingDetailsModal({ shipping, open, onOpenChange, onEdit, onD
   const [editValues, setEditValues] = useState<Partial<Shipping>>({})
   const [clients, setClients] = useState<Client[]>([])
   const [loadingClients, setLoadingClients] = useState(true)
+  const { t } = useTranslation()
 
   // Fetch clients on component mount
   useEffect(() => {
@@ -130,7 +133,7 @@ export function ShippingDetailsModal({ shipping, open, onOpenChange, onEdit, onD
   }
 
   const handleDelete = async () => {
-    if (onDelete && confirm("Are you sure you want to delete this shipping record?")) {
+    if (onDelete && confirm(t("Are you sure you want to delete this shipping record?"))) {
       await onDelete(shipping.id)
       onOpenChange(false)
     }
@@ -139,30 +142,30 @@ export function ShippingDetailsModal({ shipping, open, onOpenChange, onEdit, onD
   const handleDownload = () => {
     // Generate receipt content
     const receiptContent = `
-SHIPPING RECEIPT
+${t("SHIPPING RECEIPT")}
 
-Shipping ID: #${shipping.id}
-Type: ${shipping.type}
-Receiver: ${shipping.receiver.client_name}
-Sender: ${shipping.sender.client_name}
+${t("Shipping ID")}: #${shipping.id}
+${t("Type")}: ${shipping.type}
+${t("Receiver")}: ${shipping.receiver.client_name}
+${t("Sender")}: ${shipping.sender.client_name}
 
-Dates:
-- Shipping Date: ${new Date(shipping.shipping_date).toLocaleString()}
-- Receiving Date: ${new Date(shipping.receiving_date).toLocaleString()}
+${t("Dates")}:
+- ${t("Shipping Date")}: ${new Date(shipping.shipping_date).toLocaleString()}
+- ${t("Receiving Date")}: ${new Date(shipping.receiving_date).toLocaleString()}
 
-Financial Information:
-- Currency: ${shipping.currency || "Dollar"}
-- Paid: ${shipping.paid ?? 0} ${shipping.currency || "Dollar"}
-- Ship Price: ${shipping.ship_price ?? 0} ${shipping.currency || "Dollar"}
+${t("Financial Information")}:
+- ${t("Currency")}: ${shipping.currency || t("Dollar")}
+- ${t("Paid")}: ${shipping.paid ?? 0} ${shipping.currency || t("Dollar")}
+- ${t("Ship Price")}: ${shipping.ship_price ?? 0} ${shipping.currency || t("Dollar")}
 
-Products (${shipping.products?.length || 0}):
+${t("Products")} (${shipping.products?.length || 0}):
 ${shipping.products?.map(product =>
   `- ${product.product_name || product.box_code} (${product.number_of_boxes} boxes, ${product.Total_pices ?? 0} pcs)`
-).join('\n') || 'No products'}
+).join('\n') || t('No products')}
 
-Notes: ${shipping.note || "No notes"}
+${t("Notes")}: ${shipping.note || t("No notes")}
 
-Generated on: ${new Date().toLocaleString()}
+${t("Generated on")}: ${new Date().toLocaleString()}
     `.trim()
 
     // Create and download file
@@ -181,37 +184,37 @@ Generated on: ${new Date().toLocaleString()}
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Shipping Details</DialogTitle>
+          <DialogTitle className="text-xl font-bold">{t("Shipping Details")}</DialogTitle>
         </DialogHeader>
 
         <div className="grid gap-6">
           {/* Basic Shipping Information */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Shipping ID</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("Shipping ID")}</label>
               <p className="text-sm font-semibold">#{shipping.id}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Type</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("Type")}</label>
               {isEditing ? (
                 <select
                   value={editValues.type || ""}
                   onChange={(e) => setEditValues({ ...editValues, type: e.target.value })}
                   className="w-full px-2 py-1 bg-input text-foreground text-sm rounded"
                 >
-                  <option value="input load">Input Load</option>
-                  <option value="output load">Output Load</option>
-                  <option value="comming">Coming</option>
+                  <option value="input load">{t("Input Load")}</option>
+                  <option value="output load">{t("Output Load")}</option>
+                  <option value="comming">{t("Coming")}</option>
                 </select>
               ) : (
-                <p className="text-lg font-bold capitalize">{shipping.type}</p>
+                <p className="text-lg font-bold capitalize">{t(shipping.type) || shipping.type}</p>
               )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Receiver</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("Receiver")}</label>
               {isEditing ? (
                 <select
                   value={editValues.receiver_client_id || shipping.receiver_client_id || ""}
@@ -219,7 +222,7 @@ Generated on: ${new Date().toLocaleString()}
                   className="w-full px-2 py-1 bg-input text-foreground text-sm rounded"
                   disabled={loadingClients}
                 >
-                  <option value="">Select Receiver</option>
+                  <option value="">{t("Select Receiver")}</option>
                   {clients.map((client) => (
                     <option key={client.id} value={client.id}>
                       {client.client_name}
@@ -231,7 +234,7 @@ Generated on: ${new Date().toLocaleString()}
               )}
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Sender</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("Sender")}</label>
               {isEditing ? (
                 <select
                   value={editValues.sender_client_id || shipping.sender_client_id || ""}
@@ -239,7 +242,7 @@ Generated on: ${new Date().toLocaleString()}
                   className="w-full px-2 py-1 bg-input text-foreground text-sm rounded"
                   disabled={loadingClients}
                 >
-                  <option value="">Select Sender</option>
+                  <option value="">{t("Select Sender")}</option>
                   {clients.map((client) => (
                     <option key={client.id} value={client.id}>
                       {client.client_name}
@@ -254,22 +257,22 @@ Generated on: ${new Date().toLocaleString()}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Currency</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("Currency")}</label>
               {isEditing ? (
                 <select
                   value={editValues.currency || ""}
                   onChange={(e) => setEditValues({ ...editValues, currency: e.target.value })}
                   className="w-full px-2 py-1 bg-input text-foreground text-sm rounded"
                 >
-                  <option value="Dollar">Dollar</option>
-                  <option value="Iraqi Dinar">Iraqi Dinar</option>
+                  <option value="Dollar">{t("Dollar")}</option>
+                  <option value="Iraqi Dinar">{t("Iraqi Dinar")}</option>
                 </select>
               ) : (
-                <p className="text-sm">{shipping.currency || "Dollar"}</p>
+                <p className="text-sm">{t(shipping.currency || "Dollar")}</p>
               )}
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Paid</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("Paid")}</label>
               {isEditing ? (
                 <input
                   type="number"
@@ -280,14 +283,14 @@ Generated on: ${new Date().toLocaleString()}
                   placeholder="0.00"
                 />
               ) : (
-                <p className="text-sm">{shipping.paid ?? 0} {shipping.currency || "Dollar"}</p>
+                <p className="text-sm">{shipping.paid ?? 0} {t(shipping.currency || "Dollar")}</p>
               )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Ship Price</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("Ship Price")}</label>
               {isEditing ? (
                 <input
                   type="number"
@@ -298,28 +301,28 @@ Generated on: ${new Date().toLocaleString()}
                   placeholder="0.00"
                 />
               ) : (
-                <p className="text-sm">{shipping.ship_price ?? 0} {shipping.currency || "Dollar"}</p>
+                <p className="text-sm">{shipping.ship_price ?? 0} {t(shipping.currency || "Dollar")}</p>
               )}
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Created At</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("Created At")}</label>
               <p className="text-sm">{new Date(shipping.created_at).toLocaleString()}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Note</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("Note")}</label>
               {isEditing ? (
                 <textarea
                   value={editValues.note || ""}
                   onChange={(e) => setEditValues({ ...editValues, note: e.target.value })}
                   rows={3}
                   className="w-full px-2 py-1 bg-input text-foreground text-sm rounded"
-                  placeholder="Notes"
+                  placeholder={t("Notes")}
                 />
               ) : (
-                <p className="text-sm">{shipping.note || "No notes"}</p>
+                <p className="text-sm">{shipping.note || t("No notes")}</p>
               )}
             </div>
           </div>
@@ -327,7 +330,7 @@ Generated on: ${new Date().toLocaleString()}
           {/* Date Information */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Shipping Date</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("Shipping Date")}</label>
               {isEditing ? (
                 <input
                   type="date"
@@ -340,7 +343,7 @@ Generated on: ${new Date().toLocaleString()}
               )}
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Receiving Date</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("Receiving Date")}</label>
               {isEditing ? (
                 <input
                   type="date"
@@ -357,7 +360,7 @@ Generated on: ${new Date().toLocaleString()}
           {/* File Path - if exists */}
           {shipping.file_path && (
             <div className="border-t pt-4">
-              <label className="text-sm font-medium text-muted-foreground block mb-2">Attached Document</label>
+              <label className="text-sm font-medium text-muted-foreground block mb-2">{t("Attached Document")}</label>
               <div className="bg-muted p-3 rounded-lg">
                 <p className="text-sm text-blue-600 break-all">{shipping.file_path}</p>
               </div>
@@ -367,73 +370,73 @@ Generated on: ${new Date().toLocaleString()}
           {/* Products Information */}
           {shipping.products && shipping.products.length > 0 && (
             <div className="border-t pt-4">
-              <label className="text-sm font-medium text-muted-foreground block mb-3">Products in Shipment ({shipping.products.length})</label>
+              <label className="text-sm font-medium text-muted-foreground block mb-3">{t("Products in Shipment")} ({shipping.products.length})</label>
               <div className="space-y-3">
                 {shipping.products.map((product) => (
                   <div key={product.id} className="bg-muted p-4 rounded-lg">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Product Name</label>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Product Name")}</label>
                         <p className="text-sm font-medium">{product.product_name || product.box_code}</p>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Box Code</label>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Box Code")}</label>
                         <p className="text-sm">{product.box_code}</p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 mt-2">
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Product Type</label>
-                        <p className="text-sm">{product.product_type || "N/A"}</p>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Product Type")}</label>
+                        <p className="text-sm">{product.product_type || t("N/A")}</p>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Currency</label>
-                        <p className="text-sm">{product.currency || "Dollar"}</p>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Currency")}</label>
+                        <p className="text-sm">{t(product.currency || "Dollar")}</p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-4 gap-4 mt-3">
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Boxes</label>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Number of boxes")}</label>
                         <p className="text-sm font-bold">{product.number_of_boxes}</p>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Total Pieces</label>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Total Pieces")}</label>
                         <p className="text-sm font-bold">{product.Total_pices ?? 0}</p>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Original Price</label>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Original Price")}</label>
                         <p className="text-sm font-bold">{(product.original_price).toFixed(2)}</p>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Total Original Price</label>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Total Original Price")}</label>
                         <p className="text-sm font-bold">{(product.total_original_price ?? 0).toFixed(2)}</p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-4 gap-4 mt-3">
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Selling Price</label>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Selling Price")}</label>
                         <p className="text-sm font-bold">{product.selling_price.toFixed(2)}</p>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Box Size</label>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Size of Box")}</label>
                         <p className="text-sm font-bold">{product.size_of_box}</p>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Total Box Size</label>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Total Box Size")}</label>
                         <p className="text-sm font-bold">{product.total_box_size}</p>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Weight</label>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Weight")}</label>
                         <p className="text-sm font-bold">{product.weight ?? 0}</p>
                       </div>
                     </div>
 
                     {product.note && (
                       <div className="mt-3">
-                        <label className="text-xs font-medium text-muted-foreground">Note</label>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Note")}</label>
                         <p className="text-sm mt-1">{product.note}</p>
                       </div>
                     )}
@@ -445,13 +448,13 @@ Generated on: ${new Date().toLocaleString()}
 
           {/* Additional Information Display */}
           <div className="border-t pt-4">
-            <label className="text-sm font-medium text-muted-foreground block mb-2">Shipping Summary</label>
+            <label className="text-sm font-medium text-muted-foreground block mb-2">{t("Shipping Summary")}</label>
             <div className="bg-muted p-4 rounded-lg">
               <p className="text-sm">
-                <span className="font-medium">Type:</span> {shipping.type} •
-                <span className="font-medium"> Receiver:</span> {shipping.receiver.client_name} •
-                <span className="font-medium"> Duration:</span> {Math.ceil((new Date(shipping.receiving_date).getTime() - new Date(shipping.shipping_date).getTime()) / (1000 * 60 * 60 * 24))} days •
-                <span className="font-medium"> Products:</span> {shipping.products?.length || 0}
+                <span className="font-medium">{t("Type")}:</span> {t(shipping.type) || shipping.type} •
+                <span className="font-medium"> {t("Receiver")}:</span> {shipping.receiver.client_name} •
+                <span className="font-medium"> {t("Duration")}:</span> {Math.ceil((new Date(shipping.receiving_date).getTime() - new Date(shipping.shipping_date).getTime()) / (1000 * 60 * 60 * 24))} {t("days")} •
+                <span className="font-medium"> {t("Products")}:</span> {shipping.products?.length || 0}
               </p>
             </div>
           </div>
@@ -465,7 +468,7 @@ Generated on: ${new Date().toLocaleString()}
             className="flex items-center gap-2"
           >
             {isEditing ? <Check className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
-            {isEditing ? "Save" : "Edit"}
+            {isEditing ? t("Save") : t("Edit")}
           </Button>
           {isEditing ? (
             <Button
@@ -475,7 +478,7 @@ Generated on: ${new Date().toLocaleString()}
               className="flex items-center gap-2"
             >
               <X className="w-4 h-4" />
-              Cancel
+              {t("Cancel")}
             </Button>
           ) : (
             <>
@@ -486,7 +489,7 @@ Generated on: ${new Date().toLocaleString()}
                 className="flex items-center gap-2"
               >
                 <Trash2 className="w-4 h-4" />
-                Delete
+                {t("Delete")}
               </Button>
               <Button
                 variant="default"
@@ -495,7 +498,7 @@ Generated on: ${new Date().toLocaleString()}
                 className="flex items-center gap-2"
               >
                 <Download className="w-4 h-4" />
-                Receipt
+                {t("Receipt")}
               </Button>
             </>
           )}

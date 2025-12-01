@@ -4,12 +4,15 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Loader2, X, Upload, Truck, Link } from "lucide-react"
+import { useTranslation } from "react-i18next"
+import "../i18n.client"
 
 interface AddProductFormProps {
   onSuccess: (product: any) => void
 }
 
 export function AddProductForm({ onSuccess }: AddProductFormProps) {
+  const { t } = useTranslation()
   // Product data
   const [productData, setProductData] = useState({
     box_code: "",
@@ -104,7 +107,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
         setClients(prev => [...prev, newClient])
         return newClient.client_name
       } else {
-        throw new Error("Failed to create client")
+        throw new Error(t("Failed to add client"))
       }
     } catch (error) {
       console.error("Error creating client:", error)
@@ -159,7 +162,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to upload image")
+        throw new Error(errorData.error || t("Failed to upload file"))
       }
 
       const result = await response.json()
@@ -219,7 +222,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
       setShowNewClientForm(null)
       setNewClientName("")
     } catch (error) {
-      setError("Failed to create client")
+      setError(t("Failed to add client"))
     }
   }
 
@@ -251,7 +254,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
             imageUrl = uploadedImageUrl
           }
         } catch (uploadError) {
-          setError("Failed to upload image. Please try again.")
+          setError(t("Failed to upload file") + ". " + t("Please try again."))
           setIsLoading(false)
           return
         }
@@ -269,7 +272,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to create product")
+        throw new Error(t("Failed to create product"))
       }
 
       const newProduct = await response.json()
@@ -311,7 +314,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
 
       onSuccess(newProduct)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      setError(err instanceof Error ? err.message : t("An error occurred"))
     } finally {
       setIsLoading(false)
     }
@@ -319,16 +322,16 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-card border border-border rounded-lg p-6 space-y-6">
-      <h2 className="text-xl font-semibold text-foreground">Add New Product</h2>
+      <h2 className="text-xl font-semibold text-foreground">{t("Add New Product")}</h2>
 
       {error && <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-lg">{error}</div>}
 
       {/* Basic Information */}
       <div className="space-y-4">
-        <h3 className="text-lg font-medium text-foreground">Basic Information</h3>
+        <h3 className="text-lg font-medium text-foreground">{t("Basic Information")}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Box Code *</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Box Code")} *</label>
             <input
               type="text"
               name="box_code"
@@ -340,7 +343,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Product Name</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Product Name")}</label>
             <input
               type="text"
               name="product_name"
@@ -352,7 +355,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Storage *</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Storage")} *</label>
             <input
               type="text"
               name="storage"
@@ -364,15 +367,15 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Status</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Status")}</label>
             <select
               name="status"
               value={productData.status}
               onChange={handleProductDataChange}
               className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              <option value="available">Available</option>
-              <option value="out_of_stock">Out of Stock</option>
+              <option value="available">{t("Available")}</option>
+              <option value="out_of_stock">{t("Out of Stock")}</option>
             </select>
           </div>
         </div>
@@ -380,10 +383,10 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
 
       {/* Pricing Information */}
       <div className="space-y-4">
-        <h3 className="text-lg font-medium text-foreground">Pricing Information</h3>
+        <h3 className="text-lg font-medium text-foreground">{t("Pricing Information")}</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Original Price *</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Original Price")} *</label>
             <input
               type="number"
               name="original_price"
@@ -396,7 +399,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Selling Price *</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Selling Price")} *</label>
             <input
               type="number"
               name="selling_price"
@@ -409,20 +412,20 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Currency</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Currency")}</label>
             <select
               name="currency"
               value={productData.currency}
               onChange={handleProductDataChange}
               className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              <option value="Dollar">Dollar</option>
-              <option value="Iraqi Dinar">Iraqi Dinar</option>
+              <option value="Dollar">{t("Dollar")}</option>
+              <option value="Iraqi Dinar">{t("Iraqi Dinar")}</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Group Item Price</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Group Item Price")}</label>
             <input
               type="number"
               name="group_item_price"
@@ -435,7 +438,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-foreground mb-2">Total Original Price (Auto-calculated)</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Total Original Price")} ({t("Auto-calculated: Pieces per box × Number of boxes")})</label>
             <input
               type="number"
               value={((productData.number_of_boxes || 0) * (productData.pice_per_box || 0) * (productData.original_price || 0)).toFixed(2)}
@@ -445,7 +448,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
               className="w-full px-3 py-2 border border-input rounded-lg bg-muted text-muted-foreground"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Calculated as: (Number of Boxes × Pieces Per Box × Original Price)
+              {t("Calculated as: (Number of Boxes × Pieces Per Box × Original Price)")}
             </p>
           </div>
         </div>
@@ -453,10 +456,10 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
 
       {/* Quantity & Packaging */}
       <div className="space-y-4">
-        <h3 className="text-lg font-medium text-foreground">Quantity & Packaging</h3>
+        <h3 className="text-lg font-medium text-foreground">{t("Quantity & Packaging")}</h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Pieces Per Box</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Pieces per box")}</label>
             <input
               type="number"
               name="pice_per_box"
@@ -468,7 +471,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Number of Boxes *</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Number of boxes")} *</label>
             <input
               type="number"
               name="number_of_boxes"
@@ -481,7 +484,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-foreground mb-2">Total Pieces (Auto-calculated)</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Total Pieces")} ({t("Auto-calculated: Pieces per box × Number of boxes")})</label>
             <input
               type="number"
               value={Math.round((productData.pice_per_box || 0) * (productData.number_of_boxes || 0))}
@@ -490,12 +493,12 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
               className="w-full px-3 py-2 border border-input rounded-lg bg-muted text-muted-foreground"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Calculated as: (Pieces Per Box × Number of Boxes)
+              {t("Calculated as: (Pieces Per Box × Number of Boxes)")}
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Size of Box *</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Size of Box")} *</label>
             <input
               type="number"
               name="size_of_box"
@@ -508,7 +511,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Total Box Size *</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Total Box Size")} *</label>
             <input
               type="number"
               name="total_box_size"
@@ -521,7 +524,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Weight (kg)</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Weight in kg")}</label>
             <input
               type="number"
               name="weight"
@@ -534,7 +537,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Extracted Pieces</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Extracted Pieces")}</label>
             <input
               type="number"
               name="extracted_pieces"
@@ -550,9 +553,9 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
 
       {/* Shipping Information - Conditional Display */}
       <div className="space-y-4">
-        <h3 className="text-lg font-medium text-foreground">Shipping Information (Optional)</h3>
+        <h3 className="text-lg font-medium text-foreground">{t("Shipping Information (Optional)")}</h3>
         <p className="text-muted-foreground">
-          Choose whether to create new shipping or link to existing shipment.
+          {t("Choose whether to create new shipping or link to existing shipment.")}
         </p>
 
         {/* Shipping Mode Switch */}
@@ -569,7 +572,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
                 }`}
               >
                 <Truck className="w-4 h-4" />
-                Create New Shipping
+                {t("Create New Shipping")}
               </button>
               <button
                 type="button"
@@ -581,7 +584,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
                 }`}
               >
                 <Link className="w-4 h-4" />
-                Link Existing Shipping
+                {t("Link Existing Shipping")}
               </button>
             </div>
           </div>
@@ -589,25 +592,25 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           {!useExistingShipping ? (
             <div className="space-y-4">
               <div className="text-center">
-                <h4 className="text-sm font-medium text-foreground mb-3">Create New Shipping Record</h4>
-                <p className="text-xs text-muted-foreground">Fill in the shipping details below to create a new shipping record for this product.</p>
+                <h4 className="text-sm font-medium text-foreground mb-3">{t("Add Shipping Record")}</h4>
+                <p className="text-xs text-muted-foreground">{t("Fill in the shipping details below to create a new shipping record for this product.")}</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Shipping Type</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">{t("Shipping Type")}</label>
                   <select
                     value={shippingData.type}
                     onChange={(e) => setShippingData(prev => ({ ...prev, type: e.target.value }))}
                     className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   >
-                    <option value="coming">Coming</option>
-                    <option value="going">Going</option>
+                    <option value="coming">{t("Coming")}</option>
+                    <option value="going">{t("Going")}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Shipping Date</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">{t("Shipping Date")}</label>
                   <input
                     type="date"
                     value={shippingData.shippingDate}
@@ -617,7 +620,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Receiving Date</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">{t("Receiving Date")}</label>
                   <input
                     type="date"
                     value={shippingData.receivingDate}
@@ -627,7 +630,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Receiver</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">{t("Receiver")}</label>
                   <select
                     value={clients.find(c => c.client_name === shippingData.receiver)?.id || ""}
                     onChange={(e) => {
@@ -638,7 +641,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
                     }}
                     className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   >
-                    <option value="">Select receiver...</option>
+                    <option value="">{t("Select Receiver")}</option>
                     {clients.map(client => (
                       <option key={client.id} value={client.id.toString()}>
                         {client.client_name}
@@ -648,7 +651,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Sender</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">{t("Sender")}</label>
                   <select
                     value={clients.find(c => c.client_name === shippingData.sender)?.id || ""}
                     onChange={(e) => {
@@ -659,7 +662,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
                     }}
                     className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   >
-                    <option value="">Select sender...</option>
+                    <option value="">{t("Select Sender")}</option>
                     {clients.map(client => (
                       <option key={client.id} value={client.id.toString()}>
                         {client.client_name}
@@ -669,19 +672,19 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Currency</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">{t("Currency")}</label>
                   <select
                     value={shippingData.currency}
                     onChange={(e) => setShippingData(prev => ({ ...prev, currency: e.target.value }))}
                     className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   >
-                    <option value="Dollar">Dollar</option>
-                    <option value="Iraqi Dinar">Iraqi Dinar</option>
+                    <option value="Dollar">{t("Dollar")}</option>
+                    <option value="Iraqi Dinar">{t("Iraqi Dinar")}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Ship Price</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">{t("Ship Price")}</label>
                   <input
                     type="number"
                     step="0.01"
@@ -693,7 +696,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Paid</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">{t("Paid")}</label>
                   <input
                     type="number"
                     step="0.01"
@@ -706,11 +709,11 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Shipping Notes</label>
+                <label className="block text-sm font-medium text-foreground mb-2">{t("Notes")}</label>
                 <textarea
                   value={shippingData.note}
                   onChange={(e) => setShippingData(prev => ({ ...prev, note: e.target.value }))}
-                  placeholder="Optional shipping notes"
+                  placeholder={t("Notes")}
                   rows={2}
                   className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 />
@@ -719,8 +722,8 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
               {(shippingData.sender || shippingData.receiver) && (
                 <div className="text-sm text-muted-foreground bg-blue-50/30 dark:bg-blue-950/30 p-3 rounded-lg border">
                   {shippingData.sender && shippingData.receiver ?
-                    `Preview: ${shippingData.sender} → ${shippingData.receiver} (${shippingData.type})` :
-                    `Partial shipping info entered`
+                    `${t("Preview")}: ${shippingData.sender} → ${shippingData.receiver} (${t(shippingData.type)})` :
+                    t("Partial shipping info entered")
                   }
                 </div>
               )}
@@ -728,8 +731,8 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           ) : (
             <div className="space-y-3">
               <div className="text-center">
-                <h4 className="text-sm font-medium text-foreground mb-1">Link to Existing Shipping Record</h4>
-                <p className="text-xs text-muted-foreground">Select an existing shipping record to link this product to.</p>
+                <h4 className="text-sm font-medium text-foreground mb-1">{t("Link to Existing Shipping Record")}</h4>
+                <p className="text-xs text-muted-foreground">{t("Choose existing shipping record...")}</p>
               </div>
 
               {existingShippings.length > 0 ? (
@@ -739,23 +742,23 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
                     onChange={(e) => setSelectedShippingId(Number(e.target.value) || null)}
                     className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   >
-                    <option value="">Choose existing shipping record...</option>
+                    <option value="">{t("Choose existing shipping record...")}</option>
                     {existingShippings.map(shipping => (
                       <option key={shipping.id} value={shipping.id}>
-                        #{shipping.id} - {shipping.type} - {new Date(shipping.shipping_date).toLocaleDateString()} to {new Date(shipping.receiving_date).toLocaleDateString()} - {shipping.sender?.client_name} → {shipping.receiver?.client_name} - ${shipping.ship_price || 0}
+                        #{shipping.id} - {t(shipping.type)} - {new Date(shipping.shipping_date).toLocaleDateString()} to {new Date(shipping.receiving_date).toLocaleDateString()} - {shipping.sender?.client_name} → {shipping.receiver?.client_name} - ${shipping.ship_price || 0}
                       </option>
                     ))}
                   </select>
 
                   {selectedShippingId && (
                     <div className="text-sm text-muted-foreground bg-green-50/30 dark:bg-green-950/30 p-3 rounded-lg border">
-                      Product will be linked to shipping record #{selectedShippingId}
+                      {t("Product will be linked to shipping record")} #{selectedShippingId}
                     </div>
                   )}
                 </div>
               ) : (
                 <div className="p-4 text-center text-muted-foreground border border-dashed border-border rounded-lg bg-muted/30">
-                  <p className="mb-2">No existing shipping records found.</p>
+                  <p className="mb-2">{t("No existing shipping records found.")}</p>
                   <Button
                     type="button"
                     variant="outline"
@@ -763,7 +766,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
                     onClick={() => setUseExistingShipping(false)}
                   >
                     <Truck className="w-4 h-4 mr-2" />
-                    Create New Shipping Instead
+                    {t("Create New Shipping Instead")}
                   </Button>
                 </div>
               )}
@@ -774,7 +777,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
 
       {/* Image Upload */}
       <div className="space-y-4">
-        <h3 className="text-lg font-medium text-foreground">Product Image</h3>
+        <h3 className="text-lg font-medium text-foreground">{t("Product Image")}</h3>
         {imagePreview && (
           <div className="relative mb-3 w-32 h-32">
             <img
@@ -806,13 +809,13 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
               htmlFor="image-upload"
               className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
             >
-              Click to upload image or drag and drop
+              {t("Click to upload image or drag and drop")}
             </label>
           </div>
         )}
 
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1">Or enter Image URL</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">{t("Or enter Image URL")}</label>
           <input
             type="text"
             name="image"
@@ -826,14 +829,14 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
 
       {/* Notes */}
       <div className="space-y-4">
-        <h3 className="text-lg font-medium text-foreground">Additional Information</h3>
+        <h3 className="text-lg font-medium text-foreground">{t("Additional Information")}</h3>
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Notes</label>
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Notes")}</label>
           <textarea
             name="note"
             value={productData.note}
             onChange={handleProductDataChange}
-            placeholder="Enter any additional notes"
+            placeholder={t("Enter any additional notes")}
             rows={3}
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
@@ -844,7 +847,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
       <div className="pt-4">
         <Button type="submit" disabled={isLoading} className="w-full py-3">
           {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-          Create Product
+          {t("Create Product")}
         </Button>
       </div>
     </form>
