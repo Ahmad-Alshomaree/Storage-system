@@ -5,6 +5,8 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Loader2, Plus, Trash2 } from "lucide-react"
+import { useTranslation } from "react-i18next"
+import "../i18n.client"
 
 interface Product {
   id: number
@@ -78,6 +80,7 @@ interface OutputLoadProductSelection {
 }
 
 export function ShippingForm({ onSuccess }: ShippingFormProps) {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({
     type: "input load",
     shipping_date: "",
@@ -262,7 +265,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
 
     // Validate that required fields are filled
     if (!formData.shipping_date || !formData.receiving_date || !formData.receiver || !formData.sender) {
-      throw new Error("Please fill in all required shipping information (dates, receiver, sender) before saving products")
+      throw new Error(t("Please fill in all required shipping information (dates, receiver, sender)"))
     }
 
     // Find client IDs
@@ -270,7 +273,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
     const senderClient = existingClients.find(client => client.client_name === formData.sender)
 
     if (!receiverClient || !senderClient) {
-      throw new Error("Please select valid clients for both receiver and sender")
+      throw new Error(t("Please select a receiver"))
     }
 
     // Create shipping record
@@ -336,7 +339,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to save product")
+        throw new Error(t("Failed to save product"))
       }
 
       const savedProduct = await response.json()
@@ -349,7 +352,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
       ))
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save product")
+      setError(err instanceof Error ? err.message : t("Failed to save product"))
     } finally {
       setSavingProductId(null)
     }
@@ -396,7 +399,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to create client")
+        throw new Error(t("Failed to add client"))
       }
 
       const newClient = await response.json()
@@ -430,7 +433,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
     try {
       // Validate required shipping information
       if (!formData.shipping_date || !formData.receiving_date || !formData.receiver || !formData.sender) {
-        setError("Please fill in all required shipping information (dates, receiver, sender)")
+        setError(t("Please fill in all required shipping information (dates, receiver, sender)"))
         setIsLoading(false)
         return
       }
@@ -440,7 +443,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
       const senderClient = existingClients.find(client => client.client_name === formData.sender)
 
       if (!receiverClient || !senderClient) {
-        setError("Please select valid clients for both receiver and sender")
+        setError(t("Please select a receiver"))
         setIsLoading(false)
         return
       }
@@ -491,7 +494,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
       setError("") // Clear any errors
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      setError(err instanceof Error ? err.message : t("An error occurred"))
     } finally {
       setIsLoading(false)
     }
@@ -499,13 +502,13 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-card border border-border rounded-lg p-6 space-y-4">
-      <h2 className="text-lg font-semibold text-foreground">Add Shipping Record</h2>
+      <h2 className="text-lg font-semibold text-foreground">{t("Add Shipping Record")}</h2>
 
       {error && <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-lg">{error}</div>}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Shipping Type *</label>
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Shipping Type")} *</label>
           <select
             name="type"
             value={formData.type}
@@ -513,13 +516,13 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
             required
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <option value="input load">Input Load</option>
-            <option value="output load">Output Load</option>
+            <option value="input load">{t("Input Load")}</option>
+            <option value="output load">{t("Output Load")}</option>
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Shipping Date *</label>
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Shipping Date")} *</label>
           <input
             type="date"
             name="shipping_date"
@@ -531,7 +534,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Receiving Date *</label>
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Receiving Date")} *</label>
           <input
             type="date"
             name="receiving_date"
@@ -543,43 +546,43 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Receiver *</label>
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Receiver")} *</label>
           <select
             value={formData.receiver}
             onChange={(e) => handleClientSelectChange('receiver', e.target.value)}
             required
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <option value="">Select Receiver</option>
+            <option value="">{t("Select Receiver")}</option>
             {!isLoadingClients && existingClients.map((client) => (
               <option key={client.id} value={client.client_name}>
                 {client.client_name} {client.phone_number ? `(${client.phone_number})` : ''}
               </option>
             ))}
-            <option value="add-new-client" className="font-medium text-primary">+ Add New Client</option>
+            <option value="add-new-client" className="font-medium text-primary">+ {t("Add New Client")}</option>
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Sender *</label>
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Sender")} *</label>
           <select
             value={formData.sender}
             onChange={(e) => handleClientSelectChange('sender', e.target.value)}
             required
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <option value="">Select Sender</option>
+            <option value="">{t("Select Sender")}</option>
             {!isLoadingClients && existingClients.map((client) => (
               <option key={client.id} value={client.client_name}>
                 {client.client_name} {client.phone_number ? `(${client.phone_number})` : ''}
               </option>
             ))}
-            <option value="add-new-client" className="font-medium text-primary">+ Add New Client</option>
+            <option value="add-new-client" className="font-medium text-primary">+ {t("Add New Client")}</option>
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Currency *</label>
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Currency")} *</label>
           <select
             name="currency"
             value={formData.currency}
@@ -587,13 +590,13 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
             required
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <option value="Dollar">Dollar</option>
-            <option value="Iraqi Dinar">Iraqi Dinar</option>
+            <option value="Dollar">{t("Dollar")}</option>
+            <option value="Iraqi Dinar">{t("Iraqi Dinar")}</option>
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Ship Price</label>
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Ship Price")}</label>
           <input
             type="number"
             step="0.01"
@@ -605,7 +608,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Paid</label>
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Paid")}</label>
           <input
             type="number"
             step="0.01"
@@ -618,13 +621,13 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-foreground mb-2">Note</label>
+        <label className="block text-sm font-medium text-foreground mb-2">{t("Note")}</label>
         <textarea
           name="note"
           value={formData.note}
           onChange={handleChange}
           rows={2}
-          placeholder="Optional notes about the shipping"
+          placeholder={t("Notes")}
           className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
         />
       </div>
@@ -633,7 +636,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
       {showNewClientForm && (
         <div className="border border-border rounded-lg p-4 bg-muted/30">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-medium text-foreground">Add New Client</h3>
+            <h3 className="text-lg font-medium text-foreground">{t("Add New Client")}</h3>
             <button
               type="button"
               onClick={() => setShowNewClientForm(false)}
@@ -646,7 +649,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <input
               type="text"
-              placeholder="Client Name *"
+              placeholder={t("Client Name") + " *"}
               value={newClientData.client_name}
               onChange={(e) => setNewClientData(prev => ({ ...prev, client_name: e.target.value }))}
               className="px-3 py-2 border border-input rounded bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
@@ -654,14 +657,14 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
             />
             <input
               type="text"
-              placeholder="Phone Number"
+              placeholder={t("Phone Number")}
               value={newClientData.phone_number}
               onChange={(e) => setNewClientData(prev => ({ ...prev, phone_number: e.target.value }))}
               className="px-3 py-2 border border-input rounded bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <div className="md:col-span-2">
               <textarea
-                placeholder="History/Notes"
+                placeholder={t("History") + "/" + t("Notes")}
                 value={newClientData.history}
                 onChange={(e) => setNewClientData(prev => ({ ...prev, history: e.target.value }))}
                 rows={2}
@@ -673,7 +676,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
           <div className="flex gap-2 pt-4">
             <Button type="button" onClick={handleNewClientSubmit} disabled={isLoadingNewClient} size="sm">
               {isLoadingNewClient ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              Save Client
+              {t("Save Client")}
             </Button>
           </div>
         </div>
@@ -683,23 +686,23 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
       {formData.type === 'input load' ? (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <label className="block text-sm font-medium text-foreground mb-2">Add New Products</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Add New Products")}</label>
             <Button type="button" onClick={addNewProduct} variant="outline" size="sm">
               <Plus className="w-4 h-4 mr-2" />
-              Add Product
+              {t("Add Product")}
             </Button>
           </div>
 
           {newProducts.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground border border-dashed border-border rounded-lg">
-              No products added. Click "Add Product" to create new products for this shipment.
+              {t("No products added. Click \"Add Product\" to create new products for this shipment.")}
             </div>
           ) : (
             <div className="space-y-3">
               {newProducts.map((product) => (
                 <div key={product.id} className="border border-border rounded-lg p-4 bg-muted/30">
                   <div className="flex items-start justify-between mb-3">
-                    <h4 className="text-sm font-medium text-foreground">Product {product.id.split('-')[1]}</h4>
+                    <h4 className="text-sm font-medium text-foreground">{t("Products")} {product.id.split('-')[1]}</h4>
                     <button
                       type="button"
                       onClick={() => removeNewProduct(product.id)}
@@ -711,10 +714,10 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Product Name *</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">{t("Product Name")} *</label>
                       <input
                         type="text"
-                        placeholder="Product Name *"
+                        placeholder={t("Product Name") + " *"}
                         value={product.product_name}
                         onChange={(e) => updateNewProduct(product.id, 'product_name', e.target.value)}
                         className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
@@ -722,20 +725,20 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Product Type</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">{t("Product Type")}</label>
                       <input
                         type="text"
-                        placeholder="Product Type"
+                        placeholder={t("Product Type")}
                         value={product.product_type}
                         onChange={(e) => updateNewProduct(product.id, 'product_type', e.target.value)}
                         className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Box Code *</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">{t("Box Code")} *</label>
                       <input
                         type="text"
-                        placeholder="Box Code *"
+                        placeholder={t("Box Code") + " *"}
                         value={product.box_code}
                         onChange={(e) => updateNewProduct(product.id, 'box_code', e.target.value)}
                         className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
@@ -743,11 +746,11 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Original Price *</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">{t("Original Price")} *</label>
                       <input
                         type="number"
                         step="0.01"
-                        placeholder="Original Price *"
+                        placeholder={t("Original Price") + " *"}
                         value={product.original_price || ''}
                         onChange={(e) => updateNewProduct(product.id, 'original_price', parseFloat(e.target.value) || 0)}
                         className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
@@ -755,11 +758,11 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Selling Price *</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">{t("Selling Price")} *</label>
                       <input
                         type="number"
                         step="0.01"
-                        placeholder="Selling Price *"
+                        placeholder={t("Selling Price") + " *"}
                         value={product.selling_price || ''}
                         onChange={(e) => updateNewProduct(product.id, 'selling_price', parseFloat(e.target.value) || 0)}
                         className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
@@ -767,20 +770,20 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Storage Location</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">{t("Storage Location")}</label>
                       <input
                         type="text"
-                        placeholder="Storage Location"
+                        placeholder={t("Storage Location")}
                         value={product.storage}
                         onChange={(e) => updateNewProduct(product.id, 'storage', e.target.value)}
                         className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Number of Boxes *</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">{t("Number of boxes")} *</label>
                       <input
                         type="number"
-                        placeholder="Number of Boxes *"
+                        placeholder={t("Number of boxes") + " *"}
                         value={product.number_of_boxes || ''}
                         onChange={(e) => updateNewProduct(product.id, 'number_of_boxes', parseInt(e.target.value) || 1)}
                         className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
@@ -789,10 +792,10 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Pieces per Box *</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">{t("Pieces per box")} *</label>
                       <input
                         type="number"
-                        placeholder="Pieces per Box *"
+                        placeholder={t("Pieces per box") + " *"}
                         value={product.pice_per_box || ''}
                         onChange={(e) => updateNewProduct(product.id, 'pice_per_box', parseInt(e.target.value) || 1)}
                         className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
@@ -801,11 +804,11 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Size of Box *</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">{t("Size of Box")} *</label>
                       <input
                         type="number"
                         step="0.01"
-                        placeholder="Size of Box *"
+                        placeholder={t("Size of Box") + " *"}
                         value={product.size_of_box || ''}
                         onChange={(e) => updateNewProduct(product.id, 'size_of_box', parseFloat(e.target.value) || 0)}
                         className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
@@ -813,85 +816,85 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Image URL</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">{t("Or enter Image URL")}</label>
                       <input
                         type="text"
-                        placeholder="Image URL"
+                        placeholder={t("Or enter Image URL")}
                         value={product.image}
                         onChange={(e) => updateNewProduct(product.id, 'image', e.target.value)}
                         className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Weight</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">{t("Weight")}</label>
                       <input
                         type="number"
                         step="0.01"
-                        placeholder="Weight"
+                        placeholder={t("Weight")}
                         value={product.weight || ''}
                         onChange={(e) => updateNewProduct(product.id, 'weight', parseFloat(e.target.value) || 0)}
                         className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Group Item Price</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">{t("Group Item Price")}</label>
                       <input
                         type="number"
                         step="0.01"
-                        placeholder="Group Item Price"
+                        placeholder={t("Group Item Price")}
                         value={product.grope_item_price || ''}
                         onChange={(e) => updateNewProduct(product.id, 'grope_item_price', parseFloat(e.target.value) || 0)}
                         className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Currency *</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">{t("Currency")} *</label>
                       <select
                         value={product.currency}
                         onChange={(e) => updateNewProduct(product.id, 'currency', e.target.value)}
                         className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
                         required
                       >
-                        <option value="Dollar">Dollar</option>
-                        <option value="Iraqi Dinar">Iraqi Dinar</option>
+                        <option value="Dollar">{t("Dollar")}</option>
+                        <option value="Iraqi Dinar">{t("Iraqi Dinar")}</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Total Pieces</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">{t("Total Pieces")}</label>
                       <input
                         type="number"
-                        placeholder="Total Pieces"
+                        placeholder={t("Total Pieces")}
                         value={product.Total_pices || ''}
                         className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs w-full"
                         readOnly
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Total Original Price</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">{t("Total Original Price")}</label>
                       <input
                         type="number"
                         step="0.01"
-                        placeholder="Total Original Price"
+                        placeholder={t("Total Original Price")}
                         value={product.total_original_price || ''}
                         className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs w-full"
                         readOnly
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Total Box Size</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">{t("Total Box Size")}</label>
                       <input
                         type="number"
                         step="0.01"
-                        placeholder="Total Box Size"
+                        placeholder={t("Total Box Size")}
                         value={product.total_box_size || ''}
                         className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs w-full"
                         readOnly
                       />
                     </div>
                     <div className="md:col-span-2 lg:col-span-3">
-                      <label className="block text-xs font-medium text-foreground mb-1">Note</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">{t("Note")}</label>
                       <textarea
-                        placeholder="Product notes"
+                        placeholder={t("Enter note...")}
                         value={product.note}
                         onChange={(e) => updateNewProduct(product.id, 'note', e.target.value)}
                         rows={2}
@@ -919,9 +922,9 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                           Saving...
                         </>
                       ) : product.isSaved ? (
-                        'Saved ✓'
+                        t('Saved') + ' ✓'
                       ) : (
-                        'Save Product'
+                        t('Save Product')
                       )}
                     </Button>
                   </div>
@@ -933,7 +936,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
       ) : (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Select Products for Shipment</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Select products for shipment")}</label>
             {isLoadingProducts ? (
               <div className="p-4 text-center text-muted-foreground">Loading products...</div>
             ) : availableProducts.length === 0 ? (
@@ -951,7 +954,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                           <h4 className="text-sm font-medium text-foreground">{product.box_code}</h4>
                           <p className="text-xs text-muted-foreground">{product.product_name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {product.number_of_boxes} boxes • {product.Total_pices} pieces total
+                            {product.number_of_boxes} {t("Number of boxes")} • {product.Total_pices} {t("Total Pieces")}
                           </p>
                         </div>
                         <button
@@ -959,7 +962,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                           onClick={() => openProductSelectionDialog(product)}
                           className="text-primary hover:text-primary/80"
                         >
-                          {selection ? 'Edit' : 'Select'}
+                          {selection ? t('Edit') : t('Select')}
                         </button>
                       </div>
 
@@ -979,7 +982,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
           {/* Selected Products Summary */}
           {selectedOutputProducts.length > 0 && (
             <div className="border-t pt-4">
-              <label className="block text-sm font-medium text-foreground mb-3">Selected Products ({selectedOutputProducts.length})</label>
+              <label className="block text-sm font-medium text-foreground mb-3">{t("Selected Products")} ({selectedOutputProducts.length})</label>
               <div className="space-y-2">
                 {selectedOutputProducts.map((selection) => (
                   <div key={selection.productId} className="flex items-center justify-between bg-muted p-3 rounded">
@@ -1014,7 +1017,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
                     <label htmlFor="quantity-type" className="text-right">
-                      Type
+                      {t("Type")}
                     </label>
                     <select
                       id="quantity-type"
@@ -1050,7 +1053,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
 
                   <div className="grid grid-cols-4 items-center gap-4">
                     <label htmlFor="selling-price" className="text-right">
-                      Price
+                      {t("Selling Price")}
                     </label>
                     <input
                       id="selling-price"
@@ -1068,10 +1071,10 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
 
                   <div className="flex justify-end gap-2 pt-4">
                     <Button type="button" variant="outline" onClick={closeProductSelectionDialog}>
-                      Cancel
+                      {t("Cancel")}
                     </Button>
                     <Button type="button" onClick={saveProductSelection}>
-                      {selectedOutputProducts.find(s => s.productId === currentProductSelection.productId) ? 'Update' : 'Add'} Product
+                      {selectedOutputProducts.find(s => s.productId === currentProductSelection.productId) ? t('Update') : t('Add')} {t("Products")}
                     </Button>
                   </div>
                 </div>
@@ -1084,7 +1087,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
       <div className="flex gap-2 pt-4">
         <Button type="submit" disabled={isLoading} className="gap-2">
           {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-          Save Shipping Information
+          {t("Save Shipping Information")}
         </Button>
       </div>
     </form>

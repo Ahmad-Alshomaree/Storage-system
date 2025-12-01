@@ -4,6 +4,8 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
+import { useTranslation } from "react-i18next"
+import "../i18n.client"
 
 interface Client {
   id: number
@@ -36,6 +38,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
   const [error, setError] = useState("")
   const [clients, setClients] = useState<Client[]>([])
   const [shipping, setShipping] = useState<Shipping[]>([])
+  const { t } = useTranslation()
 
   useEffect(() => {
     fetchClients()
@@ -84,7 +87,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
     setError("")
 
     if (!formData.receiver_id) {
-      setError("Please select a receiver")
+      setError(t("Please select a receiver"))
       setIsLoading(false)
       return
     }
@@ -97,7 +100,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to add debit")
+        throw new Error(t("Failed to add debit"))
       }
 
       const newDebit = await response.json()
@@ -112,7 +115,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
       })
       onSuccess(newDebit)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      setError(err instanceof Error ? err.message : t("An error occurred"))
     } finally {
       setIsLoading(false)
     }
@@ -120,20 +123,20 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-card border border-border rounded-lg p-6 space-y-4">
-      <h2 className="text-lg font-semibold text-foreground">Add New Transaction</h2>
+      <h2 className="text-lg font-semibold text-foreground">{t("Add New Transaction")}</h2>
 
       {error && <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-lg">{error}</div>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Sender</label>
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Sender")}</label>
           <select
             name="sender_id"
             value={formData.sender_id}
             onChange={handleChange}
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <option value="">Select Sender (Optional)</option>
+            <option value="">{t("Select Sender")} ({t("Optional")})</option>
             {clients.map((client) => (
               <option key={client.id} value={client.id}>
                 {client.client_name}
@@ -143,7 +146,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Receiver *</label>
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Receiver")} *</label>
           <select
             name="receiver_id"
             value={formData.receiver_id}
@@ -151,7 +154,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
             required
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <option value="">Select Receiver</option>
+            <option value="">{t("Select Receiver")}</option>
             {clients.map((client) => (
               <option key={client.id} value={client.id}>
                 {client.client_name}
@@ -161,14 +164,14 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Shipping</label>
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Shipping")}</label>
           <select
             name="shipping_id"
             value={formData.shipping_id}
             onChange={handleChange}
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <option value="">Select Shipping (Optional)</option>
+            <option value="">{t("Select Shipping (Optional)")}</option>
             {shipping.map((ship) => (
               <option key={ship.id} value={ship.id}>
                 {ship.type} - {ship.receiver}
@@ -178,7 +181,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Amount *</label>
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Amount")} *</label>
           <input
             type="number"
             name="amount"
@@ -193,19 +196,19 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Currency</label>
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Currency")}</label>
           <input
             type="text"
             name="currency"
             value={formData.currency}
             onChange={handleChange}
-            placeholder="Dollar"
+            placeholder={t("Dollar")}
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Transaction Date (Optional)</label>
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Transaction Date")} ({t("Optional")})</label>
           <input
             type="date"
             name="transaction_date"
@@ -216,12 +219,12 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-foreground mb-2">Note</label>
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Note")}</label>
           <textarea
             name="note"
             value={formData.note}
             onChange={handleChange}
-            placeholder="Enter transaction note"
+            placeholder={t("Enter transaction note")}
             rows={3}
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
@@ -231,7 +234,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
       <div className="flex gap-2 pt-4">
         <Button type="submit" disabled={isLoading} className="gap-2">
           {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-          Add Transaction
+          {t("Add Transaction")}
         </Button>
       </div>
     </form>

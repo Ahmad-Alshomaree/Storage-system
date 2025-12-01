@@ -13,9 +13,9 @@ import { useAppData } from "@/lib/useAppData"
 import type { TabType } from "@/lib/types"
 import { useTranslation } from "react-i18next"
 import "../i18n.client"
-import { LanguageProvider } from "@/components/language-provider"
 
-function HomeContent() {
+// HomeContent no longer needs to be wrapped in LanguageProvider here because it's in layout.tsx
+export default function Home() {
   const { products, shipping, clients, debits, isLoading, error, refetch } = useAppData()
   const [activeTab, setActiveTab] = useState<TabType>("products")
   const { t } = useTranslation()
@@ -117,13 +117,5 @@ function HomeContent() {
         )}
       </main>
     </div>
-  )
-}
-
-export default function Home() {
-  return (
-    <LanguageProvider>
-      <HomeContent />
-    </LanguageProvider>
   )
 }
