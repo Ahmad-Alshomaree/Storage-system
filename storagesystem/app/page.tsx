@@ -11,10 +11,14 @@ import { Package, Truck, Users, CreditCard, Warehouse } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAppData } from "@/lib/useAppData"
 import type { TabType } from "@/lib/types"
+import { useTranslation } from "react-i18next"
+import "../i18n.client"
+import { LanguageProvider } from "@/components/language-provider"
 
-export default function Home() {
+function HomeContent() {
   const { products, shipping, clients, debits, isLoading, error, refetch } = useAppData()
   const [activeTab, setActiveTab] = useState<TabType>("products")
+  const { t } = useTranslation()
 
   if (error) {
     return (
@@ -23,7 +27,7 @@ export default function Home() {
         <main className="container mx-auto py-8 px-4">
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
-              <p className="text-destructive text-lg mb-4">Failed to load data</p>
+              <p className="text-destructive text-lg mb-4">{t("Failed to load data")}</p>
               <p className="text-muted-foreground">{error}</p>
             </div>
           </div>
@@ -38,13 +42,13 @@ export default function Home() {
       <main className="container mx-auto py-8 px-4">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground text-balance">Product Storage System</h1>
-            <p className="text-muted-foreground mt-1">Manage products, shipping, clients, and financial records efficiently</p>
+            <h1 className="text-3xl font-bold text-foreground text-balance">{t("Product Storage System")}</h1>
+            <p className="text-muted-foreground mt-1">{t("Manage products, shipping, clients, and financial records efficiently")}</p>
           </div>
           <Link href="/store" passHref>
             <Button variant="secondary" className="gap-2">
               <Warehouse className="w-4 h-4" />
-              Store Overview
+              {t("Store Overview")}
             </Button>
           </Link>
         </div>
@@ -59,7 +63,7 @@ export default function Home() {
             }`}
           >
             <Package className="inline w-4 h-4 mr-2" />
-            Products
+            {t("Products")}
           </button>
           <button
             onClick={() => setActiveTab("shipping")}
@@ -70,7 +74,7 @@ export default function Home() {
             }`}
           >
             <Truck className="inline w-4 h-4 mr-2" />
-            Shipping
+            {t("Shipping")}
           </button>
           <button
             onClick={() => setActiveTab("clients")}
@@ -81,7 +85,7 @@ export default function Home() {
             }`}
           >
             <Users className="inline w-4 h-4 mr-2" />
-            Clients
+            {t("Clients")}
           </button>
           <button
             onClick={() => setActiveTab("debits")}
@@ -92,7 +96,7 @@ export default function Home() {
             }`}
           >
             <CreditCard className="inline w-4 h-4 mr-2" />
-            Debit
+            {t("Debit")}
           </button>
         </div>
 
@@ -113,5 +117,13 @@ export default function Home() {
         )}
       </main>
     </div>
+  )
+}
+
+export default function Home() {
+  return (
+    <LanguageProvider>
+      <HomeContent />
+    </LanguageProvider>
   )
 }

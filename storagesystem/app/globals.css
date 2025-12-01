@@ -122,4 +122,40 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* RTL support */
+  html[dir="rtl"] {
+    text-align: right;
+    direction: rtl;
+  }
+
+  /* Header RTL adjustments */
+  html[dir="rtl"] header .flex {
+    flex-direction: row-reverse;
+  }
+
+  html[dir="rtl"] .gap-2 > * {
+    order: initial;
+  }
+
+  /* Language switcher RTL */
+  html[dir="rtl"] .language-switcher .flex {
+    flex-direction: row-reverse;
+  }
+
+  /* Tab buttons RTL */
+  html[dir="rtl"] .mb-6.flex > * {
+    flex-direction: row-reverse;
+  }
+
+  html[dir="rtl"] button[role="tab"] svg {
+    margin-left: 0.5rem;
+    margin-right: 0;
+  }
+
+  /* Container margins in RTL */
+  html[dir="rtl"] .container.mx-auto {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 }

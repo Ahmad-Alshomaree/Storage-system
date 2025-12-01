@@ -34,13 +34,20 @@ export interface Product {
 
 export interface Debit {
   id: number
-  client_id: number
+  sender_id?: number | null
+  receiver_id: number
   shipping_id?: number | null
   amount: number
-  description?: string | null
+  currency: string
+  note?: string | null
   transaction_date: string
   created_at: string
-  client: {
+  sender?: {
+    id: number
+    client_name: string
+    phone_number?: string | null
+  } | null
+  receiver: {
     id: number
     client_name: string
     phone_number?: string | null

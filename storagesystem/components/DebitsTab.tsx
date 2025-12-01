@@ -5,6 +5,7 @@ import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DebitTable } from "@/components/debit-table"
 import { AddDebitForm } from "@/components/add-debit-form"
+import { DebitDetailsModal } from "@/components/debit-details-modal"
 import type { Debit } from "@/lib/types"
 
 interface DebitsTabProps {
@@ -15,6 +16,10 @@ interface DebitsTabProps {
 
 export function DebitsTab({ debits, isLoading, refetch }: DebitsTabProps) {
   const [showDebitForm, setShowDebitForm] = useState(false)
+  const [selectedDebitForModal, setSelectedDebitForModal] = useState<Debit | null>(null)
+
+  // Filter out any corrupted debit records
+  const validDebits = debits.filter(debit => debit && debit.receiver && debit.receiver.client_name)
 
   const handleDeleteDebit = async (id: number) => {
     await fetch(`/api/debits/${id}`, { method: "DELETE" })
@@ -54,7 +59,7 @@ export function DebitsTab({ debits, isLoading, refetch }: DebitsTabProps) {
         <div className="flex items-center justify-center py-12">
           <div className="w-8 h-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
         </div>
-      ) : debits.length === 0 ? (
+      ) : validDebits.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground text-lg">
             No financial transactions found. Start by adding a transaction!
@@ -62,11 +67,20 @@ export function DebitsTab({ debits, isLoading, refetch }: DebitsTabProps) {
         </div>
       ) : (
         <DebitTable
-          debits={debits}
+          debits={validDebits}
           onDelete={handleDeleteDebit}
           onUpdate={handleUpdateDebit}
+          onViewDetail={(debit) => setSelectedDebitForModal(debit)}
         />
       )}
+
+      <DebitDetailsModal
+        debit={selectedDebitForModal}
+        open={!!selectedDebitForModal}
+        onOpenChange={(open) => {
+          if (!open) setSelectedDebitForModal(null)
+        }}
+      />
     </>
   )
 }

@@ -1,1 +1,0 @@
-ALTER TABLE `debits` ADD `total_debit` real;

@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import { Trash2, Edit2, Check, X, Eye } from "lucide-react"
 import { ShippingDetailsModal } from "./shipping-details-modal"
+import { useTranslation } from "react-i18next"
+import "../i18n.client"
 
 export interface ShippingTableClient {
   id: number
@@ -64,6 +66,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
   })
   const [clients, setClients] = useState<ShippingTableClient[]>([])
   const [loadingClients, setLoadingClients] = useState(true)
+  const { t } = useTranslation()
 
   // Fetch clients on component mount
   useEffect(() => {
@@ -140,28 +143,28 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
   return (
     <>
       <div className="mb-4 p-4 bg-muted rounded-lg">
-        <h3 className="text-sm font-semibold mb-3">Filter Shipping</h3>
+        <h3 className="text-sm font-semibold mb-3">{t("Filter Shipping")}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           <select
             className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
             value={filters.type}
             onChange={(e) => setFilters({ ...filters, type: e.target.value })}
           >
-            <option value="">All Types</option>
-            <option value="input load">Input Load</option>
-            <option value="output load">Output Load</option>
-            <option value="comming">Coming</option>
+            <option value="">{t("All Types")}</option>
+            <option value="input load">{t("Input Load")}</option>
+            <option value="output load">{t("Output Load")}</option>
+            <option value="comming">{t("Coming")}</option>
           </select>
           <input
             type="text"
-            placeholder="Receiver"
+            placeholder={t("Receiver")}
             className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
             value={filters.receiver}
             onChange={(e) => setFilters({ ...filters, receiver: e.target.value })}
           />
           <input
             type="text"
-            placeholder="Shipping Date"
+            placeholder={t("Shipping Date")}
             className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
             value={filters.shippingDate}
             onChange={(e) => setFilters({ ...filters, shippingDate: e.target.value })}
@@ -171,24 +174,24 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
           className="mt-3 px-3 py-1 bg-black text-white text-xs rounded hover:bg-gray-800"
           onClick={() => setFilters({ type: '', receiver: '', shippingDate: '' })}
         >
-          Clear Filters
+          {t("Clear Filters")}
         </button>
       </div>
     <div className="overflow-x-auto border border-border rounded-lg">
       <table className="w-full text-sm min-w-[1200px]">
         <thead>
           <tr className="border-b border-border bg-muted">
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Type</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Shipping Date</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Receiving Date</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Receiver</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Sender</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Products</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Paid</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Ship Price</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Currency</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Note</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Actions</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Type")}</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Shipping Date")}</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Receiving Date")}</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Receiver")}</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Sender")}</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Products")}</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Paid")}</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Ship Price")}</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Currency")}</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Note")}</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Actions")}</th>
           </tr>
         </thead>
         <tbody>
@@ -202,9 +205,9 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                       onChange={(e) => setEditValues({ ...editValues, type: e.target.value })}
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
                     >
-                      <option value="input load">Input Load</option>
-                      <option value="output load">Output Load</option>
-                      <option value="comming">Coming</option>
+                      <option value="input load">{t("Input Load")}</option>
+                      <option value="output load">{t("Output Load")}</option>
+                      <option value="comming">{t("Coming")}</option>
                     </select>
                   </td>
                   <td className="px-2 py-3">
@@ -230,7 +233,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
                       disabled={loadingClients}
                     >
-                      <option value="">Select Receiver</option>
+                      <option value="">{t("Select Receiver")}</option>
                       {clients.map((client) => (
                         <option key={client.id} value={client.id}>
                           {client.client_name}
@@ -245,7 +248,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
                       disabled={loadingClients}
                     >
-                      <option value="">Select Sender</option>
+                      <option value="">{t("Select Sender")}</option>
                       {clients.map((client) => (
                         <option key={client.id} value={client.id}>
                           {client.client_name}
@@ -337,7 +340,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                       }
                     </div>
                   </td>
-                  <td className="px-2 py-3 text-foreground text-xs">{record.paid ?? 0}</td>
+                  <td className="px-2 py-3 text-foreground text-xs">{record.ship_price ?? 0}</td>
                   <td className="px-2 py-3 text-foreground text-xs">{record.ship_price ?? 0}</td>
                   <td className="px-2 py-3 text-foreground text-xs">{record.currency || "Dollar"}</td>
                   <td className="px-2 py-3 text-foreground text-xs max-w-xs truncate">{record.note || ""}</td>

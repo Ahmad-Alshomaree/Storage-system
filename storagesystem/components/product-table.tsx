@@ -4,6 +4,8 @@ import { useState } from "react"
 import { Trash2, Edit2, Check, X, Eye } from "lucide-react"
 import { ProductDetailsModal } from "./product-details-modal"
 import type { Product } from "@/lib/types"
+import { useTranslation } from "react-i18next"
+import "../i18n.client"
 
 interface ProductTableProps {
   products: Product[]
@@ -22,6 +24,7 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
     status: '',
     productName: '',
   })
+  const { t } = useTranslation()
 
   const filteredProducts = products.filter(product => {
     return (
@@ -51,25 +54,25 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
   return (
     <>
       <div className="mb-4 p-4 bg-muted rounded-lg">
-        <h3 className="text-sm font-semibold mb-3">Filter Products</h3>
+        <h3 className="text-sm font-semibold mb-3">{t("Filter Products")}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
           <input
             type="text"
-            placeholder="Product Name"
+            placeholder={t("Product Name")}
             className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
             value={filters.productName}
             onChange={(e) => setFilters({ ...filters, productName: e.target.value })}
           />
           <input
             type="text"
-            placeholder="Storage"
+            placeholder={t("Storage")}
             className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
             value={filters.storage}
             onChange={(e) => setFilters({ ...filters, storage: e.target.value })}
           />
           <input
             type="text"
-            placeholder="Shipping ID"
+            placeholder={t("Shipping ID")}
             className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
             value={filters.shippingId}
             onChange={(e) => setFilters({ ...filters, shippingId: e.target.value })}
@@ -79,34 +82,34 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
             value={filters.status}
             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
           >
-            <option value="">All Status</option>
-            <option value="available">Available</option>
-            <option value="out_of_stock">Out of Stock</option>
+            <option value="">{t("All Status")}</option>
+            <option value="available">{t("Available")}</option>
+            <option value="out_of_stock">{t("Out of Stock")}</option>
           </select>
         </div>
         <button
           className="mt-3 px-3 py-1 bg-black text-white text-xs rounded hover:bg-gray-800"
           onClick={() => setFilters({ storage: '', shippingId: '', status: '', productName: '' })}
         >
-          Clear Filters
+          {t("Clear Filters")}
         </button>
       </div>
     <div className="overflow-x-auto border border-border rounded-lg">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border bg-muted">
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Box Code</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Product Name</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Original Price</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Selling Price</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Group Item Price</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Storage</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Number of boxes</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Pieces per box</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Extracted Pieces</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Status</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Shipping ID</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">Actions</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Box Code")}</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Product Name")}</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Original Price")}</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Selling Price")}</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Group Item Price")}</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Storage")}</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Number of boxes")}</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Pieces per box")}</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Extracted Pieces")}</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Status")}</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Shipping ID")}</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Actions")}</th>
           </tr>
         </thead>
         <tbody>
@@ -203,11 +206,11 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
                       onChange={(e) => setEditValues({ ...editValues, status: e.target.value })}
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
                     >
-                      <option value="available">Available</option>
-                      <option value="out_of_stock">Out of Stock</option>
+                      <option value="available">{t("Available")}</option>
+                      <option value="out_of_stock">{t("Out of Stock")}</option>
                     </select>
                   </td>
-                  <td className="px-3 py-3 text-xs text-muted-foreground">{product.shipping_id || "None"}</td>
+                  <td className="px-3 py-3 text-xs text-muted-foreground">{product.shipping_id || t("None")}</td>
                   <td className="px-3 py-3">
                     <div className="flex gap-1">
                       <button
@@ -239,10 +242,10 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
                         ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                         : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                     }`}>
-                      {product.status === 'available' ? 'Available' : 'Out of Stock'}
+                      {product.status === 'available' ? t('Available') : t('Out of Stock')}
                     </span>
                   </td>
-                  <td className="px-3 py-3 text-xs text-muted-foreground">{product.shipping_id || "None"}</td>
+                  <td className="px-3 py-3 text-xs text-muted-foreground">{product.shipping_id || t("None")}</td>
                   <td className="px-3 py-3">
                     <div className="flex gap-1">
                       <button

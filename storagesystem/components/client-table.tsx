@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { Trash2, Edit2, Check, X, Eye } from "lucide-react"
 import { ClientDetailsModal } from "./client-details-modal"
+import { useTranslation } from "react-i18next"
+import "../i18n.client"
 
 interface Client {
   id: number
@@ -24,6 +26,11 @@ export function ClientTable({ clients, onDelete, onUpdate }: ClientTableProps) {
   const [editValues, setEditValues] = useState<Partial<Client>>({})
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [filters, setFilters] = useState({
+    clientName: '',
+    phoneNumber: '',
+  })
+  const { t } = useTranslation()
 
   const startEdit = (client: Client) => {
     setEditingId(client.id)
@@ -41,21 +48,54 @@ export function ClientTable({ clients, onDelete, onUpdate }: ClientTableProps) {
     setEditValues({})
   }
 
+  const filteredClients = clients.filter(client => {
+    return (
+      (filters.clientName === '' || client.client_name.toLowerCase().includes(filters.clientName.toLowerCase())) &&
+      (filters.phoneNumber === '' || (client.phone_number || '').toLowerCase().includes(filters.phoneNumber.toLowerCase()))
+    )
+  })
+
   return (
+    <>
+      <div className="mb-4 p-4 bg-muted rounded-lg">
+        <h3 className="text-sm font-semibold mb-3">{t("Filter Clients")}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <input
+            type="text"
+            placeholder={t("Client Name")}
+            className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+            value={filters.clientName}
+            onChange={(e) => setFilters({ ...filters, clientName: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder={t("Phone Number")}
+            className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+            value={filters.phoneNumber}
+            onChange={(e) => setFilters({ ...filters, phoneNumber: e.target.value })}
+          />
+        </div>
+        <button
+          className="mt-3 px-3 py-1 bg-black text-white text-xs rounded hover:bg-gray-800"
+          onClick={() => setFilters({ clientName: '', phoneNumber: '' })}
+        >
+          {t("Clear Filters")}
+        </button>
+      </div>
     <div className="overflow-x-auto border border-border rounded-lg">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border bg-muted">
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Client Name</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Phone Number</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Shipping ID</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">History</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Total Debts</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Actions</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Client Name")}</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Phone Number")}</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Shipping ID")}</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("History")}</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Total Debts")}</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Actions")}</th>
           </tr>
         </thead>
         <tbody>
-          {clients.map((client) => (
+          {filteredClients.map((client) => (
             <tr key={client.id} className="border-b border-border hover:bg-muted/50 transition-colors">
               {editingId === client.id ? (
                 <>
@@ -113,10 +153,10 @@ export function ClientTable({ clients, onDelete, onUpdate }: ClientTableProps) {
               ) : (
                 <>
                   <td className="px-4 py-3 font-medium text-foreground text-xs">{client.client_name}</td>
-                  <td className="px-4 py-3 text-foreground text-xs">{client.phone_number || "N/A"}</td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">{client.shipping_id || "None"}</td>
+                  <td className="px-4 py-3 text-foreground text-xs">{client.phone_number || t("N/A")}</td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">{client.shipping_id || t("None")}</td>
                   <td className="px-4 py-3 text-foreground text-xs truncate max-w-xs" title={client.history || undefined}>
-                    {client.history || "No history"}
+                    {client.history || t("No history")}
                   </td>
                   <td className="px-4 py-3 text-foreground text-xs font-medium">{(client.total_debts ?? 0).toFixed(2)}</td>
                   <td className="px-4 py-3">
@@ -156,5 +196,6 @@ export function ClientTable({ clients, onDelete, onUpdate }: ClientTableProps) {
         onOpenChange={setShowDetailsModal}
       />
     </div>
+    </>
   )
 }

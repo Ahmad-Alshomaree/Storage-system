@@ -1,2 +1,0 @@
-ALTER TABLE `products` DROP COLUMN `Total_pices`;--> statement-breakpoint
-ALTER TABLE `products` ADD `Total_pices` integer GENERATED ALWAYS AS (CAST(ROUND(pice_per_box * number_of_boxes) AS INTEGER)) VIRTUAL;
