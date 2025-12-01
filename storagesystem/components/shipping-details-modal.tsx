@@ -1,11 +1,21 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import { Edit2, Trash2, Download, Check, X } from "lucide-react"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+
+interface Client {
+  id: number
+  client_name: string
+  phone_number?: string | null
+}
 
 interface Product {
   id: number
@@ -30,8 +40,10 @@ interface Shipping {
   type: string
   shipping_date: string
   receiving_date: string
-  receiver: string
-  sender: string
+  receiver_client_id?: number
+  sender_client_id?: number
+  receiver: Client
+  sender: Client
   paid?: number
   ship_price?: number
   currency?: string
@@ -45,10 +57,125 @@ interface ShippingDetailsModalProps {
   shipping: Shipping | null
   open: boolean
   onOpenChange: (open: boolean) => void
+  onEdit?: (id: number, updates: Partial<Shipping>) => void
+  onDelete?: (id: number) => void
 }
 
-export function ShippingDetailsModal({ shipping, open, onOpenChange }: ShippingDetailsModalProps) {
+export function ShippingDetailsModal({ shipping, open, onOpenChange, onEdit, onDelete }: ShippingDetailsModalProps) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [editValues, setEditValues] = useState<Partial<Shipping>>({})
+  const [clients, setClients] = useState<Client[]>([])
+  const [loadingClients, setLoadingClients] = useState(true)
+
+  // Fetch clients on component mount
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const response = await fetch('/api/clients')
+        if (response.ok) {
+          const data = await response.json()
+          setClients(data)
+        }
+      } catch (error) {
+        console.error('Error fetching clients:', error)
+      } finally {
+        setLoadingClients(false)
+      }
+    }
+
+    if (open) {
+      fetchClients()
+    }
+  }, [open])
+
   if (!shipping) return null
+
+  // Helper function to convert date to date format
+  const convertToDateInput = (dateString: string) => {
+    try {
+      if (dateString.includes("/")) {
+        const [month, day, year] = dateString.split('/')
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+      } else if (dateString.includes("-") && !dateString.includes("T")) {
+        return dateString
+      } else if (dateString.includes("T")) {
+        return dateString.slice(0, 10)
+      }
+      return new Date().toISOString().slice(0, 10)
+    } catch {
+      return new Date().toISOString().slice(0, 10)
+    }
+  }
+
+  const startEdit = () => {
+    setIsEditing(true)
+    setEditValues({
+      ...shipping,
+      shipping_date: convertToDateInput(shipping.shipping_date),
+      receiving_date: convertToDateInput(shipping.receiving_date),
+    })
+  }
+
+  const saveEdit = async () => {
+    if (onEdit) {
+      await onEdit(shipping.id, editValues)
+    }
+    setIsEditing(false)
+    setEditValues({})
+  }
+
+  const cancelEdit = () => {
+    setIsEditing(false)
+    setEditValues({})
+  }
+
+  const handleDelete = async () => {
+    if (onDelete && confirm("Are you sure you want to delete this shipping record?")) {
+      await onDelete(shipping.id)
+      onOpenChange(false)
+    }
+  }
+
+  const handleDownload = () => {
+    // Generate receipt content
+    const receiptContent = `
+SHIPPING RECEIPT
+
+Shipping ID: #${shipping.id}
+Type: ${shipping.type}
+Receiver: ${shipping.receiver.client_name}
+Sender: ${shipping.sender.client_name}
+
+Dates:
+- Shipping Date: ${new Date(shipping.shipping_date).toLocaleString()}
+- Receiving Date: ${new Date(shipping.receiving_date).toLocaleString()}
+
+Financial Information:
+- Currency: ${shipping.currency || "Dollar"}
+- Paid: ${shipping.paid ?? 0} ${shipping.currency || "Dollar"}
+- Ship Price: ${shipping.ship_price ?? 0} ${shipping.currency || "Dollar"}
+
+Products (${shipping.products?.length || 0}):
+${shipping.products?.map(product =>
+  `- ${product.product_name || product.box_code} (${product.number_of_boxes} boxes, ${product.Total_pices ?? 0} pcs)`
+).join('\n') || 'No products'}
+
+Notes: ${shipping.note || "No notes"}
+
+Generated on: ${new Date().toLocaleString()}
+    `.trim()
+
+    // Create and download file
+    const blob = new Blob([receiptContent], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `shipping-receipt-${shipping.id}.txt`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -66,36 +193,113 @@ export function ShippingDetailsModal({ shipping, open, onOpenChange }: ShippingD
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Type</label>
-              <p className="text-lg font-bold capitalize">{shipping.type}</p>
+              {isEditing ? (
+                <select
+                  value={editValues.type || ""}
+                  onChange={(e) => setEditValues({ ...editValues, type: e.target.value })}
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded"
+                >
+                  <option value="input load">Input Load</option>
+                  <option value="output load">Output Load</option>
+                  <option value="comming">Coming</option>
+                </select>
+              ) : (
+                <p className="text-lg font-bold capitalize">{shipping.type}</p>
+              )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Receiver</label>
-              <p className="text-sm">{shipping.receiver}</p>
+              {isEditing ? (
+                <select
+                  value={editValues.receiver_client_id || shipping.receiver_client_id || ""}
+                  onChange={(e) => setEditValues({ ...editValues, receiver_client_id: parseInt(e.target.value) })}
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded"
+                  disabled={loadingClients}
+                >
+                  <option value="">Select Receiver</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.client_name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <p className="text-sm">{shipping.receiver.client_name}</p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Sender</label>
-              <p className="text-sm">{shipping.sender}</p>
+              {isEditing ? (
+                <select
+                  value={editValues.sender_client_id || shipping.sender_client_id || ""}
+                  onChange={(e) => setEditValues({ ...editValues, sender_client_id: parseInt(e.target.value) })}
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded"
+                  disabled={loadingClients}
+                >
+                  <option value="">Select Sender</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.client_name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <p className="text-sm">{shipping.sender.client_name}</p>
+              )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Currency</label>
-              <p className="text-sm">{shipping.currency || "Dollar"}</p>
+              {isEditing ? (
+                <select
+                  value={editValues.currency || ""}
+                  onChange={(e) => setEditValues({ ...editValues, currency: e.target.value })}
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded"
+                >
+                  <option value="Dollar">Dollar</option>
+                  <option value="Iraqi Dinar">Iraqi Dinar</option>
+                </select>
+              ) : (
+                <p className="text-sm">{shipping.currency || "Dollar"}</p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Paid</label>
-              <p className="text-sm">{shipping.paid ?? 0} {shipping.currency || "Dollar"}</p>
+              {isEditing ? (
+                <input
+                  type="number"
+                  step="0.01"
+                  value={editValues.paid || ""}
+                  onChange={(e) => setEditValues({ ...editValues, paid: parseFloat(e.target.value) || 0 })}
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded"
+                  placeholder="0.00"
+                />
+              ) : (
+                <p className="text-sm">{shipping.paid ?? 0} {shipping.currency || "Dollar"}</p>
+              )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Ship Price</label>
-              <p className="text-sm">{shipping.ship_price ?? 0} {shipping.currency || "Dollar"}</p>
+              {isEditing ? (
+                <input
+                  type="number"
+                  step="0.01"
+                  value={editValues.ship_price || ""}
+                  onChange={(e) => setEditValues({ ...editValues, ship_price: parseFloat(e.target.value) || 0 })}
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded"
+                  placeholder="0.00"
+                />
+              ) : (
+                <p className="text-sm">{shipping.ship_price ?? 0} {shipping.currency || "Dollar"}</p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Created At</label>
@@ -106,7 +310,17 @@ export function ShippingDetailsModal({ shipping, open, onOpenChange }: ShippingD
           <div className="grid grid-cols-1 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Note</label>
-              <p className="text-sm">{shipping.note || "No notes"}</p>
+              {isEditing ? (
+                <textarea
+                  value={editValues.note || ""}
+                  onChange={(e) => setEditValues({ ...editValues, note: e.target.value })}
+                  rows={3}
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded"
+                  placeholder="Notes"
+                />
+              ) : (
+                <p className="text-sm">{shipping.note || "No notes"}</p>
+              )}
             </div>
           </div>
 
@@ -114,11 +328,29 @@ export function ShippingDetailsModal({ shipping, open, onOpenChange }: ShippingD
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Shipping Date</label>
-              <p className="text-sm font-semibold">{new Date(shipping.shipping_date).toLocaleString()}</p>
+              {isEditing ? (
+                <input
+                  type="date"
+                  value={editValues.shipping_date || ""}
+                  onChange={(e) => setEditValues({ ...editValues, shipping_date: e.target.value })}
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded"
+                />
+              ) : (
+                <p className="text-sm font-semibold">{new Date(shipping.shipping_date).toLocaleDateString()}</p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Receiving Date</label>
-              <p className="text-sm font-semibold">{new Date(shipping.receiving_date).toLocaleString()}</p>
+              {isEditing ? (
+                <input
+                  type="date"
+                  value={editValues.receiving_date || ""}
+                  onChange={(e) => setEditValues({ ...editValues, receiving_date: e.target.value })}
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded"
+                />
+              ) : (
+                <p className="text-sm font-semibold">{new Date(shipping.receiving_date).toLocaleDateString()}</p>
+              )}
             </div>
           </div>
 
@@ -217,13 +449,57 @@ export function ShippingDetailsModal({ shipping, open, onOpenChange }: ShippingD
             <div className="bg-muted p-4 rounded-lg">
               <p className="text-sm">
                 <span className="font-medium">Type:</span> {shipping.type} •
-                <span className="font-medium"> Receiver:</span> {shipping.receiver} •
+                <span className="font-medium"> Receiver:</span> {shipping.receiver.client_name} •
                 <span className="font-medium"> Duration:</span> {Math.ceil((new Date(shipping.receiving_date).getTime() - new Date(shipping.shipping_date).getTime()) / (1000 * 60 * 60 * 24))} days •
                 <span className="font-medium"> Products:</span> {shipping.products?.length || 0}
               </p>
             </div>
           </div>
         </div>
+
+        <DialogFooter className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={isEditing ? saveEdit : startEdit}
+            className="flex items-center gap-2"
+          >
+            {isEditing ? <Check className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
+            {isEditing ? "Save" : "Edit"}
+          </Button>
+          {isEditing ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={cancelEdit}
+              className="flex items-center gap-2"
+            >
+              <X className="w-4 h-4" />
+              Cancel
+            </Button>
+          ) : (
+            <>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDelete}
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleDownload}
+                className="flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Receipt
+              </Button>
+            </>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

@@ -3,9 +3,44 @@
 import { useState } from "react"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { ShippingTable } from "@/components/shipping-table"
+import { ShippingTable, ShippingTableClient } from "@/components/shipping-table"
 import { ShippingForm } from "@/components/shipping-form"
-import type { Shipping } from "@/lib/types"
+
+interface Product {
+  id: number
+  box_code: string
+  product_name?: string | null
+  product_type?: string | null
+  original_price: number
+  selling_price: number
+  Total_pices?: number | null
+  total_original_price?: number | null
+  number_of_boxes: number
+  size_of_box: number
+  total_box_size: number
+  weight?: number | null
+  image?: string | null
+  currency?: string | null
+  note?: string | null
+}
+
+interface Shipping {
+  id: number
+  type: string
+  shipping_date: string
+  receiving_date: string
+  receiver_client_id?: number
+  sender_client_id?: number
+  receiver: ShippingTableClient
+  sender: ShippingTableClient
+  paid?: number
+  ship_price?: number
+  currency?: string
+  note?: string | null
+  created_at: string
+  file_path?: string | null
+  products?: Product[]
+}
 
 interface ShippingTabProps {
   shipping: Shipping[]
@@ -32,7 +67,7 @@ export function ShippingTab({ shipping, isLoading, refetch }: ShippingTabProps) 
   }
 
   const filteredShipping = shipping.filter((record) =>
-    record.receiver.toLowerCase().includes(searchTerm.toLowerCase())
+    record.receiver.client_name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   return (

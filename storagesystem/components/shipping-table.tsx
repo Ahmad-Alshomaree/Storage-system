@@ -1,8 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Trash2, Edit2, Check, X, Eye } from "lucide-react"
 import { ShippingDetailsModal } from "./shipping-details-modal"
+
+export interface ShippingTableClient {
+  id: number
+  client_name: string
+  phone_number?: string | null
+}
 
 interface Product {
   id: number
@@ -27,8 +33,10 @@ interface Shipping {
   type: string
   shipping_date: string
   receiving_date: string
-  receiver: string
-  sender: string
+  receiver_client_id?: number
+  sender_client_id?: number
+  receiver: ShippingTableClient
+  sender: ShippingTableClient
   paid?: number
   ship_price?: number
   currency?: string
@@ -54,33 +62,54 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
     receiver: '',
     shippingDate: '',
   })
+  const [clients, setClients] = useState<ShippingTableClient[]>([])
+  const [loadingClients, setLoadingClients] = useState(true)
+
+  // Fetch clients on component mount
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const response = await fetch('/api/clients')
+        if (response.ok) {
+          const data = await response.json()
+          setClients(data)
+        }
+      } catch (error) {
+        console.error('Error fetching clients:', error)
+      } finally {
+        setLoadingClients(false)
+      }
+    }
+
+    fetchClients()
+  }, [])
 
   const filteredShipping = shipping.filter(record => {
     return (
       (filters.type === '' || record.type === filters.type) &&
-      (filters.receiver === '' || record.receiver.toLowerCase().includes(filters.receiver.toLowerCase())) &&
+      (filters.receiver === '' || record.receiver.client_name.toLowerCase().includes(filters.receiver.toLowerCase())) &&
       (filters.shippingDate === '' || formatDate(record.shipping_date).toLowerCase().includes(filters.shippingDate.toLowerCase()))
     )
   })
 
-  const convertToDatetimeLocal = (dateString: string) => {
+  const convertToDateInput = (dateString: string) => {
     try {
       // Handle different date formats
       if (dateString.includes("/")) {
-        // Format: "12/12/2025" -> convert to ISO
+        // Format: "12/12/2025" -> convert to YYYY-MM-DD
         const [month, day, year] = dateString.split('/')
-        return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00`).toISOString().slice(0, 16)
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
       } else if (dateString.includes("-") && !dateString.includes("T")) {
-        // Format: "2024-01-01" -> add time
-        return `${dateString}T00:00`
+        // Format: "2024-01-01" -> already in correct format
+        return dateString
       } else if (dateString.includes("T")) {
-        // Already ISO format
-        return dateString.slice(0, 16)
+        // ISO format -> extract date part
+        return dateString.slice(0, 10)
       }
       // Default fallback
-      return new Date().toISOString().slice(0, 16)
+      return new Date().toISOString().slice(0, 10)
     } catch {
-      return new Date().toISOString().slice(0, 16)
+      return new Date().toISOString().slice(0, 10)
     }
   }
 
@@ -88,8 +117,8 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
     setEditingId(record.id)
     setEditValues({
       ...record,
-      shipping_date: convertToDatetimeLocal(record.shipping_date),
-      receiving_date: convertToDatetimeLocal(record.receiving_date),
+      shipping_date: convertToDateInput(record.shipping_date),
+      receiving_date: convertToDateInput(record.receiving_date),
     })
   }
 
@@ -105,7 +134,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString()
+    return new Date(dateString).toLocaleDateString()
   }
 
   return (
@@ -146,20 +175,20 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
         </button>
       </div>
     <div className="overflow-x-auto border border-border rounded-lg">
-      <table className="w-full text-sm">
+      <table className="w-full text-sm min-w-[1200px]">
         <thead>
           <tr className="border-b border-border bg-muted">
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Type</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Shipping Date</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Receiving Date</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Receiver</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Sender</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Products</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Paid</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Ship Price</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Currency</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Note</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Actions</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Type</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Shipping Date</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Receiving Date</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Receiver</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Sender</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Products</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Paid</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Ship Price</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Currency</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Note</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -167,7 +196,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
             <tr key={record.id} className="border-b border-border hover:bg-muted/50 transition-colors">
               {editingId === record.id ? (
                 <>
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-3">
                     <select
                       value={editValues.type || ""}
                       onChange={(e) => setEditValues({ ...editValues, type: e.target.value })}
@@ -178,39 +207,53 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                       <option value="comming">Coming</option>
                     </select>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-3">
                     <input
-                      type="datetime-local"
+                      type="date"
                       value={editValues.shipping_date || ""}
                       onChange={(e) => setEditValues({ ...editValues, shipping_date: e.target.value })}
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
                     />
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-3">
                     <input
-                      type="datetime-local"
+                      type="date"
                       value={editValues.receiving_date || ""}
                       onChange={(e) => setEditValues({ ...editValues, receiving_date: e.target.value })}
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
                     />
                   </td>
-                  <td className="px-4 py-3">
-                    <input
-                      type="text"
-                      value={editValues.receiver || ""}
-                      onChange={(e) => setEditValues({ ...editValues, receiver: e.target.value })}
+                  <td className="px-2 py-3">
+                    <select
+                      value={editValues.receiver_client_id || ""}
+                      onChange={(e) => setEditValues({ ...editValues, receiver_client_id: parseInt(e.target.value) || undefined })}
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                    />
+                      disabled={loadingClients}
+                    >
+                      <option value="">Select Receiver</option>
+                      {clients.map((client) => (
+                        <option key={client.id} value={client.id}>
+                          {client.client_name}
+                        </option>
+                      ))}
+                    </select>
                   </td>
-                  <td className="px-4 py-3">
-                    <input
-                      type="text"
-                      value={editValues.sender || ""}
-                      onChange={(e) => setEditValues({ ...editValues, sender: e.target.value })}
+                  <td className="px-2 py-3">
+                    <select
+                      value={editValues.sender_client_id || ""}
+                      onChange={(e) => setEditValues({ ...editValues, sender_client_id: parseInt(e.target.value) || undefined })}
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                    />
+                      disabled={loadingClients}
+                    >
+                      <option value="">Select Sender</option>
+                      {clients.map((client) => (
+                        <option key={client.id} value={client.id}>
+                          {client.client_name}
+                        </option>
+                      ))}
+                    </select>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-3">
                     <div className="text-xs text-muted-foreground">
                       {record.products && record.products.length > 0
                         ? record.products.map(p =>
@@ -220,7 +263,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                       }
                     </div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-3">
                     <input
                       type="number"
                       step="0.01"
@@ -230,7 +273,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                       placeholder="0.00"
                     />
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-3">
                     <input
                       type="number"
                       step="0.01"
@@ -240,7 +283,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                       placeholder="0.00"
                     />
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-3">
                     <select
                       value={editValues.currency || ""}
                       onChange={(e) => setEditValues({ ...editValues, currency: e.target.value })}
@@ -250,7 +293,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                       <option value="Iraqi Dinar">Iraqi Dinar</option>
                     </select>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-3">
                     <textarea
                       value={editValues.note || ""}
                       onChange={(e) => setEditValues({ ...editValues, note: e.target.value })}
@@ -259,7 +302,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                       placeholder="Notes"
                     />
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-3">
                     <div className="flex gap-2">
                       <button
                         onClick={() => saveEdit(record.id)}
@@ -275,16 +318,16 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                 </>
               ) : (
                 <>
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-3">
                     <span className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-xs font-medium">
                       {record.type}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-foreground text-xs">{formatDate(record.shipping_date)}</td>
-                  <td className="px-4 py-3 text-foreground text-xs">{formatDate(record.receiving_date)}</td>
-                  <td className="px-4 py-3 text-foreground text-xs">{record.receiver}</td>
-                  <td className="px-4 py-3 text-foreground text-xs">{record.sender}</td>
-                  <td className="px-4 py-3 text-foreground text-xs">
+                  <td className="px-2 py-3 text-foreground text-xs">{formatDate(record.shipping_date)}</td>
+                  <td className="px-2 py-3 text-foreground text-xs">{formatDate(record.receiving_date)}</td>
+                  <td className="px-2 py-3 text-foreground text-xs">{record.receiver.client_name}</td>
+                  <td className="px-2 py-3 text-foreground text-xs">{record.sender.client_name}</td>
+                  <td className="px-2 py-3 text-foreground text-xs">
                     <div className="text-xs max-w-xs truncate">
                       {record.products && record.products.length > 0
                         ? record.products.map(p =>
@@ -294,11 +337,11 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                       }
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-foreground text-xs">{record.paid ?? 0}</td>
-                  <td className="px-4 py-3 text-foreground text-xs">{record.ship_price ?? 0}</td>
-                  <td className="px-4 py-3 text-foreground text-xs">{record.currency || "Dollar"}</td>
-                  <td className="px-4 py-3 text-foreground text-xs max-w-xs truncate">{record.note || ""}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-3 text-foreground text-xs">{record.paid ?? 0}</td>
+                  <td className="px-2 py-3 text-foreground text-xs">{record.ship_price ?? 0}</td>
+                  <td className="px-2 py-3 text-foreground text-xs">{record.currency || "Dollar"}</td>
+                  <td className="px-2 py-3 text-foreground text-xs max-w-xs truncate">{record.note || ""}</td>
+                  <td className="px-2 py-3">
                     <div className="flex gap-2">
                       <button
                         onClick={() => {
@@ -334,6 +377,8 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
         shipping={selectedShipping}
         open={showDetailsModal}
         onOpenChange={setShowDetailsModal}
+        onEdit={onUpdate}
+        onDelete={onDelete}
       />
     </div>
     </>

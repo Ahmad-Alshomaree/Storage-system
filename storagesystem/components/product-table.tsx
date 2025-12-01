@@ -279,6 +279,13 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
         product={selectedProduct}
         open={showDetailsModal}
         onOpenChange={setShowDetailsModal}
+        onEdit={async (updatedProduct) => {
+          await onUpdate(updatedProduct.id, updatedProduct)
+        }}
+        onDelete={(productId) => {
+          onDelete(productId)
+          setShowDetailsModal(false)
+        }}
       />
     </>
   )

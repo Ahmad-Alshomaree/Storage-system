@@ -1,53 +1,55 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-
-interface Product {
-  id: number
-  shipping_id?: number | null
-  box_code: string
-  product_name?: string
-  product_type?: string
-  original_price: number
-  total_original_price: number
-  selling_price: number
-  storage?: string
-  weight?: number
-  image?: string | null
-  pice_per_box?: number | null
-  Total_pices?: number | null
-  size_of_box: number
-  total_box_size: number
-  number_of_boxes: number
-  extracted_pieces?: number | null
-  status: string
-  Grope_Item_price?: number | null
-  currency: string
-  note?: string | null
-  created_at?: string
-  updated_at?: string
-  shipping?: {
-    id: number
-    type: string
-    shipping_date: string
-    receiver: string
-    file_path?: string | null
-    created_at: string
-  }
-}
+import { Button } from "@/components/ui/button"
+import { Trash2, Edit2, Check, X } from "lucide-react"
+import type { Product } from "@/lib/types"
 
 interface ProductDetailsModalProps {
   product: Product | null
   open: boolean
   onOpenChange: (open: boolean) => void
+  onEdit?: (product: Product) => void
+  onDelete?: (productId: number) => void
 }
 
-export function ProductDetailsModal({ product, open, onOpenChange }: ProductDetailsModalProps) {
+export function ProductDetailsModal({ product, open, onOpenChange, onEdit, onDelete }: ProductDetailsModalProps) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedProduct, setEditedProduct] = useState<Partial<Product>>({})
+
+  // Reset editing state when product changes or modal opens/closes
+  useEffect(() => {
+    setIsEditing(false)
+    setEditedProduct({})
+  }, [product, open])
+
+  // Start editing
+  const handleStartEdit = () => {
+    setIsEditing(true)
+    setEditedProduct({ ...product })
+  }
+
+  // Save changes
+  const handleSave = async () => {
+    if (onEdit && product) {
+      await onEdit(editedProduct as Product)
+      setIsEditing(false)
+      setEditedProduct({})
+    }
+  }
+
+  // Cancel editing
+  const handleCancel = () => {
+    setIsEditing(false)
+    setEditedProduct({})
+  }
+
   if (!product) return null
 
   return (
@@ -62,22 +64,58 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Box Code</label>
-              <p className="text-sm font-semibold">{product.box_code}</p>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editedProduct.box_code || ""}
+                  onChange={(e) => setEditedProduct({ ...editedProduct, box_code: e.target.value })}
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded border"
+                />
+              ) : (
+                <p className="text-sm font-semibold">{product.box_code}</p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Product Name</label>
-              <p className="text-sm">{product.product_name || "N/A"}</p>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editedProduct.product_name || ""}
+                  onChange={(e) => setEditedProduct({ ...editedProduct, product_name: e.target.value })}
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded border"
+                />
+              ) : (
+                <p className="text-sm">{product.product_name || "N/A"}</p>
+              )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Product Type</label>
-              <p className="text-sm">{product.product_type || "N/A"}</p>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editedProduct.product_type || ""}
+                  onChange={(e) => setEditedProduct({ ...editedProduct, product_type: e.target.value })}
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded border"
+                />
+              ) : (
+                <p className="text-sm">{product.product_type || "N/A"}</p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Storage Location</label>
-              <p className="text-sm">{product.storage || "N/A"}</p>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editedProduct.storage || ""}
+                  onChange={(e) => setEditedProduct({ ...editedProduct, storage: e.target.value })}
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded border"
+                />
+              ) : (
+                <p className="text-sm">{product.storage || "N/A"}</p>
+              )}
             </div>
           </div>
 
@@ -85,15 +123,45 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Original Price</label>
-              <p className="text-sm font-semibold text-green-600">{product.original_price.toFixed(2)}</p>
+              {isEditing ? (
+                <input
+                  type="number"
+                  value={editedProduct.original_price || 0}
+                  onChange={(e) => setEditedProduct({ ...editedProduct, original_price: Number.parseFloat(e.target.value) || 0 })}
+                  step="0.01"
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded border"
+                />
+              ) : (
+                <p className="text-sm font-semibold text-green-600">{product.original_price.toFixed(2)}</p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Selling Price</label>
-              <p className="text-sm font-semibold text-blue-600">{product.selling_price.toFixed(2)}</p>
+              {isEditing ? (
+                <input
+                  type="number"
+                  value={editedProduct.selling_price || 0}
+                  onChange={(e) => setEditedProduct({ ...editedProduct, selling_price: Number.parseFloat(e.target.value) || 0 })}
+                  step="0.01"
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded border"
+                />
+              ) : (
+                <p className="text-sm font-semibold text-blue-600">{product.selling_price.toFixed(2)}</p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Group Item Price</label>
-              <p className="text-sm font-semibold text-purple-600">{product.Grope_Item_price ? product.Grope_Item_price.toFixed(2) : "N/A"}</p>
+              {isEditing ? (
+                <input
+                  type="number"
+                  value={editedProduct.group_item_price || 0}
+                  onChange={(e) => setEditedProduct({ ...editedProduct, group_item_price: Number.parseFloat(e.target.value) || 0 })}
+                  step="0.01"
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded border"
+                />
+              ) : (
+                <p className="text-sm font-semibold text-purple-600">{product.group_item_price ? product.group_item_price.toFixed(2) : "N/A"}</p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Total Original Price</label>
@@ -105,11 +173,21 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Pieces Per Box</label>
-              <p className="text-sm">{product.pice_per_box || "N/A"}</p>
+              {isEditing ? (
+                <input
+                  type="number"
+                  value={editedProduct.pice_per_box || 0}
+                  onChange={(e) => setEditedProduct({ ...editedProduct, pice_per_box: Number.parseInt(e.target.value) || 0 })}
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded border"
+                />
+              ) : (
+                <p className="text-sm">{product.pice_per_box || "N/A"}</p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Total Pieces</label>
-              <p className="text-sm">{product.Total_pices || "N/A"}</p>
+              <p className="text-sm font-semibold">{product.Total_pices || "N/A"}</p>
+              <p className="text-xs text-muted-foreground">Auto-calculated: Pieces per box × Number of boxes</p>
             </div>
           </div>
 
@@ -117,7 +195,17 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
           <div className="grid grid-cols-3 gap-4 border-t pt-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Extracted Pieces</label>
-              <p className="text-sm font-semibold">{product.extracted_pieces || 0}</p>
+              {isEditing ? (
+                <input
+                  type="number"
+                  value={editedProduct.extracted_pieces || 0}
+                  onChange={(e) => setEditedProduct({ ...editedProduct, extracted_pieces: Number.parseInt(e.target.value) || 0 })}
+                  min="0"
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded border"
+                />
+              ) : (
+                <p className="text-sm font-semibold">{product.extracted_pieces || 0}</p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Remaining Pieces</label>
@@ -127,20 +215,41 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Status</label>
-              <p className={`text-sm font-bold ${
-                product.status === 'available'
-                  ? 'text-green-600'
-                  : 'text-red-600'
-              }`}>
-                {product.status === 'available' ? 'Available' : 'Out of Stock'}
-              </p>
+              {isEditing ? (
+                <select
+                  value={editedProduct.status || "available"}
+                  onChange={(e) => setEditedProduct({ ...editedProduct, status: e.target.value })}
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded border"
+                >
+                  <option value="available">Available</option>
+                  <option value="out_of_stock">Out of Stock</option>
+                </select>
+              ) : (
+                <p className={`text-sm font-bold ${
+                  product.status === 'available'
+                    ? 'text-green-600'
+                    : 'text-red-600'
+                }`}>
+                  {product.status === 'available' ? 'Available' : 'Out of Stock'}
+                </p>
+              )}
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Number of Boxes</label>
-              <p className="text-sm">{product.number_of_boxes || "N/A"}</p>
+              {isEditing ? (
+                <input
+                  type="number"
+                  value={editedProduct.number_of_boxes || 0}
+                  onChange={(e) => setEditedProduct({ ...editedProduct, number_of_boxes: Number.parseFloat(e.target.value) || 0 })}
+                  step="0.01"
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded border"
+                />
+              ) : (
+                <p className="text-sm">{product.number_of_boxes || "N/A"}</p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Size of Box</label>
@@ -156,7 +265,18 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Weight</label>
-              <p className="text-sm">{product.weight ? `${product.weight} kg` : "N/A"}</p>
+              {isEditing ? (
+                <input
+                  type="number"
+                  value={editedProduct.weight || 0}
+                  onChange={(e) => setEditedProduct({ ...editedProduct, weight: Number.parseFloat(e.target.value) || 0 })}
+                  step="0.01"
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded border"
+                  placeholder="Weight in kg"
+                />
+              ) : (
+                <p className="text-sm">{product.weight ? `${product.weight} kg` : "N/A"}</p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Image</label>
@@ -191,7 +311,17 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Note</label>
-              <p className="text-sm">{product.note || "No note"}</p>
+              {isEditing ? (
+                <textarea
+                  value={editedProduct.note || ""}
+                  onChange={(e) => setEditedProduct({ ...editedProduct, note: e.target.value })}
+                  rows={2}
+                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded border"
+                  placeholder="Enter note..."
+                />
+              ) : (
+                <p className="text-sm">{product.note || "No note"}</p>
+              )}
             </div>
           </div>
 
@@ -206,6 +336,52 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
               <p className="text-sm">{product.updated_at ? new Date(product.updated_at).toLocaleString() : "N/A"}</p>
             </div>
           </div>
+        </div>
+
+        <div className="flex justify-end gap-2 mt-6 border-t pt-4">
+          {isEditing ? (
+            <>
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                className="flex items-center gap-2"
+              >
+                <X className="w-4 h-4" />
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSave}
+                className="flex items-center gap-2"
+              >
+                <Check className="w-4 h-4" />
+                Save
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                onClick={handleStartEdit}
+                className="flex items-center gap-2"
+              >
+                <Edit2 className="w-4 h-4" />
+                Edit
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  if (confirm('Are you sure you want to delete this product?')) {
+                    onDelete?.(product.id)
+                    onOpenChange(false)
+                  }
+                }}
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </Button>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>

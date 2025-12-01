@@ -1,6 +1,6 @@
 import { db } from "@/lib/db"
-import { shipping } from "@/lib/schema"
-import { eq } from "drizzle-orm"
+import { shipping, products, debits, storeProducts, client } from "@/lib/schema"
+import { eq, inArray, sql } from "drizzle-orm"
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -65,7 +65,32 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    await db.delete(shipping).where(eq(shipping.id, Number.parseInt(id)))
+    const shippingId = Number.parseInt(id)
+
+    // Use transaction to handle cascading deletes
+    await db.transaction(async (tx) => {
+      // First, set clients' shipping_id to null where it references this shipping
+      await tx.update(client).set({ shipping_id: null }).where(eq(client.shipping_id, shippingId))
+
+      // Get all products in this shipping
+      const shippingProducts = await tx.select({ id: products.id }).from(products).where(eq(products.shipping_id, shippingId))
+      const productIds = shippingProducts.map(p => p.id)
+
+      if (productIds.length > 0) {
+        // Delete store_products related to these products
+        await tx.delete(storeProducts).where(inArray(storeProducts.product_id, productIds))
+
+        // Delete products
+        await tx.delete(products).where(eq(products.shipping_id, shippingId))
+      }
+
+      // Delete debits related to this shipping
+      await tx.delete(debits).where(eq(debits.shipping_id, shippingId))
+
+      // Finally, delete the shipping record
+      await tx.delete(shipping).where(eq(shipping.id, shippingId))
+    })
+
     return Response.json({ success: true })
   } catch (error) {
     console.error("Error deleting shipping record:", error)

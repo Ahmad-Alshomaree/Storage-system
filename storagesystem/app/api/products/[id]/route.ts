@@ -39,9 +39,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return Response.json({ error: "Product not found" }, { status: 404 })
     }
 
-    // Handle extracted_pieces separately as it affects status
-    const extractedPieces = body.extracted_pieces !== undefined ? body.extracted_pieces : existingProduct.extracted_pieces
-    const temporaryUpdateData = {
+    // Get updated field values, using existing values as fallbacks
+    const updatedData = {
       box_code: body.box_code ?? existingProduct.box_code,
       product_name: body.product_name ?? existingProduct.product_name,
       original_price: body.original_price ?? existingProduct.original_price,
@@ -58,17 +57,25 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       updated_at: new Date().toISOString(),
     }
 
-    // Calculate total pieces from current/update data
-    const picePerBox = temporaryUpdateData.pice_per_box ?? existingProduct.pice_per_box
-    const numberOfBoxes = temporaryUpdateData.number_of_boxes ?? existingProduct.number_of_boxes
-    const totalPieces = Math.round(picePerBox * numberOfBoxes)
+    // Calculate total pieces from updated data
+    const piecesPerBox = updatedData.pice_per_box
+    const numberOfBoxes = updatedData.number_of_boxes
+    const totalPieces = Math.round(piecesPerBox * numberOfBoxes)
+
+    // Calculate total original price from updated data
+    const totalOriginalPrice = totalPieces * updatedData.original_price
+
+    // Handle extracted_pieces separately as it affects status
+    const extractedPieces = body.extracted_pieces !== undefined ? body.extracted_pieces : existingProduct.extracted_pieces
 
     // Automatically set status based on extracted_pieces vs total pieces
     const automaticStatus = extractedPieces >= totalPieces ? "out_of_stock" : "available"
 
-    // Final update data including extracted_pieces and status
+    // Final update data including calculated fields, extracted_pieces and status
     const updateData = {
-      ...temporaryUpdateData,
+      ...updatedData,
+      Total_pices: totalPieces,
+      total_original_price: totalOriginalPrice,
       extracted_pieces: extractedPieces,
       status: automaticStatus,
     }

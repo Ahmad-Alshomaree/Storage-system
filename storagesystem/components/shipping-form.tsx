@@ -428,16 +428,9 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
     setError("")
 
     try {
-      // For input load, validate that at least one product is added
-      if (formData.type === 'input load' && newProducts.length === 0) {
-        setError("Please add at least one product for input load shipping")
-        setIsLoading(false)
-        return
-      }
-
-      // For output load, validate that at least one product is selected
-      if (formData.type === 'output load' && selectedProductIds.length === 0) {
-        setError("Please select at least one product for output load shipping")
+      // Validate required shipping information
+      if (!formData.shipping_date || !formData.receiving_date || !formData.receiver || !formData.sender) {
+        setError("Please fill in all required shipping information (dates, receiver, sender)")
         setIsLoading(false)
         return
       }
@@ -478,7 +471,6 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
 
       // Handle client assignment
       if (formData.receiver) {
-        // Assign client to shipping - find client by name
         const existingClient = existingClients.find(client => client.client_name === formData.receiver)
         if (existingClient) {
           await fetch(`/api/clients/${existingClient.id}`, {
@@ -489,107 +481,15 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         }
       }
 
-      if (formData.type === 'input load') {
-        // Create new products and assign to shipping
-        const productPromises = newProducts.map(product => {
-          const productData = {
-            product_name: product.product_name,
-            box_code: product.box_code,
-            original_price: product.original_price,
-            selling_price: product.selling_price,
-            storage: product.storage,
-            number_of_boxes: product.number_of_boxes,
-            size_of_box: product.size_of_box,
-            total_box_size: product.total_box_size,
-            weight: product.weight,
-            pice_per_box: product.pice_per_box,
-            grope_item_price: product.grope_item_price,
-            image: product.image || null,
-            Total_pices: product.Total_pices,
-            total_original_price: product.total_original_price,
-            currency: product.currency,
-            note: product.note || null,
-            shipping_id: newShipping.id,
-          }
+      // Store the shipping ID for future use (products can be saved separately)
+      setCurrentShippingId(newShipping.id)
 
-          return fetch("/api/products", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(productData),
-          })
-        })
-
-        await Promise.all(productPromises)
-      } else {
-        // Assign selected products to the new shipping
-        if (selectedProductIds.length > 0) {
-          const assignPromises = selectedProductIds.map(productId =>
-            fetch(`/api/products/${productId}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ shipping_id: newShipping.id }),
-            })
-          )
-
-          await Promise.all(assignPromises)
-        }
-
-        // If shipping to store, populate store_products table
-        if (formData.receiver === "STORE" && selectedProductIds.length > 0) {
-          // Get the full product details for selected products
-          const productsResponse = await fetch("/api/products")
-          if (productsResponse.ok) {
-            const allProducts = await productsResponse.json()
-            const storeProductsToAdd = allProducts
-              .filter((product: any) => selectedProductIds.includes(product.id))
-              .map((product: any) => ({
-                product_id: product.id,
-                product_name: product.product_name || "",
-                individual_item_selling_price: product.selling_price,
-                image: product.image,
-                group_item_price: product.Grope_Item_price,
-                number_of_items: (product.pice_per_box || 1) * product.number_of_boxes,
-              }))
-
-            const storeProductsPromises = storeProductsToAdd.map((storeProduct: any) =>
-              fetch("/api/store-products", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(storeProduct),
-              })
-            )
-
-            await Promise.all(storeProductsPromises)
-          }
-        }
-      }
-
-      // Reset form
-      setFormData({
-        type: "input load",
-        shipping_date: "",
-        receiving_date: "",
-        receiver: "",
-        sender: "",
-        paid: 0,
-        ship_price: 0,
-        currency: "Dollar",
-        note: "",
-        shipToStore: false,
-      })
-      setSelectedProductIds([])
-      setNewProducts([])
-      setNextProductId(1)
-      setShowNewClientForm(false)
-      setNewClientData({
-        client_name: "",
-        phone_number: "",
-        history: "",
-      })
-      setCurrentShippingId(null)
-      setSavingProductId(null)
-
+      // Notify success - shipping information saved
       onSuccess(newShipping)
+
+      // Show success message but keep form data for potential order saving
+      setError("") // Clear any errors
+
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
     } finally {

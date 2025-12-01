@@ -23,13 +23,17 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
+    console.log("Shipping API received:", body)
     const { type, shipping_date, receiving_date, receiver_client_id, sender_client_id, paid, ship_price, currency, note } = body
 
+    console.log("Parsed data:", { type, shipping_date, receiving_date, receiver_client_id, sender_client_id })
+
     if (!type || !shipping_date || !receiving_date || !receiver_client_id || !sender_client_id) {
+      console.log("Missing fields:", { type: !!type, shipping_date: !!shipping_date, receiving_date: !!receiving_date, receiver_client_id: !!receiver_client_id, sender_client_id: !!sender_client_id })
       return Response.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    if (!["input load", "output load", "comming"].includes(type)) {
+    if (!["input load", "output load", "comming", "coming", "going"].includes(type)) {
       return Response.json({ error: "Invalid shipping type" }, { status: 400 })
     }
 
@@ -49,7 +53,8 @@ export async function POST(request: Request) {
       })
       .returning()
 
-    return Response.json(result[0], { status: 201 })
+    const newShipping = Array.isArray(result) ? result[0] : result
+    return Response.json(newShipping, { status: 201 })
   } catch (error) {
     console.error("Error creating shipping record:", error)
     return Response.json({ error: "Failed to create shipping record" }, { status: 500 })

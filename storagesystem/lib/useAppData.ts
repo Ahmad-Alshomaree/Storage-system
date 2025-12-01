@@ -44,14 +44,10 @@ export function useAppData(): UseAppDataReturn {
         }) : [])
       }
 
-      // Process shipping
+      // Process shipping - keep full objects for components that need them
       if (shippingRes.ok) {
         const data = await shippingRes.json()
-        setShipping(Array.isArray(data) ? data.map(s => ({
-          ...s,
-          receiver: typeof s.receiver === 'object' && s.receiver !== null ? s.receiver.client_name : s.receiver || "",
-          sender: typeof s.sender === 'object' && s.sender !== null ? s.sender.client_name : s.sender || "",
-        })) : [])
+        setShipping(Array.isArray(data) ? data : [])
       }
 
       // Process clients
