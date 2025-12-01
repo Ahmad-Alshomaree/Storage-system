@@ -1,6 +1,6 @@
 import { db } from "@/lib/db"
-import { shipping, storeProducts, products } from "@/lib/schema"
-import { eq } from "drizzle-orm"
+import { shipping, storeProducts, products, debits } from "@/lib/schema"
+import { eq, and, sql } from "drizzle-orm"
 
 export async function GET() {
   try {
@@ -54,6 +54,66 @@ export async function POST(request: Request) {
       .returning()
 
     const newShipping = Array.isArray(result) ? result[0] : result
+    console.log("Created shipping:", newShipping)
+
+    // Automatically create debit record if shipping costs are not fully paid
+    let createdShortage = false
+    let createdOverpaid = false
+    if (ship_price && ship_price > 0 && paid < ship_price) {
+      const outstandingAmount = ship_price - (paid || 0)
+      await db.insert(debits).values({
+        sender_id: sender_client_id,
+        receiver_id: receiver_client_id,
+        shipping_id: newShipping.id,
+        amount: outstandingAmount,
+        currency: currency || "Dollar",
+        note: `Shipping cost - ${type}`,
+        transaction_date: receiving_date,
+        created_at: new Date().toISOString(),
+      })
+      createdShortage = true
+      console.log(`Created debit record for outstanding shipping cost: ${outstandingAmount}`)
+    }
+
+    // Automatically create credit record if overpaid
+    if (paid > ship_price) {
+      const overpaidAmount = paid - ship_price
+      await db.insert(debits).values({
+        sender_id: receiver_client_id,
+        receiver_id: sender_client_id,
+        shipping_id: newShipping.id,
+        amount: overpaidAmount,
+        currency: currency || "Dollar",
+        note: `Overpayment - ${type}`,
+        transaction_date: receiving_date,
+        created_at: new Date().toISOString(),
+      })
+      createdOverpaid = true
+      console.log(`Created credit record for overpayment: ${overpaidAmount}`)
+    }
+
+    // Update total_debit for affected pairs
+    if (createdShortage) {
+      const [{ sum }] = await db
+        .select({ sum: sql<number>`sum(${debits.amount})` })
+        .from(debits)
+        .where(and(eq(debits.sender_id, sender_client_id), eq(debits.receiver_id, receiver_client_id)))
+      await db
+        .update(debits)
+        .set({ total_debit: sum })
+        .where(and(eq(debits.sender_id, sender_client_id), eq(debits.receiver_id, receiver_client_id)))
+    }
+    if (createdOverpaid) {
+      const [{ sum }] = await db
+        .select({ sum: sql<number>`sum(${debits.amount})` })
+        .from(debits)
+        .where(and(eq(debits.sender_id, receiver_client_id), eq(debits.receiver_id, sender_client_id)))
+      await db
+        .update(debits)
+        .set({ total_debit: sum })
+        .where(and(eq(debits.sender_id, receiver_client_id), eq(debits.receiver_id, sender_client_id)))
+    }
+
     return Response.json(newShipping, { status: 201 })
   } catch (error) {
     console.error("Error creating shipping record:", error)

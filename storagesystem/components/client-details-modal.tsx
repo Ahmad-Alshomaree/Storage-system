@@ -13,7 +13,6 @@ interface Client {
   phone_number?: string | null
   shipping_id?: number | null
   history?: string | null
-  debt: number
   total_debts: number
   shipping?: {
     id: number
@@ -66,18 +65,12 @@ export function ClientDetailsModal({ client, open, onOpenChange }: ClientDetails
             </div>
           </div>
 
-          {/* Financial Information */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Current Debt</label>
-              <p className={`text-sm font-semibold ${client.debt >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                ${client.debt.toFixed(2)}
-              </p>
-            </div>
+          {/* Financial Information - Total Debts only */}
+          <div className="grid grid-cols-1 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Total Debts</label>
-              <p className={`text-sm font-bold ${client.total_debts >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                ${client.total_debts.toFixed(2)}
+              <p className={`text-sm font-bold ${(client.total_debts ?? 0) >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                ${(client.total_debts ?? 0).toFixed(2)}
               </p>
             </div>
           </div>

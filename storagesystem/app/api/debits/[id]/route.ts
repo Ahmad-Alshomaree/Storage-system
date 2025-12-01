@@ -9,7 +9,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const debitData = await db.query.debits.findFirst({
       where: eq(debits.id, idNum),
       with: {
-        client: true,
+        sender: true,
+        receiver: true,
         shipping: true,
       },
     })
@@ -30,7 +31,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params
     const idNum = Number.parseInt(id)
     const body = await request.json()
-    const { client_id, shipping_id, amount, type, description, transaction_date } = body
+    const { sender_id, receiver_id, shipping_id, amount, currency, type, note, transaction_date } = body
 
     if (type !== "debit" && type !== "credit") {
       return Response.json({ error: "Type must be 'debit' or 'credit'" }, { status: 400 })
@@ -39,11 +40,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const result = await db
       .update(debits)
       .set({
-        client_id,
+        sender_id: sender_id || null,
+        receiver_id,
         shipping_id: shipping_id || null,
         amount,
+        currency: currency || "Dollar",
         type,
-        description: description || null,
+        note: note || null,
         transaction_date,
       })
       .where(eq(debits.id, idNum))
@@ -53,15 +56,16 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return Response.json({ error: "Debit not found" }, { status: 404 })
     }
 
-    const debitWithClient = await db.query.debits.findFirst({
+    const debitWithRelations = await db.query.debits.findFirst({
       where: eq(debits.id, idNum),
       with: {
-        client: true,
+        sender: true,
+        receiver: true,
         shipping: true,
       },
     })
 
-    return Response.json(debitWithClient)
+    return Response.json(debitWithRelations)
   } catch (error) {
     console.error("Error updating debit:", error)
     return Response.json({ error: "Failed to update debit" }, { status: 500 })

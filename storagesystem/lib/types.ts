@@ -37,7 +37,6 @@ export interface Debit {
   client_id: number
   shipping_id?: number | null
   amount: number
-  type: "debit" | "credit"
   description?: string | null
   transaction_date: string
   created_at: string

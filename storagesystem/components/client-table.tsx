@@ -10,7 +10,6 @@ interface Client {
   phone_number?: string | null
   shipping_id?: number | null
   history?: string | null
-  debt: number
   total_debts: number
 }
 
@@ -51,7 +50,6 @@ export function ClientTable({ clients, onDelete, onUpdate }: ClientTableProps) {
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Phone Number</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Shipping ID</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">History</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Debt</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Total Debts</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Actions</th>
           </tr>
@@ -95,19 +93,8 @@ export function ClientTable({ clients, onDelete, onUpdate }: ClientTableProps) {
                       rows={2}
                     />
                   </td>
-                  <td className="px-4 py-3">
-                    <input
-                      type="number"
-                      value={editValues.debt || 0}
-                      onChange={(e) =>
-                        setEditValues({ ...editValues, debt: Number.parseFloat(e.target.value) })
-                      }
-                      step="0.01"
-                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                    />
-                  </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {client.total_debts.toFixed(2)}
+                    {(client.total_debts ?? 0).toFixed(2)}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
@@ -131,8 +118,7 @@ export function ClientTable({ clients, onDelete, onUpdate }: ClientTableProps) {
                   <td className="px-4 py-3 text-foreground text-xs truncate max-w-xs" title={client.history || undefined}>
                     {client.history || "No history"}
                   </td>
-                  <td className="px-4 py-3 text-foreground text-xs">{client.debt.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-foreground text-xs font-medium">{client.total_debts.toFixed(2)}</td>
+                  <td className="px-4 py-3 text-foreground text-xs font-medium">{(client.total_debts ?? 0).toFixed(2)}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
                       <button

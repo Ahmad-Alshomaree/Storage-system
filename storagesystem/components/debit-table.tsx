@@ -5,14 +5,20 @@ import { Trash2, Edit2, Check, X, Eye, DollarSign } from "lucide-react"
 
 interface Debit {
   id: number
-  client_id: number
+  sender_id?: number | null
+  receiver_id: number
   shipping_id?: number | null
   amount: number
-  type: "debit" | "credit"
-  description?: string | null
+  currency: string
+  note?: string | null
   transaction_date: string
   created_at: string
-  client: {
+  sender?: {
+    id: number
+    client_name: string
+    phone_number?: string | null
+  } | null
+  receiver: {
     id: number
     client_name: string
     phone_number?: string | null
@@ -58,11 +64,12 @@ export function DebitTable({ debits, onDelete, onUpdate }: DebitTableProps) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border bg-muted">
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Client</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Sender</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Receiver</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Shipping ID</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Amount</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Type</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Description</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Currency</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Note</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Transaction Date</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Actions</th>
           </tr>
@@ -73,7 +80,10 @@ export function DebitTable({ debits, onDelete, onUpdate }: DebitTableProps) {
               {editingId === debit.id ? (
                 <>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {debit.client.client_name}
+                    {debit.sender?.client_name || "None"}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">
+                    {debit.receiver.client_name}
                   </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
                     {debit.shipping?.id || debit.shipping_id || "None"}
@@ -90,20 +100,19 @@ export function DebitTable({ debits, onDelete, onUpdate }: DebitTableProps) {
                     />
                   </td>
                   <td className="px-4 py-3">
-                    <select
-                      value={editValues.type || debit.type}
-                      onChange={(e) => setEditValues({ ...editValues, type: e.target.value as "debit" | "credit" })}
+                    <input
+                      type="text"
+                      value={editValues.currency || ""}
+                      onChange={(e) => setEditValues({ ...editValues, currency: e.target.value })}
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                    >
-                      <option value="debit">Debit</option>
-                      <option value="credit">Credit</option>
-                    </select>
+                      placeholder="Dollar"
+                    />
                   </td>
                   <td className="px-4 py-3">
                     <input
                       type="text"
-                      value={editValues.description || ""}
-                      onChange={(e) => setEditValues({ ...editValues, description: e.target.value })}
+                      value={editValues.note || ""}
+                      onChange={(e) => setEditValues({ ...editValues, note: e.target.value })}
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
                     />
                   </td>
@@ -131,23 +140,13 @@ export function DebitTable({ debits, onDelete, onUpdate }: DebitTableProps) {
                 </>
               ) : (
                 <>
-                  <td className="px-4 py-3 font-medium text-foreground text-xs">{debit.client.client_name}</td>
+                  <td className="px-4 py-3 font-medium text-foreground text-xs">{debit.sender?.client_name || "None"}</td>
+                  <td className="px-4 py-3 font-medium text-foreground text-xs">{debit.receiver.client_name}</td>
                   <td className="px-4 py-3 text-foreground text-xs">{debit.shipping?.id || "None"}</td>
                   <td className="px-4 py-3 text-foreground text-xs font-bold">{debit.amount.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-xs">
-                    <span
-                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                        debit.type === "debit"
-                          ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300"
-                          : "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
-                      }`}
-                    >
-                      <DollarSign className="w-3 h-3" />
-                      {debit.type === "debit" ? "Debit" : "Credit"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-foreground text-xs truncate max-w-xs" title={debit.description || undefined}>
-                    {debit.description || "No description"}
+                  <td className="px-4 py-3 text-foreground text-xs">{debit.currency}</td>
+                  <td className="px-4 py-3 text-foreground text-xs truncate max-w-xs" title={debit.note || undefined}>
+                    {debit.note || "No note"}
                   </td>
                   <td className="px-4 py-3 text-foreground text-xs">
                     {new Date(debit.transaction_date).toLocaleDateString()}

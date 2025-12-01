@@ -24,11 +24,12 @@ interface AddDebitFormProps {
 
 export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
   const [formData, setFormData] = useState({
-    client_id: "",
+    sender_id: "",
+    receiver_id: "",
     shipping_id: "",
     amount: 0,
-    type: "debit" as "debit" | "credit",
-    description: "",
+    currency: "Dollar",
+    note: "",
     transaction_date: new Date().toISOString().split('T')[0], // Today's date
   })
   const [isLoading, setIsLoading] = useState(false)
@@ -71,7 +72,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
       ...prev,
       [name]: name === "amount"
         ? Number.parseFloat(value) || 0
-        : name === "client_id" || name === "shipping_id"
+        : name === "sender_id" || name === "receiver_id" || name === "shipping_id"
           ? Number.parseInt(value) || ""
           : value,
     }))
@@ -82,8 +83,8 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
     setIsLoading(true)
     setError("")
 
-    if (!formData.client_id) {
-      setError("Please select a client")
+    if (!formData.receiver_id) {
+      setError("Please select a receiver")
       setIsLoading(false)
       return
     }
@@ -101,11 +102,12 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
 
       const newDebit = await response.json()
       setFormData({
-        client_id: "",
+        sender_id: "",
+        receiver_id: "",
         shipping_id: "",
         amount: 0,
-        type: "debit",
-        description: "",
+        currency: "Dollar",
+        note: "",
         transaction_date: new Date().toISOString().split('T')[0],
       })
       onSuccess(newDebit)
@@ -124,15 +126,32 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Client *</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Sender</label>
           <select
-            name="client_id"
-            value={formData.client_id}
+            name="sender_id"
+            value={formData.sender_id}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="">Select Sender (Optional)</option>
+            {clients.map((client) => (
+              <option key={client.id} value={client.id}>
+                {client.client_name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">Receiver *</label>
+          <select
+            name="receiver_id"
+            value={formData.receiver_id}
             onChange={handleChange}
             required
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <option value="">Select Client</option>
+            <option value="">Select Receiver</option>
             {clients.map((client) => (
               <option key={client.id} value={client.id}>
                 {client.client_name}
@@ -174,38 +193,35 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Type *</label>
-          <select
-            name="type"
-            value={formData.type}
+          <label className="block text-sm font-medium text-foreground mb-2">Currency</label>
+          <input
+            type="text"
+            name="currency"
+            value={formData.currency}
             onChange={handleChange}
-            required
-            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="debit">Debit (Amount Owed)</option>
-            <option value="credit">Credit (Payment Received)</option>
-          </select>
+            placeholder="Dollar"
+            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Transaction Date *</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Transaction Date (Optional)</label>
           <input
             type="date"
             name="transaction_date"
             value={formData.transaction_date}
             onChange={handleChange}
-            required
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-foreground mb-2">Description</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Note</label>
           <textarea
-            name="description"
-            value={formData.description}
+            name="note"
+            value={formData.note}
             onChange={handleChange}
-            placeholder="Enter transaction description"
+            placeholder="Enter transaction note"
             rows={3}
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />

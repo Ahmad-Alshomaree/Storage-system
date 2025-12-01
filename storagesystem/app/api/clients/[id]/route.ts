@@ -1,6 +1,6 @@
 import { db } from "@/lib/db"
-import { client } from "@/lib/schema"
-import { eq } from "drizzle-orm"
+import { client, shipping, debits } from "@/lib/schema"
+import { eq, sql } from "drizzle-orm"
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -63,7 +63,43 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   try {
     const { id } = await params
     const idNum = Number.parseInt(id)
+
+    // Check for existing relations that prevent deletion
+    const [shippingAsSenderCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(shipping)
+      .where(eq(shipping.sender_client_id, idNum))
+
+    const [shippingAsReceiverCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(shipping)
+      .where(eq(shipping.receiver_client_id, idNum))
+
+    const [clientDebitsCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(debits)
+      .where(eq(debits.client_id, idNum))
+
+    const hasShippingRelation = (shippingAsSenderCount?.count ?? 0) > 0 || (shippingAsReceiverCount?.count ?? 0) > 0
+    const hasDebitRelation = (clientDebitsCount?.count ?? 0) > 0
+
+    if (hasShippingRelation || hasDebitRelation) {
+      let errorMessage = "Cannot delete client because they have associated records:\n\n"
+      if (hasShippingRelation) {
+        errorMessage += "• There are shipping records related to this client\n"
+      }
+      if (hasDebitRelation) {
+        errorMessage += "• There are debit transactions related to this client\n"
+      }
+      errorMessage += "\nPlease remove these related records first before deleting the client."
+
+      return Response.json({
+        error: errorMessage
+      }, { status: 400 })
+    }
+
     await db.delete(client).where(eq(client.id, idNum))
+
     return Response.json({ success: true })
   } catch (error) {
     console.error("Error deleting client:", error)

@@ -18,17 +18,38 @@ export function ClientsTab({ clients, isLoading, refetch }: ClientsTabProps) {
   const [searchTerm, setSearchTerm] = useState("")
 
   const handleDeleteClient = async (id: number) => {
-    await fetch(`/api/clients/${id}`, { method: "DELETE" })
-    refetch()
+    try {
+      const response = await fetch(`/api/clients/${id}`, { method: "DELETE" })
+      if (!response.ok) {
+        if (response.status === 400) {
+          const errorData = await response.json()
+          alert(errorData.error)
+          return
+        }
+        throw new Error(`Failed to delete client: ${response.status}`)
+      }
+      refetch()
+    } catch (error) {
+      console.error("Error deleting client:", error)
+      alert("Failed to delete client. Please try again.")
+    }
   }
 
   const handleUpdateClient = async (id: number, updates: Partial<Client>) => {
-    await fetch(`/api/clients/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
-    })
-    refetch()
+    try {
+      const response = await fetch(`/api/clients/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      })
+      if (!response.ok) {
+        throw new Error(`Failed to update client: ${response.status}`)
+      }
+      refetch()
+    } catch (error) {
+      console.error("Error updating client:", error)
+      alert("Failed to update client. Please try again.")
+    }
   }
 
   const filteredClients = clients.filter((client) =>

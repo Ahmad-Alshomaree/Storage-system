@@ -106,24 +106,30 @@ export const debits = sqliteTable(
   "debits",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    client_id: integer("client_id").references(() => client.id),
+    sender_id: integer("sender_id").references(() => client.id),
+    receiver_id: integer("receiver_id").references(() => client.id),
     shipping_id: integer("shipping_id").references(() => shipping.id),
     amount: real("amount").notNull(),
-    type: text("type").notNull(), // "debit" for amount owed, "credit" for payment received
-    description: text("description"),
-    transaction_date: text("transaction_date").notNull(),
+    currency: text("currency").default("Dollar"),
+    note: text("note"),
+    transaction_date: text("transaction_date"),
+    total_debit: real("total_debit"),
     created_at: text("created_at").notNull(),
   },
   (table) => ({
-    clientIdIdx: index("idx_debit_client_id").on(table.client_id),
+    senderIdIdx: index("idx_debit_sender_id").on(table.sender_id),
+    receiverIdIdx: index("idx_debit_receiver_id").on(table.receiver_id),
     shippingIdIdx: index("idx_debit_shipping_id").on(table.shipping_id),
-    typeIdx: index("idx_debit_type").on(table.type),
   }),
 )
 
 export const debitsRelations = relations(debits, ({ one }) => ({
-  client: one(client, {
-    fields: [debits.client_id],
+  sender: one(client, {
+    fields: [debits.sender_id],
+    references: [client.id],
+  }),
+  receiver: one(client, {
+    fields: [debits.receiver_id],
     references: [client.id],
   }),
   shipping: one(shipping, {
