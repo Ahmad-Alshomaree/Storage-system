@@ -17,7 +17,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
   const [productData, setProductData] = useState({
     box_code: "",
     product_name: "",
-    original_price: 0,
+    cost: 0,
     selling_price: 0,
     storage: "",
     weight: 0,
@@ -52,6 +52,9 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
   const [selectedShippingId, setSelectedShippingId] = useState<number | null>(null)
   const [useExistingShipping, setUseExistingShipping] = useState(false)
 
+  // Rooms data
+  const [rooms, setRooms] = useState<any[]>([])
+
   // UI State
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
@@ -63,6 +66,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
   useEffect(() => {
     fetchClients()
     fetchShippings()
+    fetchRooms()
   }, [])
 
   const fetchClients = async () => {
@@ -86,6 +90,23 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
       }
     } catch (error) {
       console.error("Error fetching shipping options:", error)
+    }
+  }
+
+  const fetchRooms = async () => {
+    try {
+      console.log("Fetching rooms...")
+      const response = await fetch("/api/rooms")
+      console.log("Rooms API response status:", response.status)
+      if (response.ok) {
+        const data = await response.json()
+        console.log("Fetched rooms:", data)
+        setRooms(data)
+      } else {
+        console.error("Failed to fetch rooms:", response.status, response.statusText)
+      }
+    } catch (error) {
+      console.error("Error fetching rooms:", error)
     }
   }
 
@@ -140,7 +161,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
         const newShipping = await response.json()
         return newShipping.id
       } else {
-        throw new Error("Failed to create shipping")
+        throw new Error(t("Failed to create shipping record"))
       }
     } catch (error) {
       console.error("Error creating shipping:", error)
@@ -281,7 +302,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
       setProductData({
         box_code: "",
         product_name: "",
-        original_price: 0,
+        cost: 0,
         selling_price: 0,
         storage: "",
         weight: 0,
@@ -337,7 +358,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
               name="box_code"
               value={productData.box_code}
               onChange={handleProductDataChange}
-              placeholder="e.g., BOX-001"
+              placeholder={t("e.g., BOX-001")}
               className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
@@ -349,21 +370,30 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
               name="product_name"
               value={productData.product_name}
               onChange={handleProductDataChange}
-              placeholder="Enter product name"
+              placeholder={t("Enter product name")}
               className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">{t("Storage")} *</label>
-            <input
-              type="text"
+            <select
               name="storage"
               value={productData.storage}
               onChange={handleProductDataChange}
-              placeholder="e.g., Warehouse A, Shelf 3"
-              className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            />
+              className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="">{t("Select Storage Location")}</option>
+              {rooms.map(room => (
+                <option key={room.id} value={room.room_name}>
+                  {room.room_name}
+                </option>
+              ))}
+              {rooms.length === 0 && <option disabled>{t("Loading...")}</option>}
+            </select>
+            <p className="text-xs text-muted-foreground mt-1">
+              {rooms.length > 0 ? `${rooms.length} ${t("rooms available")}` : t("Loading rooms...")}
+            </p>
           </div>
 
           <div>
@@ -386,11 +416,11 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
         <h3 className="text-lg font-medium text-foreground">{t("Pricing Information")}</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">{t("Original Price")} *</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Cost")} *</label>
             <input
               type="number"
-              name="original_price"
-              value={productData.original_price || ""}
+              name="cost"
+              value={productData.cost || ""}
               onChange={handleProductDataChange}
               step="0.01"
               placeholder="0.00"
@@ -438,17 +468,17 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-foreground mb-2">{t("Total Original Price")} ({t("Auto-calculated: Pieces per box × Number of boxes")})</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("Total Cost")} ({t("Auto-calculated: Pieces per box × Number of boxes")})</label>
             <input
               type="number"
-              value={((productData.number_of_boxes || 0) * (productData.pice_per_box || 0) * (productData.original_price || 0)).toFixed(2)}
+              value={((productData.number_of_boxes || 0) * (productData.pice_per_box || 0) * (productData.cost || 0)).toFixed(2)}
               readOnly
               step="0.01"
               placeholder="0.00"
               className="w-full px-3 py-2 border border-input rounded-lg bg-muted text-muted-foreground"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              {t("Calculated as: (Number of Boxes × Pieces Per Box × Original Price)")}
+              {t("Calculated as: (Number of Boxes × Pieces Per Box × Cost)")}
             </p>
           </div>
         </div>
@@ -782,7 +812,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           <div className="relative mb-3 w-32 h-32">
             <img
               src={imagePreview}
-              alt="Product preview"
+              alt={t("Product preview")}
               className="w-full h-full object-cover rounded-lg border border-border"
             />
             <button

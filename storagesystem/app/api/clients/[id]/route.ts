@@ -75,13 +75,18 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       .from(shipping)
       .where(eq(shipping.receiver_client_id, idNum))
 
-    const [clientDebitsCount] = await db
+    const [senderDebitsCount] = await db
       .select({ count: sql<number>`count(*)` })
       .from(debits)
-      .where(eq(debits.client_id, idNum))
+      .where(eq(debits.sender_id, idNum))
+
+    const [receiverDebitsCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(debits)
+      .where(eq(debits.receiver_id, idNum))
 
     const hasShippingRelation = (shippingAsSenderCount?.count ?? 0) > 0 || (shippingAsReceiverCount?.count ?? 0) > 0
-    const hasDebitRelation = (clientDebitsCount?.count ?? 0) > 0
+    const hasDebitRelation = (senderDebitsCount?.count ?? 0) > 0 || (receiverDebitsCount?.count ?? 0) > 0
 
     if (hasShippingRelation || hasDebitRelation) {
       let errorMessage = "Cannot delete client because they have associated records:\n\n"

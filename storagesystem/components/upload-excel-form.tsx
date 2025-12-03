@@ -17,6 +17,11 @@ interface Client {
   phone_number?: string
 }
 
+interface Room {
+  id: number
+  room_name: string
+}
+
 export function UploadExcelForm({ onSuccess }: UploadExcelFormProps) {
   const [file, setFile] = useState<File | null>(null)
   const [receiverId, setReceiverId] = useState("")
@@ -26,8 +31,10 @@ export function UploadExcelForm({ onSuccess }: UploadExcelFormProps) {
   const [cost, setCost] = useState("")
   const [paid, setPaid] = useState("")
   const [clients, setClients] = useState<Client[]>([])
+  const [rooms, setRooms] = useState<Room[]>([])
   const [uploadProductsOnly, setUploadProductsOnly] = useState(false)
   const [isLoadingClients, setIsLoadingClients] = useState(true)
+  const [isLoadingRooms, setIsLoadingRooms] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [previewData, setPreviewData] = useState<any[] | null>(null)
@@ -51,7 +58,22 @@ export function UploadExcelForm({ onSuccess }: UploadExcelFormProps) {
       }
     }
 
+    const fetchRooms = async () => {
+      try {
+        const response = await fetch("/api/rooms")
+        if (response.ok) {
+          const roomsData = await response.json()
+          setRooms(roomsData)
+        }
+      } catch (error) {
+        console.error("Failed to fetch rooms:", error)
+      } finally {
+        setIsLoadingRooms(false)
+      }
+    }
+
     fetchClients()
+    fetchRooms()
   }, [])
 
   // Auto preview when file is selected
@@ -220,6 +242,32 @@ export function UploadExcelForm({ onSuccess }: UploadExcelFormProps) {
     setPreviewData(newData)
   }
 
+  const handleImageUpload = async (index: number, file: File) => {
+    try {
+      const formData = new FormData()
+      formData.append("image", file)
+
+      const response = await fetch("/api/upload/image", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error("Upload failed")
+      }
+
+      const result = await response.json()
+      if (result.success) {
+        updatePreviewData(index, 'image', result.imageUrl)
+      } else {
+        throw new Error(result.error || "Upload failed")
+      }
+    } catch (error) {
+      console.error("Image upload error:", error)
+      // Show error in some way, but for now just log it
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} className="bg-card p-6 rounded-lg shadow-sm border border-border">
       <h3 className="text-lg font-semibold mb-4">{t("Upload Excel File")}</h3>
@@ -305,7 +353,7 @@ export function UploadExcelForm({ onSuccess }: UploadExcelFormProps) {
             </div>
 
             <div>
-                <label className="block text-sm font-medium mb-1">{t("Cost")}</label>
+                <label className="block text-sm font-medium mb-1">Ship Cost</label>
                 <input
                     type="number"
                     step="0.01"
@@ -371,133 +419,234 @@ export function UploadExcelForm({ onSuccess }: UploadExcelFormProps) {
             <span className="text-sm text-muted-foreground ml-2">({previewData.length} rows)</span>
           </h4>
           <div className="overflow-x-auto max-h-96 border rounded-md">
-            <table className="w-full border-collapse text-sm">
+            <table className="min-w-[1600px] border-collapse text-sm">
               <thead className="bg-muted sticky top-0">
                 <tr>
-                  <th className="border border-border p-2">#</th>
-                  <th className="border border-border p-2">{t("Item No")}</th>
-                  <th className="border border-border p-2">{t("Product Name")}</th>
-                  <th className="border border-border p-2">{t("Storage")}</th>
-                  <th className="border border-border p-2">{t("Box Code / Name")}</th>
-                  <th className="border border-border p-2">{t("Original Price")}</th>
-                  <th className="border border-border p-2">{t("Selling Price")}</th>
-                  <th className="border border-border p-2">{t("Quantity")}</th>
-                  <th className="border border-border p-2">{t("Pieces per Box")}</th>
-                  <th className="border border-border p-2">{t("Box Size")}</th>
-                  <th className="border border-border p-2">{t("Total Box Size")}</th>
-                  <th className="border border-border p-2">{t("Number of Boxes")}</th>
-                  <th className="border border-border p-2">{t("Total Price")}</th>
-                  <th className="border border-border p-2">{t("Grope Item Price")}</th>
+                  <th className="border border-border p-3 min-w-[60px]">#</th>
+                  <th className="border border-border p-3 min-w-[100px]">{t("Item No")}</th>
+                  <th className="border border-border p-3 min-w-[150px]">{t("Product Name")}</th>
+                  <th className="border border-border p-3 min-w-[120px]">{t("Storage")}</th>
+                  <th className="border border-border p-3 min-w-[140px]">{t("Box Code ")}</th>
+                  <th className="border border-border p-3 min-w-[130px]">{t("Selling Price")}</th>
+                  <th className="border border-border p-3 min-w-[100px]">{t("Quantity")}</th>
+                  <th className="border border-border p-3 min-w-[130px]">{t("Pieces per Box")}</th>
+                  <th className="border border-border p-3 min-w-[100px]">{t("Box Size")}</th>
+                  <th className="border border-border p-3 min-w-[130px]">{t("Total Box Size")}</th>
+                  <th className="border border-border p-3 min-w-[130px]">{t("Number of Boxes")}</th>
+                  <th className="border border-border p-3 min-w-[120px]">{t("Total Price")}</th>
+                  <th className="border border-border p-3 min-w-[140px]">{t("Grope Item Price")}</th>
+                  <th className="border border-border p-3 min-w-[100px]">{t("Weight")}</th>
+                  <th className="border border-border p-3 min-w-[100px]">{t("Cost")}</th>
+                  <th className="border border-border p-3 min-w-[120px]">{t("Total Cost")}</th>
+                  <th className="border border-border p-3 min-w-[120px]">{t("Currency")}</th>
+                  <th className="border border-border p-3 min-w-[150px]">{t("Image")}</th>
                 </tr>
               </thead>
               <tbody>
                 {previewData.map((row, index) => (
                   <tr key={index} className="hover:bg-muted/50">
-                    <td className="border border-border p-2 text-center font-mono">{index + 1}</td>
-                    <td className="border border-border p-2">{row.itemNo}</td>
-                    <td className={`border border-border p-2 ${!row.productName || row.productName === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
+                    <td className="border border-border p-3 text-center font-mono">{index + 1}</td>
+                    <td className="border border-border p-3">{row.itemNo}</td>
+                    <td className={`border border-border p-3 ${!row.productName || row.productName === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
                       <input
                         type="text"
                         value={row.productName}
                         onChange={(e) => updatePreviewData(index, 'productName', e.target.value)}
-                        className={`w-full px-2 py-1 border rounded ${!row.productName || row.productName === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
+                        className={`w-full px-3 py-2 border rounded ${!row.productName || row.productName === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
                         placeholder={!row.productName || row.productName === '' ? "Fill this field" : ""}
                       />
                     </td>
-                    <td className={`border border-border p-2 ${!row.storage || row.storage === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
-                      <input
-                        type="text"
-                        value={row.storage}
+                    <td className={`border border-border p-3 ${!row.storage || row.storage === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
+                      <select
+                        value={row.storage || ""}
                         onChange={(e) => updatePreviewData(index, 'storage', e.target.value)}
-                        className={`w-full px-2 py-1 border rounded ${!row.storage || row.storage === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
-                        placeholder={!row.storage || row.storage === '' ? "Fill this field" : ""}
-                      />
+                        className={`w-full px-3 py-2 border rounded ${!row.storage || row.storage === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
+                        disabled={isLoadingRooms}
+                      >
+                        <option value="">{isLoadingRooms ? "Loading..." : "Select Room"}</option>
+                        {!isLoadingRooms && rooms.map((room) => (
+                          <option key={room.id} value={room.room_name}>
+                            {room.room_name}
+                          </option>
+                        ))}
+                      </select>
                     </td>
-                    <td className={`border border-border p-2 ${!row.boxCode || row.boxCode === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
+                    <td className={`border border-border p-3 ${!row.boxCode || row.boxCode === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
                       <input
                         type="text"
                         value={row.boxCode}
                         onChange={(e) => updatePreviewData(index, 'boxCode', e.target.value)}
-                        className={`w-full px-2 py-1 border rounded ${!row.boxCode || row.boxCode === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
+                        className={`w-full px-3 py-2 border rounded ${!row.boxCode || row.boxCode === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
                         placeholder={!row.boxCode || row.boxCode === '' ? "Fill this field" : ""}
                       />
                     </td>
-                    <td className={`border border-border p-2 ${!row.originalPrice || row.originalPrice === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={row.originalPrice}
-                        onChange={(e) => updatePreviewData(index, 'originalPrice', e.target.value)}
-                        className={`w-full px-2 py-1 border rounded ${!row.originalPrice || row.originalPrice === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
-                        placeholder={!row.originalPrice || row.originalPrice === '' ? "Fill this field" : ""}
-                      />
-                    </td>
-                    <td className={`border border-border p-2 ${!row.sellingPrice || row.sellingPrice === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
+                    <td className={`border border-border p-3 ${!row.sellingPrice || row.sellingPrice === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
                       <input
                         type="number"
                         step="0.01"
                         value={row.sellingPrice}
                         onChange={(e) => updatePreviewData(index, 'sellingPrice', e.target.value)}
-                        className={`w-full px-2 py-1 border rounded ${!row.sellingPrice || row.sellingPrice === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
+                        className={`w-full px-3 py-2 border rounded ${!row.sellingPrice || row.sellingPrice === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
                         placeholder={!row.sellingPrice || row.sellingPrice === '' ? "Fill this field" : ""}
                       />
                     </td>
-                    <td className={`border border-border p-2 ${!row.quantity || row.quantity === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
+                    <td className={`border border-border p-3 ${!row.quantity || row.quantity === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
                       <input
                         type="number"
                         value={row.quantity}
                         onChange={(e) => updatePreviewData(index, 'quantity', e.target.value)}
-                        className={`w-full px-2 py-1 border rounded ${!row.quantity || row.quantity === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
+                        className={`w-full px-3 py-2 border rounded ${!row.quantity || row.quantity === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
                         placeholder={!row.quantity || row.quantity === '' ? "Fill this field" : ""}
                       />
                     </td>
-                    <td className={`border border-border p-2 ${!row.piecesPerBox || row.piecesPerBox === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
+                    <td className={`border border-border p-3 ${!row.piecesPerBox || row.piecesPerBox === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
                       <input
                         type="number"
                         value={row.piecesPerBox}
                         onChange={(e) => updatePreviewData(index, 'piecesPerBox', e.target.value)}
-                        className={`w-full px-2 py-1 border rounded ${!row.piecesPerBox || row.piecesPerBox === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
+                        className={`w-full px-3 py-2 border rounded ${!row.piecesPerBox || row.piecesPerBox === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
                         placeholder={!row.piecesPerBox || row.piecesPerBox === '' ? "Fill this field" : ""}
                       />
                     </td>
-                    <td className={`border border-border p-2 ${!row.boxSize || row.boxSize === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
+                    <td className={`border border-border p-3 ${!row.boxSize || row.boxSize === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
                       <input
                         type="number"
                         step="0.01"
                         value={row.boxSize}
                         onChange={(e) => updatePreviewData(index, 'boxSize', e.target.value)}
-                        className={`w-full px-2 py-1 border rounded ${!row.boxSize || row.boxSize === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
+                        className={`w-full px-3 py-2 border rounded ${!row.boxSize || row.boxSize === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
                         placeholder={!row.boxSize || row.boxSize === '' ? "Fill this field" : ""}
                       />
                     </td>
-                    <td className={`border border-border p-2 ${!row.totalBoxSize || row.totalBoxSize === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
+                    <td className={`border border-border p-3 ${!row.totalBoxSize || row.totalBoxSize === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
                       <input
                         type="number"
                         step="0.01"
                         value={row.totalBoxSize}
                         onChange={(e) => updatePreviewData(index, 'totalBoxSize', e.target.value)}
-                        className={`w-full px-2 py-1 border rounded ${!row.totalBoxSize || row.totalBoxSize === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
+                        className={`w-full px-3 py-2 border rounded ${!row.totalBoxSize || row.totalBoxSize === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
                         placeholder={!row.totalBoxSize || row.totalBoxSize === '' ? "Fill this field" : ""}
                       />
                     </td>
-                    <td className={`border border-border p-2 ${!row.numberOfBoxes || row.numberOfBoxes === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
+                    <td className={`border border-border p-3 ${!row.numberOfBoxes || row.numberOfBoxes === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
                       <input
                         type="number"
                         value={row.numberOfBoxes}
                         onChange={(e) => updatePreviewData(index, 'numberOfBoxes', e.target.value)}
-                        className={`w-full px-2 py-1 border rounded ${!row.numberOfBoxes || row.numberOfBoxes === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
+                        className={`w-full px-3 py-2 border rounded ${!row.numberOfBoxes || row.numberOfBoxes === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
                         placeholder={!row.numberOfBoxes || row.numberOfBoxes === '' ? "Fill this field" : ""}
                       />
                     </td>
-                    <td className={`border border-border p-2 ${!row.totalPrice || row.totalPrice === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
+                    <td className={`border border-border p-3 ${!row.totalPrice || row.totalPrice === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
                       <input
                         type="number"
                         step="0.01"
                         value={row.totalPrice}
                         onChange={(e) => updatePreviewData(index, 'totalPrice', e.target.value)}
-                        className={`w-full px-2 py-1 border rounded ${!row.totalPrice || row.totalPrice === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
+                        className={`w-full px-3 py-2 border rounded ${!row.totalPrice || row.totalPrice === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
                         placeholder={!row.totalPrice || row.totalPrice === '' ? "Fill this field" : ""}
                       />
+                    </td>
+                    <td className={`border border-border p-3 ${!row.gropeItemPrice || row.gropeItemPrice === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={row.gropeItemPrice}
+                        onChange={(e) => updatePreviewData(index, 'gropeItemPrice', e.target.value)}
+                        className={`w-full px-3 py-2 border rounded ${!row.gropeItemPrice || row.gropeItemPrice === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
+                        placeholder={!row.gropeItemPrice || row.gropeItemPrice === '' ? "Fill this field" : ""}
+                      />
+                    </td>
+                    <td className={`border border-border p-3 ${!row.weight || row.weight === '' ? 'bg-gray-50' : 'bg-white'}`}>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={row.weight}
+                        onChange={(e) => updatePreviewData(index, 'weight', e.target.value)}
+                        className="w-full px-3 py-2 border rounded"
+                        placeholder="Optional"
+                      />
+                    </td>
+                    <td className={`border border-border p-3 ${!row.cost || row.cost === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={row.cost}
+                        onChange={(e) => updatePreviewData(index, 'cost', e.target.value)}
+                        className={`w-full px-3 py-2 border rounded ${!row.cost || row.cost === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
+                        placeholder={!row.cost || row.cost === '' ? "Fill this field" : ""}
+                        required
+                      />
+                    </td>
+                    <td className={`border border-border p-3 ${!row.totalCost || row.totalCost === '' ? 'bg-orange-50' : 'bg-green-50'}`}>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={row.totalCost}
+                        onChange={(e) => updatePreviewData(index, 'totalCost', e.target.value)}
+                        className={`w-full px-3 py-2 border rounded ${!row.totalCost || row.totalCost === '' ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}
+                        placeholder={!row.totalCost || row.totalCost === '' ? "Fill this field" : ""}
+                        required
+                      />
+                    </td>
+                    <td className={`border border-border p-3 ${!row.currency || row.currency === '' ? 'bg-gray-50' : 'bg-white'}`}>
+                      <input
+                        type="text"
+                        value={row.currency}
+                        onChange={(e) => updatePreviewData(index, 'currency', e.target.value)}
+                        className="w-full px-3 py-2 border rounded"
+                        placeholder="Optional"
+                      />
+                    </td>
+                    <td className={`border border-border p-3 ${!row.image || row.image === '' ? 'bg-gray-50' : 'bg-white'}`}>
+                      <div className="flex items-center gap-2">
+                        {row.image && row.image !== '' ? (
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <img
+                              src={row.image.startsWith('/uploads/images/') ? row.image : undefined}
+                              alt="Product image"
+                              className="w-8 h-8 object-cover rounded border"
+                              style={{ display: row.image.startsWith('/uploads/images/') ? 'block' : 'none' }}
+                            />
+                            <span className="text-xs truncate max-w-[80px]" title={row.image}>
+                              {row.image.split('/').pop() || row.image}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => updatePreviewData(index, 'image', '')}
+                              className="text-red-500 hover:text-red-700 text-xs"
+                              title="Remove image"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">No image</span>
+                        )}
+                        <div className="relative">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0]
+                              if (file) {
+                                handleImageUpload(index, file)
+                              }
+                              // Reset the input
+                              e.target.value = ''
+                            }}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            title="Upload image"
+                          />
+                          <button
+                            type="button"
+                            className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                          >
+                            <Upload className="w-3 h-3" />
+                            Upload
+                          </button>
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -506,9 +655,11 @@ export function UploadExcelForm({ onSuccess }: UploadExcelFormProps) {
           </div>
           <div className="mt-2 text-sm text-muted-foreground">
             <span className="inline-block w-3 h-3 bg-orange-100 border border-orange-300 rounded mr-2"></span>
-            Empty fields (needs to be filled)
+            Required fields (must be filled)
             <span className="inline-block w-3 h-3 bg-green-100 border border-green-300 rounded ml-4 mr-2"></span>
             Filled fields
+            <span className="inline-block w-3 h-3 bg-gray-100 border border-gray-300 rounded ml-4 mr-2"></span>
+            Optional fields
           </div>
         </div>
       )}

@@ -56,63 +56,28 @@ export async function POST(request: Request) {
     const newShipping = Array.isArray(result) ? result[0] : result
     console.log("Created shipping:", newShipping)
 
-    // Automatically create debit record if shipping costs are not fully paid
-    let createdShortage = false
-    let createdOverpaid = false
-    if (ship_price && ship_price > 0 && paid < ship_price) {
-      const outstandingAmount = ship_price - (paid || 0)
-      await db.insert(debits).values({
-        sender_id: sender_client_id,
-        receiver_id: receiver_client_id,
-        shipping_id: newShipping.id,
-        amount: outstandingAmount,
-        currency: currency || "Dollar",
-        note: `Shipping cost - ${type}`,
-        transaction_date: receiving_date,
-        created_at: new Date().toISOString(),
-      })
-      createdShortage = true
-      console.log(`Created debit record for outstanding shipping cost: ${outstandingAmount}`)
-    }
+    // Always create debit record when shipping is created
+    await db.insert(debits).values({
+      sender_id: sender_client_id,
+      receiver_id: receiver_client_id,
+      shipping_id: newShipping.id,
+      amount: (ship_price || 0) - (paid || 0),
+      currency: currency || "Dollar",
+      note: `Shipping ${type}${ship_price && ship_price > 0 ? ` - cost: ${ship_price}` : ''}`,
+      transaction_date: receiving_date,
+      created_at: new Date().toISOString(),
+    })
+    console.log(`Created debit record for shipping: ${newShipping.id}`)
 
-    // Automatically create credit record if overpaid
-    if (paid > ship_price) {
-      const overpaidAmount = paid - ship_price
-      await db.insert(debits).values({
-        sender_id: receiver_client_id,
-        receiver_id: sender_client_id,
-        shipping_id: newShipping.id,
-        amount: overpaidAmount,
-        currency: currency || "Dollar",
-        note: `Overpayment - ${type}`,
-        transaction_date: receiving_date,
-        created_at: new Date().toISOString(),
-      })
-      createdOverpaid = true
-      console.log(`Created credit record for overpayment: ${overpaidAmount}`)
-    }
-
-    // Update total_debit for affected pairs
-    if (createdShortage) {
-      const [{ sum }] = await db
-        .select({ sum: sql<number>`sum(${debits.amount})` })
-        .from(debits)
-        .where(and(eq(debits.sender_id, sender_client_id), eq(debits.receiver_id, receiver_client_id)))
-      await db
-        .update(debits)
-        .set({ total_debit: sum })
-        .where(and(eq(debits.sender_id, sender_client_id), eq(debits.receiver_id, receiver_client_id)))
-    }
-    if (createdOverpaid) {
-      const [{ sum }] = await db
-        .select({ sum: sql<number>`sum(${debits.amount})` })
-        .from(debits)
-        .where(and(eq(debits.sender_id, receiver_client_id), eq(debits.receiver_id, sender_client_id)))
-      await db
-        .update(debits)
-        .set({ total_debit: sum })
-        .where(and(eq(debits.sender_id, receiver_client_id), eq(debits.receiver_id, sender_client_id)))
-    }
+    // Update total_debit for the sender-receiver pair
+    const [{ sum }] = await db
+      .select({ sum: sql<number>`sum(${debits.amount})` })
+      .from(debits)
+      .where(and(eq(debits.sender_id, sender_client_id), eq(debits.receiver_id, receiver_client_id)))
+    await db
+      .update(debits)
+      .set({ total_debit: sum })
+      .where(and(eq(debits.sender_id, sender_client_id), eq(debits.receiver_id, receiver_client_id)))
 
     return Response.json(newShipping, { status: 201 })
   } catch (error) {

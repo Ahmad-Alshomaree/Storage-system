@@ -1,8 +1,8 @@
 
 import { NextRequest, NextResponse } from "next/server"
-import { shipping, products, client } from "@/lib/schema"
+import { shipping, products, client, debits } from "@/lib/schema"
 import { db } from "@/lib/db"
-import { eq } from "drizzle-orm"
+import { eq, and, sql } from "drizzle-orm"
 import { writeFile, mkdir } from "fs/promises"
 import { join } from "path"
 import * as XLSX from "xlsx"
@@ -85,7 +85,30 @@ export async function POST(req: NextRequest) {
       throw new Error("Failed to create shipping record")
     }
 
-    const shippingId = newShippingRecords[0].id
+    const newShipping = newShippingRecords[0]
+    const shippingId = newShipping.id
+
+    // Always create debit record when shipping is created
+    await db.insert(debits).values({
+      sender_id: receiverClient.id,
+      receiver_id: senderClient.id,
+      shipping_id: shippingId,
+      amount: parseFloat(cost) || 0,
+      currency: "Dollar",
+      note: `Shipping ${type}${parseFloat(cost) && parseFloat(cost) > 0 ? ` - cost: ${cost}` : ''}`,
+      transaction_date: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+    })
+
+    // Update total_debit for the sender-receiver pair
+    const [{ sum }] = await db
+      .select({ sum: sql<number>`sum(${debits.amount})` })
+      .from(debits)
+      .where(and(eq(debits.sender_id, receiverClient.id), eq(debits.receiver_id, senderClient.id)))
+    await db
+      .update(debits)
+      .set({ total_debit: sum })
+      .where(and(eq(debits.sender_id, receiverClient.id), eq(debits.receiver_id, senderClient.id)))
 
     // Process products - use edited data if provided, otherwise process from Excel
     let productPromises: any[] = []
@@ -102,30 +125,26 @@ export async function POST(req: NextRequest) {
           return isNaN(parsed) ? 0 : parsed
         }
 
-        // Use itemNo from the preview data, convert to ID
+        // Use itemNo as a separate field, let id auto-increment
         const itemNoString = String(product.itemNo || '')
-        let itemId = parseInt(itemNoString.replace(/\D/g, ''))
-        if (isNaN(itemId) || itemId <= 0) {
-          itemId = Date.now() + Math.random() * 1000 // Fallback ID
-        }
 
         return db.insert(products).values({
-          id: itemId,
+          item_no: itemNoString,
           shipping_id: shippingId,
           box_code: product.boxCode || '',
           product_name: product.productName || '',
           storage: product.storage || '',
-          original_price: safeFloat(product.originalPrice),
+          cost: safeFloat(product.cost),
           selling_price: safeFloat(product.sellingPrice),
           weight: 0,
-          image: "",
+          image: product.image || "",
           pice_per_box: safeInt(product.piecesPerBox),
           Total_pices: safeInt(product.quantity),
-          total_original_price: safeFloat(product.totalPrice),
+          total_cost: safeFloat(product.totalCost),
           size_of_box: safeFloat(product.boxSize),
           total_box_size: safeFloat(product.totalBoxSize),
           number_of_boxes: safeFloat(product.numberOfBoxes),
-          Grope_Item_price: 0,
+          Grope_Item_price: safeFloat(product.gropeItemPrice) || 0,
           currency: "Dollar",
           note: "",
           created_at: new Date().toISOString(),
@@ -177,26 +196,22 @@ export async function POST(req: NextRequest) {
             return isNaN(parsed) ? 0 : parsed
           }
 
-          // Convert Item No to number by removing non-digit characters
+          // Convert Item No to string for storage
           const itemNoString = String(row[itemNoColIndex] || '')
-          let itemId = parseInt(itemNoString.replace(/\D/g, ''))
-          if (isNaN(itemId) || itemId <= 0) {
-            itemId = fallbackId++
-          }
 
           return db.insert(products).values({
-              id: itemId,
+              item_no: itemNoString,
               shipping_id: shippingId,
-              box_code: itemId ? String(itemId) : 'No Code',
-              product_name: itemId ? `Product ${itemId}` : 'Unknown Product',
+              box_code: itemNoString || 'No Code',
+              product_name: itemNoString ? `Product ${itemNoString}` : 'Unknown Product',
               storage: "Default",
-              original_price: safeFloat(row[priceColIndex !== -1 ? priceColIndex : 0]),
+              cost: safeFloat(row[priceColIndex !== -1 ? priceColIndex : 0]),
               selling_price: safeFloat(row[secondColIndex]),
               weight: 0,
               image: "",
               pice_per_box: safeInt(row[pcsCtnColIndex !== -1 ? pcsCtnColIndex : 0]),
               Total_pices: safeInt(row[qtyColIndex !== -1 ? qtyColIndex : 0]),
-              total_original_price: safeFloat(row[tPriceColIndex !== -1 ? tPriceColIndex : 0]),
+              total_cost: safeFloat(row[tPriceColIndex !== -1 ? tPriceColIndex : 0]),
               size_of_box: safeFloat(row[cbmCntColIndex !== -1 ? cbmCntColIndex : 0]),
               total_box_size: safeFloat(row[tCbmColIndex !== -1 ? tCbmColIndex : 0]),
               number_of_boxes: safeFloat(row[ctnColIndex !== -1 ? ctnColIndex : 0]),

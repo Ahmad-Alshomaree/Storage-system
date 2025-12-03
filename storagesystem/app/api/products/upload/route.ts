@@ -47,6 +47,10 @@ export async function POST(req: NextRequest) {
     const tPriceColIndex = columnMap['t/price'] ?? columnMap['t price'] ?? -1
     const cbmCntColIndex = columnMap['cbm/cnt'] ?? columnMap['cbm cnt'] ?? -1
     const tCbmColIndex = columnMap['t/cbm'] ?? columnMap['t cbm'] ?? -1
+    const weightColIndex = columnMap['weight'] ?? -1
+    const costColIndex = columnMap['cost'] ?? -1
+    const totalCostColIndex = columnMap['total cost'] ?? columnMap['total_cost'] ?? -1
+    const currencyColIndex = columnMap['currency'] ?? -1
 
     // Fallback to hard positions if not found
     const itemCol = itemNoColIndex !== -1 ? itemNoColIndex : (columnMap['item no'] ? columnMap['item no'] : 2) || 2 // column D in 0-based
@@ -64,6 +68,17 @@ export async function POST(req: NextRequest) {
         const itemValue = row[itemCol] || ''
         if (!itemValue || itemValue.trim() === '') return null
 
+        // Third column (index 2) contains total cost data
+        const totalCostValue = row[2] || '0' // C column (0-based index 2)
+
+        // Calculate total pieces for cost calculation
+        const quantity = parseFloat(row[qtyCol] || '0') || 0
+        const piecesPerBox = parseFloat(row[pcsCtnCol] || '0') || 0
+        const totalPieces = quantity * piecesPerBox
+
+        // Calculate individual cost as totalCost divided by totalPieces
+        const costPerPiece = totalPieces > 0 ? parseFloat(totalCostValue) / totalPieces : 0
+
         return {
             itemNo: itemValue,
             boxCode: '', // Empty, user will fill manually
@@ -78,6 +93,11 @@ export async function POST(req: NextRequest) {
             numberOfBoxes: row[ctnCol] || '',
             totalPrice: row[tPriceCol] || '',
             gropeItemPrice: row[firstColIndex] || '', // First column
+            weight: weightColIndex !== -1 ? row[weightColIndex] || '' : '',
+            cost: costPerPiece > 0 ? costPerPiece.toFixed(4) : totalCostValue, // Calculated individual cost, fallback to totalCostValue if calculation fails
+            totalCost: totalCostValue, // Third column contains total cost
+            currency: currencyColIndex !== -1 ? row[currencyColIndex] || 'Dollar' : 'Dollar', // Required, default to Dollar
+            image: '', // Empty, user will fill manually
         }
     }).filter(Boolean)
 

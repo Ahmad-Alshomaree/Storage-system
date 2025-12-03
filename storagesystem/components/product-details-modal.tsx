@@ -62,6 +62,23 @@ export function ProductDetailsModal({ product, open, onOpenChange, onEdit, onDel
           <DialogTitle className="text-xl font-bold">{t("Product Details")}</DialogTitle>
         </DialogHeader>
 
+        {/* Product Image */}
+        {product.image && product.image !== "" ? (
+          <div className="flex justify-center mb-4">
+            <img
+              src={product.image}
+              alt={product.product_name || "Product image"}
+              className="max-w-full max-h-64 object-cover rounded-lg border shadow-sm"
+            />
+          </div>
+        ) : (
+          <div className="flex justify-center mb-4">
+            <div className="w-full max-w-64 h-32 bg-muted rounded-lg border flex items-center justify-center">
+              <p className="text-muted-foreground text-sm">{t("No image available")}</p>
+            </div>
+          </div>
+        )}
+
         <div className="grid gap-6">
           {/* Basic Information */}
           <div className="grid grid-cols-2 gap-4">
@@ -125,17 +142,17 @@ export function ProductDetailsModal({ product, open, onOpenChange, onEdit, onDel
           {/* Pricing */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Original Price")}</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("Cost")}</label>
               {isEditing ? (
                 <input
                   type="number"
-                  value={editedProduct.original_price || 0}
-                  onChange={(e) => setEditedProduct({ ...editedProduct, original_price: Number.parseFloat(e.target.value) || 0 })}
+                  value={editedProduct.cost || 0}
+                  onChange={(e) => setEditedProduct({ ...editedProduct, cost: Number.parseFloat(e.target.value) || 0 })}
                   step="0.01"
                   className="w-full px-2 py-1 bg-input text-foreground text-sm rounded border"
                 />
               ) : (
-                <p className="text-sm font-semibold text-green-600">{product.original_price.toFixed(2)}</p>
+                <p className="text-sm font-semibold text-green-600">{product.cost.toFixed(2)}</p>
               )}
             </div>
             <div>
@@ -157,18 +174,18 @@ export function ProductDetailsModal({ product, open, onOpenChange, onEdit, onDel
               {isEditing ? (
                 <input
                   type="number"
-                  value={editedProduct.group_item_price || 0}
-                  onChange={(e) => setEditedProduct({ ...editedProduct, group_item_price: Number.parseFloat(e.target.value) || 0 })}
+                  value={editedProduct.Grope_Item_price || 0}
+                  onChange={(e) => setEditedProduct({ ...editedProduct, Grope_Item_price: Number.parseFloat(e.target.value) || 0 })}
                   step="0.01"
                   className="w-full px-2 py-1 bg-input text-foreground text-sm rounded border"
                 />
               ) : (
-                <p className="text-sm font-semibold text-purple-600">{product.group_item_price ? product.group_item_price.toFixed(2) : t("N/A")}</p>
+                <p className="text-sm font-semibold text-purple-600">{product.Grope_Item_price ? product.Grope_Item_price.toFixed(2) : t("N/A")}</p>
               )}
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Total Original Price")}</label>
-              <p className="text-sm">{product.total_original_price?.toFixed(2) || t("N/A")}</p>
+              <label className="text-sm font-medium text-muted-foreground">{t("Total Cost")}</label>
+              <p className="text-sm">{product.total_cost?.toFixed(2) || t("N/A")}</p>
             </div>
           </div>
 
@@ -265,7 +282,7 @@ export function ProductDetailsModal({ product, open, onOpenChange, onEdit, onDel
           </div>
 
           {/* Additional Info */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">{t("Weight")}</label>
               {isEditing ? (
@@ -281,30 +298,65 @@ export function ProductDetailsModal({ product, open, onOpenChange, onEdit, onDel
                 <p className="text-sm">{product.weight ? `${product.weight} kg` : t("N/A")}</p>
               )}
             </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Image")}</label>
-              <p className="text-sm">{product.image || t("No image")}</p>
-            </div>
           </div>
 
           {/* Shipping Info */}
-          {product.shipping_id && (
-            <div className="grid grid-cols-2 gap-4 border-t pt-4">
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">{t("Shipping ID")}</label>
-                <p className="text-sm">{product.shipping_id}</p>
+          {product.shipping_id && product.shipping && (
+            <div className="grid gap-4 border-t pt-4">
+              <h4 className="text-md font-semibold">{t("Shipping Details")}</h4>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">{t("Shipping ID")}</label>
+                  <p className="text-sm">{product.shipping_id}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">{t("Shipping Type")}</label>
+                  <p className="text-sm">{product.shipping.type || t("N/A")}</p>
+                </div>
               </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">{t("Shipping Type")}</label>
-                <p className="text-sm">{product.shipping?.type || t("N/A")}</p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">{t("Shipping Date")}</label>
+                  <p className="text-sm">{product.shipping.shipping_date ? new Date(product.shipping.shipping_date).toLocaleDateString() : t("N/A")}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">{t("Receiving Date")}</label>
+                  <p className="text-sm">{product.shipping.receiving_date ? new Date(product.shipping.receiving_date).toLocaleDateString() : t("N/A")}</p>
+                </div>
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">{t("Shipping Sender")}</label>
+                  <p className="text-sm">{product.shipping.sender?.client_name || t("N/A")}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">{t("Shipping Receiver")}</label>
+                  <p className="text-sm">{product.shipping.receiver?.client_name || t("N/A")}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">{t("Shipping Cost")}</label>
+                  <p className="text-sm font-semibold">{product.shipping.ship_price ? `${product.shipping.ship_price.toFixed(2)} ${product.shipping.currency || 'Dollar'}` : t("N/A")}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">{t("Amount Paid")}</label>
+                  <p className="text-sm font-semibold">{product.shipping.paid ? `${product.shipping.paid.toFixed(2)} ${product.shipping.currency || 'Dollar'}` : t("N/A")}</p>
+                </div>
+              </div>
+
+              {product.shipping.note && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">{t("Shipping Note")}</label>
+                  <p className="text-sm">{product.shipping.note}</p>
+                </div>
+              )}
             </div>
           )}
-
-          <div>
-            <label className="text-sm font-medium text-muted-foreground">{t("Shipping Receiver")}</label>
-            <p className="text-sm">{product.shipping?.receiver || t("N/A")}</p>
-          </div>
 
           {/* Currency and Note */}
           <div className="grid grid-cols-2 gap-4 border-t pt-4">

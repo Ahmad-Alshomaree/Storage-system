@@ -19,6 +19,7 @@ interface Debit {
   note?: string | null
   transaction_date: string
   created_at: string
+  total_debit?: number | null
   sender?: {
     id: number
     client_name: string
@@ -82,22 +83,38 @@ export function DebitDetailsModal({ debit, open, onOpenChange }: DebitDetailsMod
           </div>
 
           {/* Parties Involved */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Sender")}</label>
-              <p className="text-sm font-semibold">{debit.sender?.client_name || t("None")}</p>
-              {debit.sender?.phone_number && (
-                <p className="text-xs text-muted-foreground">{debit.sender.phone_number}</p>
-              )}
+          {debit.sender ? (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">
+                  {debit.total_debit && debit.total_debit < 0 ? t("Debtor") : t("Creditor")}
+                </label>
+                <p className="text-sm font-semibold">{debit.sender.client_name}</p>
+                {debit.sender.phone_number && (
+                  <p className="text-xs text-muted-foreground">{debit.sender.phone_number}</p>
+                )}
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">
+                  {debit.total_debit && debit.total_debit < 0 ? t("Creditor") : t("Debtor")}
+                </label>
+                <p className="text-sm font-semibold">{debit.receiver.client_name}</p>
+                {debit.receiver.phone_number && (
+                  <p className="text-xs text-muted-foreground">{debit.receiver.phone_number}</p>
+                )}
+              </div>
             </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Receiver")}</label>
-              <p className="text-sm font-semibold">{debit.receiver.client_name}</p>
-              {debit.receiver?.phone_number && (
-                <p className="text-xs text-muted-foreground">{debit.receiver.phone_number}</p>
-              )}
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">{t("Client")}</label>
+                <p className="text-sm font-semibold">{debit.receiver.client_name}</p>
+                {debit.receiver.phone_number && (
+                  <p className="text-xs text-muted-foreground">{debit.receiver.phone_number}</p>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Note */}
           <div>

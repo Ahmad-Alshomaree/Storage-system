@@ -1,0 +1,35 @@
+PRAGMA foreign_keys=OFF;--> statement-breakpoint
+CREATE TABLE `__new_products` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`shipping_id` integer,
+	`item_no` text,
+	`box_code` text NOT NULL,
+	`product_name` text,
+	`cost` real NOT NULL,
+	`selling_price` real NOT NULL,
+	`storage` text,
+	`weight` real,
+	`image` text,
+	`pice_per_box` integer,
+	`Total_pices` integer DEFAULT 0,
+	`total_cost` real DEFAULT 0,
+	`size_of_box` real NOT NULL,
+	`total_box_size` real NOT NULL,
+	`number_of_boxes` integer NOT NULL,
+	`extracted_pieces` integer DEFAULT 0,
+	`status` text DEFAULT 'available',
+	`Grope_Item_price` real,
+	`currency` text NOT NULL,
+	`note` text,
+	`created_at` text,
+	`updated_at` text,
+	FOREIGN KEY (`shipping_id`) REFERENCES `shipping`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+INSERT INTO `__new_products`("id", "shipping_id", "box_code", "product_name", "cost", "selling_price", "storage", "weight", "image", "pice_per_box", "Total_pices", "total_cost", "size_of_box", "total_box_size", "number_of_boxes", "extracted_pieces", "status", "Grope_Item_price", "currency", "note", "created_at", "updated_at") SELECT "id", "shipping_id", "box_code", "product_name", "cost", "selling_price", "storage", "weight", "image", "pice_per_box", "Total_pices", "total_cost", "size_of_box", "total_box_size", "number_of_boxes", "extracted_pieces", "status", "Grope_Item_price", "currency", "note", "created_at", "updated_at" FROM `products`;--> statement-breakpoint
+DROP TABLE `products`;--> statement-breakpoint
+ALTER TABLE `__new_products` RENAME TO `products`;--> statement-breakpoint
+PRAGMA foreign_keys=ON;--> statement-breakpoint
+CREATE INDEX `idx_product_name` ON `products` (`product_name`);--> statement-breakpoint
+CREATE INDEX `idx_box_code` ON `products` (`box_code`);--> statement-breakpoint
+CREATE INDEX `idx_shipping_id` ON `products` (`shipping_id`);

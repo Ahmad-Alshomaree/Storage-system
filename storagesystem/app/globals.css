@@ -144,7 +144,7 @@
   }
 
   /* Tab buttons RTL */
-  html[dir="rtl"] .mb-6.flex > * {
+  html[dir="rtl"] .mb-6.flex.gap-2 {
     flex-direction: row-reverse;
   }
 
@@ -153,9 +153,5 @@
     margin-right: 0;
   }
 
-  /* Container margins in RTL */
-  html[dir="rtl"] .container.mx-auto {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
+  /* Container margins in RTL - removed extra padding since px-4 already handles it */
 }

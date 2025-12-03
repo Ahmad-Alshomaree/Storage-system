@@ -100,7 +100,6 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
           <tr className="border-b border-border bg-muted">
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Box Code")}</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Product Name")}</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Original Price")}</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Selling Price")}</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Group Item Price")}</th>
             <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Storage")}</th>
@@ -136,17 +135,6 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
                   <td className="px-3 py-3">
                     <input
                       type="number"
-                      value={editValues.original_price || 0}
-                      onChange={(e) =>
-                        setEditValues({ ...editValues, original_price: Number.parseFloat(e.target.value) })
-                      }
-                      step="0.01"
-                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                    />
-                  </td>
-                  <td className="px-3 py-3">
-                    <input
-                      type="number"
                       value={editValues.selling_price || 0}
                       onChange={(e) =>
                         setEditValues({ ...editValues, selling_price: Number.parseFloat(e.target.value) })
@@ -158,9 +146,9 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
                   <td className="px-3 py-3">
                     <input
                       type="number"
-                      value={editValues.group_item_price || 0}
+                      value={editValues.Grope_Item_price || 0}
                       onChange={(e) =>
-                        setEditValues({ ...editValues, group_item_price: Number.parseFloat(e.target.value) })
+                        setEditValues({ ...editValues, Grope_Item_price: Number.parseFloat(e.target.value) })
                       }
                       step="0.01"
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
@@ -229,9 +217,8 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
                 <>
                   <td className="px-3 py-3 font-medium text-foreground text-xs">{product.box_code}</td>
                   <td className="px-3 py-3 text-foreground text-xs">{product.product_name}</td>
-                  <td className="px-3 py-3 text-foreground text-xs">{product.original_price.toFixed(2)}</td>
-                  <td className="px-3 py-3 text-foreground text-xs font-medium">{product.selling_price.toFixed(2)}</td>
-                  <td className="px-3 py-3 text-foreground text-xs">{product.group_item_price ? product.group_item_price.toFixed(2) : "0.00"}</td>
+                  <td className="px-3 py-3 text-foreground text-xs font-medium">{product.selling_price ? product.selling_price.toFixed(2) : "0.00"}</td>
+                  <td className="px-3 py-3 text-foreground text-xs">{product.Grope_Item_price ? product.Grope_Item_price.toFixed(2) : "0.00"}</td>
                   <td className="px-3 py-3 text-foreground text-xs">{product.storage}</td>
                   <td className="px-3 py-3 text-foreground text-xs">{product.number_of_boxes}</td>
                   <td className="px-3 py-3 text-foreground text-xs">{product.pice_per_box}</td>

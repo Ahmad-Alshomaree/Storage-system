@@ -1,11 +1,12 @@
 export interface Product {
   id: number
   shipping_id?: number | null
+  item_no?: string | null
   box_code: string
   product_name?: string
   product_type?: string
-  original_price: number
-  total_original_price: number
+  cost: number
+  total_cost: number
   selling_price: number
   storage?: string
   weight?: number
@@ -17,7 +18,7 @@ export interface Product {
   number_of_boxes: number
   extracted_pieces?: number | null
   status: string
-  group_item_price?: number | null
+  Grope_Item_price?: number | null
   currency: string
   note?: string | null
   created_at?: string
@@ -26,8 +27,22 @@ export interface Product {
     id: number
     type: string
     shipping_date: string
-    receiver: string
+    receiving_date: string
+    receiver?: {
+      id: number
+      client_name: string
+      phone_number?: string | null
+    }
+    sender?: {
+      id: number
+      client_name: string
+      phone_number?: string | null
+    }
     file_path?: string | null
+    paid: number
+    ship_price: number
+    currency: string
+    note?: string | null
     created_at: string
   }
 }
@@ -42,6 +57,7 @@ export interface Debit {
   note?: string | null
   transaction_date: string
   created_at: string
+  total_debit?: number | null
   sender?: {
     id: number
     client_name: string
@@ -56,8 +72,22 @@ export interface Debit {
     id: number
     type: string
     shipping_date: string
-    receiver: string
+    receiving_date: string
+    receiver?: {
+      id: number
+      client_name: string
+      phone_number?: string | null
+    }
+    sender?: {
+      id: number
+      client_name: string
+      phone_number?: string | null
+    }
     file_path?: string | null
+    paid: number
+    ship_price: number
+    currency: string
+    note?: string | null
     created_at: string
   }
 }
@@ -93,6 +123,11 @@ export interface StoreProduct {
   number_of_items: number
   entered_at: string
   product?: Product
+}
+
+export interface Room {
+  id: number
+  room_name: string
 }
 
 export type TabType = "products" | "shipping" | "clients" | "debits"

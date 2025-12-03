@@ -140,6 +140,27 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
     return new Date(dateString).toLocaleDateString()
   }
 
+  const getShippingTypeColor = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'input load':
+        // Green for incoming/arrival
+        return 'px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full text-xs font-medium'
+      case 'output load':
+        // Orange/amber for outgoing/departure
+        return 'px-2 py-1 bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 rounded-full text-xs font-medium'
+      case 'comming':
+      case 'coming':
+        // Blue for general coming shipments
+        return 'px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-xs font-medium'
+      case 'going':
+        // Purple for going shipments
+        return 'px-2 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded-full text-xs font-medium'
+      default:
+        // Default gray for unknown types
+        return 'px-2 py-1 bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 rounded-full text-xs font-medium'
+    }
+  }
+
   return (
     <>
       <div className="mb-4 p-4 bg-muted rounded-lg">
@@ -322,8 +343,8 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
               ) : (
                 <>
                   <td className="px-2 py-3">
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-xs font-medium">
-                      {record.type}
+                    <span className={getShippingTypeColor(record.type)}>
+                      {t(record.type === 'comming' ? 'Coming' : record.type)}
                     </span>
                   </td>
                   <td className="px-2 py-3 text-foreground text-xs">{formatDate(record.shipping_date)}</td>

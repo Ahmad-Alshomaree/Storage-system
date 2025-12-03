@@ -37,12 +37,13 @@ export const shippingRelations = relations(shipping, ({ many, one }) => ({
 export const products = sqliteTable(
   "products",
   {
-    id: integer("id").primaryKey(),
+    id: integer("id").primaryKey({ autoIncrement: true }),
     shipping_id: integer("shipping_id").references(() => shipping.id),
+    item_no: text("item_no"),
     box_code: text("box_code").notNull(),
     product_name: text("product_name"),
     //product_type: text("product_type").notNull(),
-    original_price: real("original_price").notNull(),
+    cost: real("cost").notNull(),
     selling_price: real("selling_price").notNull(),
     storage: text("storage"),
     weight: real("weight"),
@@ -51,7 +52,7 @@ export const products = sqliteTable(
     image: text("image"),
     pice_per_box: integer("pice_per_box"),
     Total_pices: integer("Total_pices").default(0),
-    total_original_price: real("total_original_price").default(0),
+    total_cost: real("total_cost").default(0),
     size_of_box: real("size_of_box").notNull(),
     total_box_size: real("total_box_size").notNull(),
     number_of_boxes: integer("number_of_boxes").notNull(),
@@ -137,6 +138,17 @@ export const debitsRelations = relations(debits, ({ one }) => ({
     references: [shipping.id],
   }),
 }))
+
+export const rooms = sqliteTable(
+  "rooms",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    room_name: text("room_name").notNull(),
+  },
+  (table) => ({
+    roomNameIdx: index("idx_room_name").on(table.room_name),
+  }),
+)
 
 export const storeProducts = sqliteTable(
   "store_products",

@@ -48,6 +48,14 @@ export function DebitTable({ debits, onDelete, onUpdate, onViewDetail }: DebitTa
     return acc
   }, {} as Record<string, number>)
 
+  // Helper function to get role label based on total debits
+  const getRoleLabel = (debit: Debit, totalDebitsValue: number) => {
+    if (!debit.sender) return { first: "Client", second: "" }
+    return totalDebitsValue < 0
+      ? { first: t("Debtor"), second: t("Creditor") }
+      : { first: t("Creditor"), second: t("Debtor") }
+  }
+
   const filteredDebits = debits.filter(debit => {
     return (
       (filters.sender === '' || (debit.sender?.client_name || '').toLowerCase().includes(filters.sender.toLowerCase())) &&
@@ -64,14 +72,14 @@ export function DebitTable({ debits, onDelete, onUpdate, onViewDetail }: DebitTa
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           <input
             type="text"
-            placeholder={t("Sender")}
+            placeholder={t("Creditor")}
             className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
             value={filters.sender}
             onChange={(e) => setFilters({ ...filters, sender: e.target.value })}
           />
           <input
             type="text"
-            placeholder={t("Receiver")}
+            placeholder={t("Debtor")}
             className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
             value={filters.receiver}
             onChange={(e) => setFilters({ ...filters, receiver: e.target.value })}
@@ -104,9 +112,10 @@ export function DebitTable({ debits, onDelete, onUpdate, onViewDetail }: DebitTa
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border bg-muted">
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Sender")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Receiver")}</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Creditor")}</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Debtor")}</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Shipping ID")}</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Ship Cost")}</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Amount")}</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Total Debits")}</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Currency")}</th>
@@ -129,16 +138,25 @@ export function DebitTable({ debits, onDelete, onUpdate, onViewDetail }: DebitTa
                   <td className="px-4 py-3 text-xs text-muted-foreground">
                     {debit.shipping?.id || debit.shipping_id || t("None")}
                   </td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">
+                    {debit.shipping?.ship_price ? debit.shipping.ship_price.toFixed(2) : "N/A"}
+                  </td>
                   <td className="px-4 py-3">
-                    <input
-                      type="number"
-                      value={editValues.amount || 0}
-                      onChange={(e) =>
-                        setEditValues({ ...editValues, amount: Number.parseFloat(e.target.value) })
-                      }
-                      step="0.01"
-                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                    />
+                    {debit.shipping_id ? (
+                      <span className="text-muted-foreground text-xs">
+                        {editValues.amount?.toFixed(2) || "0.00"}
+                      </span>
+                    ) : (
+                      <input
+                        type="number"
+                        value={editValues.amount || 0}
+                        onChange={(e) =>
+                          setEditValues({ ...editValues, amount: Number.parseFloat(e.target.value) })
+                        }
+                        step="0.01"
+                        className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                      />
+                    )}
                   </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
                     {(totalDebits[`${debit.sender_id ?? 'null'}-${debit.receiver_id}`] || 0).toFixed(2)}
@@ -183,47 +201,63 @@ export function DebitTable({ debits, onDelete, onUpdate, onViewDetail }: DebitTa
                   </td>
                 </>
               ) : (
-                <>
-                  <td className="px-4 py-3 font-medium text-foreground text-xs">{debit.sender?.client_name || t("None")}</td>
-                  <td className="px-4 py-3 font-medium text-foreground text-xs">{debit.receiver?.client_name || t("Receiver Missing")}</td>
-                  <td className="px-4 py-3 text-foreground text-xs">{debit.shipping?.id || t("None")}</td>
-                  <td className="px-4 py-3 text-foreground text-xs font-bold">{debit.amount.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-foreground text-xs font-semibold text-primary">
-                    {(totalDebits[`${debit.sender_id ?? 'null'}-${debit.receiver_id}`] || 0).toFixed(2)}
-                  </td>
-                  <td className="px-4 py-3 text-foreground text-xs">{debit.currency}</td>
-                  <td className="px-4 py-3 text-foreground text-xs truncate max-w-xs" title={debit.note || undefined}>
-                    {debit.note || t("No note")}
-                  </td>
-                  <td className="px-4 py-3 text-foreground text-xs">
-                    {new Date(debit.transaction_date).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      {onViewDetail && (
-                        <button
-                          onClick={() => onViewDetail(debit)}
-                          className="p-1 hover:bg-secondary/10 rounded text-muted-foreground transition-colors"
-                          title={t("View Details")}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => startEdit(debit)}
-                        className="p-1 hover:bg-primary/10 rounded text-primary transition-colors"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => onDelete(debit.id)}
-                        className="p-1 hover:bg-destructive/10 rounded text-destructive transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </>
+                (() => {
+                  const totalDebitsValue = totalDebits[`${debit.sender_id ?? 'null'}-${debit.receiver_id}`] || 0
+                  const isSenderDebtor = debit.sender && totalDebitsValue < 0
+
+                  return (
+                    <>
+                      <td className="px-4 py-3 font-medium text-foreground text-xs">
+                        {!debit.sender ? t("Client") :
+                         isSenderDebtor ? debit.sender.client_name : debit.receiver.client_name}
+                      </td>
+                      <td className="px-4 py-3 font-medium text-foreground text-xs">
+                        {!debit.sender ? "-" :
+                         isSenderDebtor ? debit.receiver.client_name : debit.sender.client_name}
+                      </td>
+                      <td className="px-4 py-3 text-foreground text-xs">{debit.shipping?.id || t("None")}</td>
+                      <td className="px-4 py-3 text-foreground text-xs font-bold">
+                        {debit.shipping?.ship_price ? debit.shipping.ship_price.toFixed(2) : "N/A"}
+                      </td>
+                      <td className="px-4 py-3 text-foreground text-xs font-bold">{debit.amount.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-foreground text-xs font-semibold text-primary">
+                        {totalDebitsValue.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3 text-foreground text-xs">{debit.currency}</td>
+                      <td className="px-4 py-3 text-foreground text-xs truncate max-w-xs" title={debit.note || undefined}>
+                        {debit.note || t("No note")}
+                      </td>
+                      <td className="px-4 py-3 text-foreground text-xs">
+                        {new Date(debit.transaction_date).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2">
+                          {onViewDetail && (
+                            <button
+                              onClick={() => onViewDetail(debit)}
+                              className="p-1 hover:bg-secondary/10 rounded text-muted-foreground transition-colors"
+                              title={t("View Details")}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => startEdit(debit)}
+                            className="p-1 hover:bg-primary/10 rounded text-primary transition-colors"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => onDelete(debit.id)}
+                            className="p-1 hover:bg-destructive/10 rounded text-destructive transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  )
+                })()
               )}
             </tr>
           ))}

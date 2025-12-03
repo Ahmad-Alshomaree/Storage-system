@@ -15,6 +15,27 @@
       "when": 1764619744720,
       "tag": "0001_thick_magma",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1764661289787,
+      "tag": "0002_dapper_lady_ursula",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1764661806695,
+      "tag": "0003_wet_cloak",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1764754756004,
+      "tag": "0004_curved_lightspeed",
+      "breakpoints": true
     }
   ]
 }

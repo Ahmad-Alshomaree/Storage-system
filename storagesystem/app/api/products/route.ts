@@ -5,7 +5,12 @@ export async function GET() {
   try {
     const allProducts = await db.query.products.findMany({
       with: {
-        shipping: true,
+        shipping: {
+          with: {
+            receiver: true,
+            sender: true,
+          },
+        },
       },
       orderBy: (products, { desc }) => desc(products.created_at),
     })
@@ -22,7 +27,7 @@ export async function POST(request: Request) {
     const body = await request.json()
     const {
       product_name,
-      original_price,
+      cost,
       selling_price,
       group_item_price,
       storage,
@@ -42,8 +47,8 @@ export async function POST(request: Request) {
       note,
     } = body
 
-    if (!box_code || original_price === undefined || original_price === null || selling_price === undefined || selling_price === null) {
-      return Response.json({ error: "Missing required fields: box_code, original_price, and selling_price are required" }, { status: 400 })
+    if (!box_code || cost === undefined || cost === null || selling_price === undefined || selling_price === null) {
+      return Response.json({ error: "Missing required fields: box_code, cost, and selling_price are required" }, { status: 400 })
     }
 
     const now = new Date().toISOString()
@@ -52,13 +57,13 @@ export async function POST(request: Request) {
     const piecesPerBox = Math.max(1, pice_per_box || 1);
     const numBoxes = Math.max(1, number_of_boxes || 1);
     const totalPieces = Math.round(piecesPerBox * numBoxes);
-    const totalOriginalPriceValue = totalPieces * (original_price || 0);
+    const totalCostValue = totalPieces * (cost || 0);
 
     const result = await db
       .insert(products)
       .values({
         product_name,
-        original_price: original_price || 0,
+        cost: cost || 0,
         selling_price: selling_price || 0,
         Grope_Item_price: group_item_price || 0,
         storage,
@@ -70,7 +75,7 @@ export async function POST(request: Request) {
         number_of_boxes: numBoxes,
         extracted_pieces: extracted_pieces || 0,
         Total_pices: totalPieces,
-        total_original_price: totalOriginalPriceValue,
+        total_cost: totalCostValue,
         box_code,
         shipping_id: shipping_id || null,
         status: "available",

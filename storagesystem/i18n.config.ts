@@ -53,6 +53,7 @@ const resources = {
       "Failed to update client. Please try again.": "Failed to update client. Please try again.",
 
       // Clients Tab
+      "Select Storage Location": "Select Storage Location",
       "Search by client name or phone number...": "Search by client name or phone number...",
       "Cancel": "Cancel",
       "Add Client": "Add Client",
@@ -155,6 +156,8 @@ const resources = {
       "No existing shipping records found.": "No existing shipping records found.",
       "Please fill in all required shipping information (dates, receiver, sender)": "Please fill in all required shipping information (dates, receiver, sender)",
       "Partial shipping info entered": "Partial shipping info entered",
+      "Choose whether to create new shipping or link to existing shipment.": "Choose whether to create new shipping or link to existing shipment.",
+      "Fill in the shipping details below to create a new shipping record for this product.": "Fill in the shipping details below to create a new shipping record for this product.",
 
       // Client Table
       "Filter Clients": "Filter Clients",
@@ -260,6 +263,7 @@ const resources = {
       "Failed to update client. Please try again.": "فشل في تحديث العميل. يرجى المحاولة مرة أخرى.",
 
       // Clients Tab
+      "Select Storage Location": "اختر موقع التخزين",
       "Search by client name or phone number...": "البحث بالاسم أو رقم الهاتف...",
       "Cancel": "إلغاء",
       "Add Client": "إضافة عميل",
@@ -359,6 +363,8 @@ const resources = {
       "Create New Shipping Instead": "إنشاء شحن جديد بدلاً من ذلك",
       "Choose existing shipping record...": "اختر سجل شحن موجود...",
       "Product will be linked to shipping record": "سيتم ربط المنتج بسجل الشحن",
+      "Choose whether to create new shipping or link to existing shipment.": "اختر ما إذا كنت تريد إنشاء شحن جديد أو ربط بشحنة موجودة.",
+      "Fill in the shipping details below to create a new shipping record for this product.": "املأ تفاصيل الشحن أدناه لإنشاء سجل شحن جديد لهذا المنتج.",
       "No existing shipping records found.": "لم يتم العثور على سجلات شحن موجودة.",
       "Please fill in all required shipping information (dates, receiver, sender)": "يرجى ملء جميع معلومات الشحن المطلوبة (التواريخ، المستلم، المرسل)",
       "Partial shipping info entered": "تم إدخال معلومات شحن جزئية",
@@ -407,11 +413,33 @@ const resources = {
       "Individual Selling Price": "سعر البيع الفردي",
       "Entered At": "تاريخ الإدخال",
 
-      // Upload Excel
+      // Additional Excel Upload translations
       "Upload Excel File": "رفع ملف إكسيل",
       "Excel File": "ملف إكسيل",
-      "Cost": "التكلفة",
-      "Uploading...": "جاري الرفع..."
+      "Total Cost": "إجمالي التكلفة",
+      "Saving...": "جاري الحفظ...",
+      "Save Products": "حفظ المنتجات",
+      "Previewing...": "جاري المعاينة...",
+      "Preview and Edit Data": "معاينة وتحرير البيانات",
+      "Upload image": "رفع صورة",
+
+      // Excel Table Headers - Complete set
+      "Item No": "رقم البند",
+      "#": "#",
+      "Box Code / Name": "رقم/اسم الصندوق",
+      "Quantity": "الكمية",
+      "Box Size": "حجم الصندوق",
+      "Total Box Size": "إجمالي حجم الصندوق",
+      "Number of Boxes": "عدد الصناديق",
+      "Total Price": "إجمالي السعر",
+      "Grope Item Price": "سعر البند المجموعي",
+
+      // Additional Form Fields
+      "Upload products only (no shipping record)": "رفع المنتجات فقط (بدون سجل شحن)",
+      "Please choose a file": "يرجى اختر ملف",
+
+      // Image Upload Specific (not duplicated)
+      "Optional": "اختياري"
     }
   }
 }

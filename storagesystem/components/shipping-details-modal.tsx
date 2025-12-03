@@ -24,10 +24,10 @@ interface Product {
   box_code: string
   product_name?: string | null
   product_type?: string | null
-  original_price: number
+  cost: number
   selling_price: number
   Total_pices?: number | null
-  total_original_price?: number | null
+  total_cost?: number | null
   number_of_boxes: number
   size_of_box: number
   total_box_size: number
@@ -406,12 +406,12 @@ ${t("Generated on")}: ${new Date().toLocaleString()}
                         <p className="text-sm font-bold">{product.Total_pices ?? 0}</p>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">{t("Original Price")}</label>
-                        <p className="text-sm font-bold">{(product.original_price).toFixed(2)}</p>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Cost")}</label>
+                        <p className="text-sm font-bold">{(product.cost).toFixed(2)}</p>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">{t("Total Original Price")}</label>
-                        <p className="text-sm font-bold">{(product.total_original_price ?? 0).toFixed(2)}</p>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Total Cost")}</label>
+                        <p className="text-sm font-bold">{(product.total_cost ?? 0).toFixed(2)}</p>
                       </div>
                     </div>
 

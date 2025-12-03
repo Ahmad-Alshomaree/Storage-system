@@ -1,5 +1,5 @@
 import { db } from './lib/db.js';
-import { client, shipping, products, debits, storeProducts } from './lib/schema.js';
+import { client, shipping, products, debits, storeProducts, rooms } from './lib/schema.js';
 
 async function seedDatabase() {
   try {
@@ -64,14 +64,14 @@ async function seedDatabase() {
         shipping_id: shippingRecords[0].id,
         box_code: 'BOX-001',
         product_name: 'Smartphone Accessories',
-        original_price: 50.0,
+        cost: 50.0,
         selling_price: 75.0,
         storage: 'A1-01',
         weight: 2.5,
         image: null,
         pice_per_box: 20,
         Total_pices: 100,
-        total_original_price: 5000.0,
+        total_cost: 5000.0,
         size_of_box: 25.0,
         total_box_size: 625.0,
         number_of_boxes: 5,
@@ -87,14 +87,14 @@ async function seedDatabase() {
         shipping_id: shippingRecords[1].id,
         box_code: 'BOX-002',
         product_name: 'Cotton T-Shirts',
-        original_price: 10.0,
+        cost: 10.0,
         selling_price: 18.0,
         storage: 'B2-03',
         weight: 4.0,
         image: null,
         pice_per_box: 50,
         Total_pices: 500,
-        total_original_price: 5000.0,
+        total_cost: 5000.0,
         size_of_box: 30.0,
         total_box_size: 900.0,
         number_of_boxes: 10,
@@ -137,6 +137,20 @@ async function seedDatabase() {
     ]).returning();
 
     console.log('Inserted debits:', debitRecords.length);
+
+    // Insert sample rooms
+    const roomRecords = await db.insert(rooms).values([
+      { room_name: 'Warehouse A' },
+      { room_name: 'Warehouse B' },
+      { room_name: 'Storage Room 1' },
+      { room_name: 'Storage Room 2' },
+      { room_name: 'Ground Floor Storage' },
+      { room_name: 'First Floor Storage' },
+      { room_name: 'Main Hall' },
+      { room_name: 'Back Office' }
+    ]).returning();
+
+    console.log('Inserted rooms:', roomRecords.length);
 
     // Insert sample store products
     const storeProductRecords = await db.insert(storeProducts).values([

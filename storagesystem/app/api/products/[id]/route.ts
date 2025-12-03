@@ -43,7 +43,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const updatedData = {
       box_code: body.box_code ?? existingProduct.box_code,
       product_name: body.product_name ?? existingProduct.product_name,
-      original_price: body.original_price ?? existingProduct.original_price,
+      cost: body.cost ?? existingProduct.cost,
       selling_price: body.selling_price ?? existingProduct.selling_price,
       Grope_Item_price: body.group_item_price ?? existingProduct.Grope_Item_price,
       storage: body.storage ?? existingProduct.storage,
@@ -62,8 +62,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const numberOfBoxes = updatedData.number_of_boxes
     const totalPieces = Math.round(piecesPerBox * numberOfBoxes)
 
-    // Calculate total original price from updated data
-    const totalOriginalPrice = totalPieces * updatedData.original_price
+    // Calculate total cost from updated data
+    const totalCost = totalPieces * updatedData.cost
 
     // Handle extracted_pieces separately as it affects status
     const extractedPieces = body.extracted_pieces !== undefined ? body.extracted_pieces : existingProduct.extracted_pieces
@@ -75,7 +75,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const updateData = {
       ...updatedData,
       Total_pices: totalPieces,
-      total_original_price: totalOriginalPrice,
+      total_cost: totalCost,
       extracted_pieces: extractedPieces,
       status: automaticStatus,
     }

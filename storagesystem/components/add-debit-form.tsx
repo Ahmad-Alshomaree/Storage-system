@@ -16,7 +16,13 @@ interface Client {
 interface Shipping {
   id: number
   type: string
-  receiver: string
+  receiver: {
+    id: number
+    client_name: string
+    phone_number?: string | null
+    shipping_id?: number | null
+    history?: string | null
+  }
   shipping_date: string
 }
 
@@ -87,7 +93,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
     setError("")
 
     if (!formData.receiver_id) {
-      setError(t("Please select a receiver"))
+      setError(t("Please select a creditor"))
       setIsLoading(false)
       return
     }
@@ -129,14 +135,14 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Sender")}</label>
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Debtor")}</label>
           <select
             name="sender_id"
             value={formData.sender_id}
             onChange={handleChange}
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <option value="">{t("Select Sender")} ({t("Optional")})</option>
+            <option value="">{t("Select Debtor")} ({t("Optional")})</option>
             {clients.map((client) => (
               <option key={client.id} value={client.id}>
                 {client.client_name}
@@ -146,7 +152,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Receiver")} *</label>
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Creditor")} *</label>
           <select
             name="receiver_id"
             value={formData.receiver_id}
@@ -154,7 +160,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
             required
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <option value="">{t("Select Receiver")}</option>
+            <option value="">{t("Select Creditor")}</option>
             {clients.map((client) => (
               <option key={client.id} value={client.id}>
                 {client.client_name}
@@ -174,7 +180,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
             <option value="">{t("Select Shipping (Optional)")}</option>
             {shipping.map((ship) => (
               <option key={ship.id} value={ship.id}>
-                {ship.type} - {ship.receiver}
+                {ship.type} - {ship.receiver.client_name}
               </option>
             ))}
           </select>
