@@ -1,0 +1,155 @@
+[33mcommit 5ed363e90cc2afc0c72ab6961b432951a09edd66[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: Ahmad <220208706@ostimteknik.edu.tr>
+Date:   Thu Dec 4 00:19:20 2025 +0300
+
+    Dec 3 version 1
+
+[33mcommit ebe35ce08247c20536e70452515694177e5b962c[m
+Author: Ahmad <220208706@ostimteknik.edu.tr>
+Date:   Tue Dec 2 00:23:52 2025 +0300
+
+    Dec 2 version 1
+
+[33mcommit c2d5f04802271a453c04599ff8ccce78546f7467[m
+Author: Ahmad <220208706@ostimteknik.edu.tr>
+Date:   Mon Dec 1 20:37:19 2025 +0300
+
+    Dec 1 version 4
+
+[33mcommit a1dabf7e6b3ee5f7b474653165e812058c14ee9b[m
+Merge: d4ee970 36668d3
+Author: Ahmad Al-shomaree <127014851+Ahmad-Alshomaree@users.noreply.github.com>
+Date:   Mon Dec 1 20:35:34 2025 +0300
+
+    Merge pull request #4 from Ahmad-Alshomaree/add-arabic-localization
+    
+    Add Arabic localization and i18n support
+
+[33mcommit 36668d39d239c48f81849603ef3f7a8fddb86b46[m[33m ([m[1;31morigin/add-arabic-localization[m[33m)[m
+Author: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>
+Date:   Mon Dec 1 17:30:56 2025 +0000
+
+    Add Arabic localization and i18n support
+    
+    - Implemented `i18n.config.ts` with English and Arabic translations for all identified UI strings.
+    - Created `i18n.client.ts` to initialize `react-i18next` on the client.
+    - Added `components/providers.tsx` to wrap the application with `LanguageProvider` for directionality management (RTL/LTR).
+    - Updated `app/layout.tsx` to use the new `Providers` component.
+    - Refactored `app/page.tsx`, `app/store/page.tsx`, and all components in `components/` to use the `useTranslation` hook and replace hardcoded strings with translation keys.
+    - Ensured forms, tables, modals, and dynamic content use localized strings.
+    - Added support for Arabic layout (RTL).
+
+[33mcommit d4ee970d093faa582e84814dc4fc988b8600346e[m
+Author: Ahmad <220208706@ostimteknik.edu.tr>
+Date:   Mon Dec 1 19:47:57 2025 +0300
+
+    Dec 1 version 3
+
+[33mcommit 442f3518b2305f7f7571719ff3dc8f0b6b802a43[m
+Author: Ahmad <220208706@ostimteknik.edu.tr>
+Date:   Mon Dec 1 15:03:58 2025 +0300
+
+    Dec 1 version 2
+
+[33mcommit c59f25efa18443c8d94f84f57875672a859a3314[m
+Author: Ahmad <220208706@ostimteknik.edu.tr>
+Date:   Mon Dec 1 10:51:31 2025 +0300
+
+    Dec 1 version 1
+
+[33mcommit 7ece18ef1371ef4540d0712246d311c90d121c6b[m
+Author: Ahmad <220208706@ostimteknik.edu.tr>
+Date:   Sun Nov 30 14:26:19 2025 +0300
+
+    Nov 30 ver 1
+
+[33mcommit 11b132a6d1fd7f71b99dfeacc4d50d910157e605[m
+Merge: 155ef33 930cf85
+Author: Ahmad Al-shomaree <127014851+Ahmad-Alshomaree@users.noreply.github.com>
+Date:   Sun Nov 30 10:42:26 2025 +0300
+
+    Merge pull request #3 from Ahmad-Alshomaree/fix-react-object-render-error
+    
+    Fix "Objects are not valid as a React child" error in forms
+
+[33mcommit 930cf856b4c50f4c7b6d90d86656ba043668ad55[m[33m ([m[1;31morigin/fix-react-object-render-error[m[33m)[m
+Author: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>
+Date:   Sun Nov 30 07:41:30 2025 +0000
+
+    Fix "Objects are not valid as a React child" error in forms
+    
+    The application was crashing with a "Runtime Error: Objects are not valid as a React child" because `AddProductForm` and `AddClientForm` were attempting to render `shipping.receiver` directly. The API returns `shipping.receiver` as a full Client object (containing keys like `id`, `client_name`, `total_debts`, etc.) instead of a simple string, causing React to throw an error when trying to render the object.
+    
+    This commit updates `AddProductForm.tsx` and `AddClientForm.tsx` to conditionally check if `shipping.receiver` is an object. If it is, it renders `shipping.receiver.client_name`; otherwise, it renders the value as-is. This ensures correct rendering of the shipping options in the dropdown menus and prevents the application crash.
+
+[33mcommit 155ef3303876e24664115c7cad024a5cd97374c8[m
+Author: Ahmad <220208706@ostimteknik.edu.tr>
+Date:   Fri Nov 28 19:23:37 2025 +0300
+
+    Nov 28 version 4
+
+[33mcommit fe7c150b0f52f972741e2bf27444b8edd2515500[m
+Author: Ahmad <220208706@ostimteknik.edu.tr>
+Date:   Fri Nov 28 18:02:23 2025 +0300
+
+    Nov 28 version 3
+
+[33mcommit 39b469f6ae07aa911030fc17a50d052e674f8ce5[m
+Author: Ahmad <220208706@ostimteknik.edu.tr>
+Date:   Fri Nov 28 12:01:01 2025 +0300
+
+    Nov 28 version 2
+
+[33mcommit b26cd1f6ecb1f865d2419f668af9b843f8910c50[m
+Author: Ahmad <220208706@ostimteknik.edu.tr>
+Date:   Fri Nov 28 11:35:15 2025 +0300
+
+    Nov 28 version 1
+
+[33mcommit 977c6b619962763602673e4428fe53e6f3fe4a84[m
+Author: Ahmad <220208706@ostimteknik.edu.tr>
+Date:   Thu Nov 27 23:59:24 2025 +0300
+
+    Nov 25 version 10
+
+[33mcommit 01a58f1c3d3c30f4167a2f9f59da8783ff6aa1a7[m
+Author: Ahmad <220208706@ostimteknik.edu.tr>
+Date:   Thu Nov 27 14:18:35 2025 +0300
+
+    Nov 25 version 9
+
+[33mcommit 78b62096aaa28065e82b462501bf0774989ab775[m
+Author: Ahmad <220208706@ostimteknik.edu.tr>
+Date:   Thu Nov 27 13:44:58 2025 +0300
+
+    Nov 25 version 8
+
+[33mcommit 590c16e86502bf9b25c105bc62a52299dbc45b07[m
+Author: Ahmad <220208706@ostimteknik.edu.tr>
+Date:   Thu Nov 27 13:14:53 2025 +0300
+
+    Nov 25 version 7
+
+[33mcommit 382e773e660fbc986d451314a1ceb68b2ee09a35[m
+Author: Ahmad <220208706@ostimteknik.edu.tr>
+Date:   Thu Nov 27 12:46:34 2025 +0300
+
+    Nov 25 version 6
+
+[33mcommit 724588a3a4577bc755d2338a57534656677754a2[m
+Author: Ahmad <220208706@ostimteknik.edu.tr>
+Date:   Thu Nov 27 11:20:25 2025 +0300
+
+    Nov 25 version 5
+
+[33mcommit e0d97193280314a22cb2eb0691c9ea14d74eafc1[m
+Author: Ahmad <220208706@ostimteknik.edu.tr>
+Date:   Thu Nov 27 10:49:37 2025 +0300
+
+    Nov 27 version 2
+
+[33mcommit bacc7f421fe68178fce776bcebbecfbe41123797[m
+Author: Ahmad <220208706@ostimteknik.edu.tr>
+Date:   Thu Nov 27 09:56:05 2025 +0300
+
+    Nov 27 version 1
