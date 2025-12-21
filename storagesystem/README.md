@@ -1,97 +1,96 @@
-import { getDatabase } from "@/lib/db"
-import { products } from "@/lib/schema"
-import { eq } from "drizzle-orm"
+# Storage System
 
-const db = getDatabase()
+A desktop application for managing storage, clients, products, and shipping records. Built with Tauri, React, Next.js, and SQLite.
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
-  try {
-    const id = Number.parseInt(params.id)
-    const product = db.query.products.findFirst({
-      where: eq(products.id, id),
-      with: {
-        shipping: true,
-      },
-    })
+## Download and Installation
 
-    if (!product) {
-      return Response.json({ error: "Product not found" }, { status: 404 })
-    }
+### From GitHub Releases
 
-    return Response.json(product)
-  } catch (error) {
-    console.error("Error fetching product:", error)
-    return Response.json({ error: "Failed to fetch product" }, { status: 500 })
-  }
-}
+1. Go to the [Releases](https://github.com/Ahmad-Alshomaree/Storage-system/releases) page
+2. Download the appropriate installer for your operating system:
+   - **Linux**: Download `storagesystem_0.1.0_amd64.AppImage` (recommended) or `.deb`/`.rpm` files
+   - **Windows**: Download the `.msi` installer (when available)
+   - **macOS**: Download the `.dmg` file (when available)
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
-  try {
-    const id = Number.parseInt(params.id)
-    const body = await request.json()
-    const {
-      product_name,
-      product_type,
-      original_price,
-      selling_price,
-      storage,
-      quantity,
-      weight,
-      sizes,
-      colors,
-      image,
-      box_number,
-      price_per_box,
-      shipping_id,
-      total_original_price,
-      size_of_box_at_ship,
-      total_box_size,
-      box_code,
-    } = body
+### Linux Installation
 
-    const result = db
-      .update(products)
-      .set({
-        product_name,
-        product_type,
-        original_price,
-        selling_price,
-        storage,
-        quantity,
-        weight,
-        sizes,
-        colors,
-        image,
-        box_number,
-        price_per_box,
-        shipping_id,
-        total_original_price,
-        size_of_box_at_ship,
-        total_box_size,
-        box_code,
-        updated_at: new Date().toISOString(),
-      })
-      .where(eq(products.id, id))
-      .returning()
+#### Using AppImage (Recommended - No installation required)
+```bash
+chmod +x storagesystem_0.1.0_amd64.AppImage
+./storagesystem_0.1.0_amd64.AppImage
+```
 
-    if (result.length === 0) {
-      return Response.json({ error: "Product not found" }, { status: 404 })
-    }
+#### Using DEB Package (Ubuntu/Debian)
+```bash
+sudo dpkg -i storagesystem_0.1.0_amd64.deb
+# If you get dependency errors, run:
+sudo apt-get install -f
+```
 
-    return Response.json(result[0])
-  } catch (error) {
-    console.error("Error updating product:", error)
-    return Response.json({ error: "Failed to update product" }, { status: 500 })
-  }
-}
+#### Using RPM Package (Fedora/RHEL)
+```bash
+sudo rpm -i storagesystem-0.1.0-1.x86_64.rpm
+```
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
-  try {
-    const id = Number.parseInt(params.id)
-    db.delete(products).where(eq(products.id, id)).run()
-    return Response.json({ success: true })
-  } catch (error) {
-    console.error("Error deleting product:", error)
-    return Response.json({ error: "Failed to delete product" }, { status: 500 })
-  }
-}
+## Features
+
+- **Client Management**: Add, edit, and manage client information
+- **Product Management**: Track products, pricing, inventory, and shipping details
+- **Shipping Management**: Handle shipping records and logistics
+- **Debit Tracking**: Monitor financial transactions and debits
+- **Data Import/Export**: Support for Excel file uploads and data management
+- **Multi-language Support**: Built-in internationalization
+
+## Development
+
+### Prerequisites
+
+- Node.js (LTS version)
+- pnpm
+- Rust
+
+### Setup
+
+1. Clone the repository:
+```bash
+git clone https://github.com/Ahmad-Alshomaree/Storage-system.git
+cd Storage-system
+```
+
+2. Install dependencies:
+```bash
+pnpm install
+```
+
+3. Set up the database:
+```bash
+pnpm db:migrate
+```
+
+4. Run in development mode:
+```bash
+pnpm tauri dev
+```
+
+5. Build for production:
+```bash
+pnpm tauri build
+```
+
+## Technologies Used
+
+- **Frontend**: React, Next.js, TypeScript, Tailwind CSS
+- **Backend**: Tauri (Rust), SQLite, Drizzle ORM
+- **Desktop Framework**: Tauri
+- **UI Components**: Radix UI, Lucide Icons
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+This project is private and proprietary.

@@ -16,7 +16,6 @@
 # next.js
 /.next/
 /out/
-/dist/
 
 # production
 /build
@@ -38,9 +37,13 @@ dev.log
 # data
 /data
 
+# vercel
+.vercel
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
-# Tauri
+# tauri
 src-tauri/target/
+src-tauri/gen/
