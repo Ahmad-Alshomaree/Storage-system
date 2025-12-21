@@ -8,8 +8,8 @@ A desktop application for managing storage, clients, products, and shipping reco
 
 1. Go to the [Releases](https://github.com/Ahmad-Alshomaree/Storage-system/releases) page
 2. Download the appropriate installer for your operating system:
+   - **Windows**: Download `storagesystem_0.1.0_x64-setup.exe` (.exe installer)
    - **Linux**: Download `storagesystem_0.1.0_amd64.AppImage` (recommended) or `.deb`/`.rpm` files
-   - **Windows**: Download the `.msi` installer (when available)
    - **macOS**: Download the `.dmg` file (when available)
 
 ### Linux Installation
@@ -31,6 +31,20 @@ sudo apt-get install -f
 ```bash
 sudo rpm -i storagesystem-0.1.0-1.x86_64.rpm
 ```
+
+### Windows Installation
+
+#### Using EXE Installer (Recommended)
+1. Download `storagesystem_0.1.0_x64-setup.exe` from the [Releases](https://github.com/Ahmad-Alshomaree/Storage-system/releases) page
+2. Double-click the downloaded `.exe` file
+3. Follow the installation wizard
+4. Launch the application from the Start menu or desktop shortcut
+
+#### Portable Version (Alternative)
+If you prefer a portable version without installation:
+1. Download the `.zip` file from the releases (if available)
+2. Extract the zip file to any folder
+3. Run `storagesystem.exe` directly
 
 ## Features
 
