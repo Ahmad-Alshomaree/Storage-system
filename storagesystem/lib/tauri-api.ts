@@ -1,175 +1,242 @@
-import { invoke } from '@tauri-apps/api/core';
+// Database commands - works in both development and Tauri environments
+// Using dynamic imports and type assertions to avoid build-time issues
 
-// Type definitions matching the Rust backend
-export interface Product {
-  id: number;
-  shipping_id?: number;
-  item_no?: string;
-  box_code: string;
-  product_name?: string;
-  cost: number;
-  selling_price: number;
-  storage?: string;
-  weight?: number;
-  image?: string;
-  pice_per_box: number;
-  total_pices: number;
-  total_cost: number;
-  size_of_box: number;
-  total_box_size: number;
-  number_of_boxes: number;
-  extracted_pieces: number;
-  status: string;
-  grope_item_price?: number;
-  currency: string;
-  note?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface Client {
-  id: number;
-  client_name: string;
-  phone_number?: string;
-  shipping_id?: number;
-  history?: string;
-  debt: number;
-  total_debts: number;
-}
-
-export interface ShippingTableClient {
-  id: number;
-  client_name: string;
-  phone_number?: string;
-}
-
-export interface Shipping {
-  id: number;
-  type: string;
-  shipping_date: string;
-  receiving_date: string;
-  receiver_client_id: number;
-  sender_client_id: number;
-  receiver: ShippingTableClient;
-  sender: ShippingTableClient;
-  file_path?: string;
-  paid: number;
-  ship_price: number;
-  currency: string;
-  note?: string;
-  created_at: string;
-}
-
-export interface Debit {
-  id: number;
-  sender_id?: number;
-  receiver_id: number;
-  shipping_id?: number;
-  amount: number;
-  currency: string;
-  note?: string;
-  transaction_date: string;
-  total_debit?: number;
-  created_at: string;
-  sender?: {
-    id: number;
-    client_name: string;
-    phone_number?: string;
-  };
-  receiver: {
-    id: number;
-    client_name: string;
-    phone_number?: string;
-  };
-  shipping?: {
-    id: number;
-    type: string;
-    shipping_date: string;
-    receiving_date: string;
-    receiver?: {
-      id: number;
-      client_name: string;
-      phone_number?: string;
-    };
-    sender?: {
-      id: number;
-      client_name: string;
-      phone_number?: string;
-    };
-    file_path?: string;
-    paid: number;
-    ship_price: number;
-    currency: string;
-    note?: string;
-    created_at: string;
-  };
-}
-
-export interface Room {
-  id: number;
-  room_name: string;
-}
-
-export interface StoreProduct {
-  id: number;
-  product_id: number;
-  product_name: string;
-  individual_item_selling_price: number;
-  image?: string;
-  group_item_price?: number;
-  number_of_items: number;
-  entered_at: string;
-}
-
-// API functions that invoke Tauri commands
-export const api = {
-  // Product operations
-  async getProducts(): Promise<Product[]> {
-    return invoke('get_products');
+export const tauriApi = {
+  // Check if running in Tauri environment
+  isTauri: () => {
+    return typeof window !== 'undefined' && !!(window as any).__TAURI_INTERNALS__
   },
 
-  async createProduct(product: Omit<Product, 'id'>): Promise<Product> {
-    return invoke('create_product', { productData: product });
+  // Initialize database
+  initializeDatabase: async () => {
+    console.log('tauriApi: __TAURI_INTERNALS__ present?', tauriApi.isTauri())
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Running in Tauri, calling initialize_database')
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('initialize_database')
+      } catch (error) {
+        console.error('tauriApi: Failed to initialize database in Tauri:', error)
+        // Fallback to no-op in development
+        return Promise.resolve()
+      }
+    }
+    console.log('tauriApi: Running in web mode, skipping database initialization')
+    // In development, just resolve
+    return Promise.resolve()
   },
 
-  async deleteProduct(id: number): Promise<void> {
-    return invoke('delete_product', { id });
+  // Products
+  getProducts: async (): Promise<any[]> => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Fetching products via Tauri')
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('get_products')
+      } catch (error) {
+        console.error('tauriApi: Failed to fetch products via Tauri:', error)
+        throw new Error('Failed to fetch products')
+      }
+    }
+    // In development, use API routes
+    console.log('tauriApi: Fetching products via HTTP API')
+    const response = await fetch('/api/products')
+    if (!response.ok) throw new Error('Failed to fetch products')
+    return response.json()
   },
 
-  // Client operations
-  async getClients(): Promise<Client[]> {
-    return invoke('get_clients');
+  createProduct: async (product: any) => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Creating product via Tauri')
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('create_product', { productData: product })
+      } catch (error) {
+        console.error('tauriApi: Failed to create product via Tauri:', error)
+        throw new Error('Failed to create product')
+      }
+    }
+    // In development, use API routes
+    console.log('tauriApi: Creating product via HTTP API')
+    const response = await fetch('/api/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(product),
+    })
+    if (!response.ok) throw new Error('Failed to create product')
+    return response.json()
   },
 
-  async createClient(client: Omit<Client, 'id'>): Promise<Client> {
-    return invoke('create_client', { clientData: client });
+  deleteProduct: async (id: number) => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Deleting product via Tauri')
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('delete_product', { id })
+      } catch (error) {
+        console.error('tauriApi: Failed to delete product via Tauri:', error)
+        throw new Error('Failed to delete product')
+      }
+    }
+    // In development, use API routes
+    console.log('tauriApi: Deleting product via HTTP API')
+    const response = await fetch(`/api/products/${id}`, { method: 'DELETE' })
+    if (!response.ok) throw new Error('Failed to delete product')
   },
 
-  // Shipping operations
-  async getShipping(): Promise<Shipping[]> {
-    return invoke('get_shipping');
+  // Clients
+  getClients: async (): Promise<any[]> => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Fetching clients via Tauri')
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('get_clients')
+      } catch (error) {
+        console.error('tauriApi: Failed to fetch clients via Tauri:', error)
+        throw new Error('Failed to fetch clients')
+      }
+    }
+    // In development, use API routes
+    console.log('tauriApi: Fetching clients via HTTP API')
+    const response = await fetch('/api/clients')
+    if (!response.ok) throw new Error('Failed to fetch clients')
+    return response.json()
   },
 
-  // Debit operations
-  async getDebits(): Promise<Debit[]> {
-    return invoke('get_debits');
+  createClient: async (client: any) => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Creating client via Tauri')
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('create_client', { clientData: client })
+      } catch (error) {
+        console.error('tauriApi: Failed to create client via Tauri:', error)
+        throw new Error('Failed to create client')
+      }
+    }
+    // In development, use API routes
+    console.log('tauriApi: Creating client via HTTP API')
+    const response = await fetch('/api/clients', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(client),
+    })
+    if (!response.ok) throw new Error('Failed to create client')
+    return response.json()
   },
 
-  // Room operations
-  async getRooms(): Promise<Room[]> {
-    return invoke('get_rooms');
+  // Shipping
+  getShipping: async (): Promise<any[]> => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Fetching shipping via Tauri')
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('get_shipping')
+      } catch (error) {
+        console.error('tauriApi: Failed to fetch shipping via Tauri:', error)
+        throw new Error('Failed to fetch shipping')
+      }
+    }
+    // In development, use API routes
+    console.log('tauriApi: Fetching shipping via HTTP API')
+    const response = await fetch('/api/shipping')
+    if (!response.ok) throw new Error('Failed to fetch shipping')
+    return response.json()
   },
 
-  // Store product operations
-  async getStoreProducts(): Promise<StoreProduct[]> {
-    return invoke('get_store_products');
+  // Debits
+  getDebits: async (): Promise<any[]> => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Fetching debits via Tauri')
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('get_debits')
+      } catch (error) {
+        console.error('tauriApi: Failed to fetch debits via Tauri:', error)
+        throw new Error('Failed to fetch debits')
+      }
+    }
+    // In development, use API routes
+    console.log('tauriApi: Fetching debits via HTTP API')
+    const response = await fetch('/api/debits')
+    if (!response.ok) throw new Error('Failed to fetch debits')
+    return response.json()
+  },
+
+  // Rooms
+  getRooms: async (): Promise<any[]> => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Fetching rooms via Tauri')
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('get_rooms')
+      } catch (error) {
+        console.error('tauriApi: Failed to fetch rooms via Tauri:', error)
+        throw new Error('Failed to fetch rooms')
+      }
+    }
+    // In development, use API routes
+    console.log('tauriApi: Fetching rooms via HTTP API')
+    const response = await fetch('/api/rooms')
+    if (!response.ok) throw new Error('Failed to fetch rooms')
+    return response.json()
+  },
+
+  // Store Products
+  getStoreProducts: async (): Promise<any[]> => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Fetching store products via Tauri')
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('get_store_products')
+      } catch (error) {
+        console.error('tauriApi: Failed to fetch store products via Tauri:', error)
+        throw new Error('Failed to fetch store products')
+      }
+    }
+    // In development, use API routes
+    console.log('tauriApi: Fetching store products via HTTP API')
+    const response = await fetch('/api/store-products')
+    if (!response.ok) throw new Error('Failed to fetch store products')
+    return response.json()
   },
 
   // File upload
-  async uploadFile(filePath: string): Promise<string> {
-    return invoke('upload_file', { filePath });
+  uploadFile: async (filePath: string) => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Uploading file via Tauri')
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('upload_file', { filePath })
+      } catch (error) {
+        console.error('tauriApi: Failed to upload file via Tauri:', error)
+        throw new Error('Failed to upload file')
+      }
+    }
+    // In development, this would use API routes, but for now just return the path
+    console.log('tauriApi: File upload not supported in web mode')
+    return filePath
   },
-};
-
-// Helper function to check if running in Tauri environment
-export const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
+}

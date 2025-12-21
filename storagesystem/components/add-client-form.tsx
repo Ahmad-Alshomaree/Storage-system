@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { tauriApi } from "@/lib/tauri-api"
 import "../i18n.client"
 
 interface AddClientFormProps {
@@ -30,11 +31,8 @@ export function AddClientForm({ onSuccess }: AddClientFormProps) {
 
   const fetchShippingOptions = async () => {
     try {
-      const response = await fetch("/api/shipping")
-      if (response.ok) {
-        const data = await response.json()
-        setShippingOptions(data)
-      }
+      const data = await tauriApi.getShipping()
+      setShippingOptions(data)
     } catch (error) {
       console.error("Error fetching shipping options:", error)
     }
@@ -60,17 +58,7 @@ export function AddClientForm({ onSuccess }: AddClientFormProps) {
     setError("")
 
     try {
-      const response = await fetch("/api/clients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      })
-
-      if (!response.ok) {
-        throw new Error(t("Failed to add client"))
-      }
-
-      const newClient = await response.json()
+      const newClient = await tauriApi.createClient(formData)
       setFormData({
         client_name: "",
         phone_number: "",

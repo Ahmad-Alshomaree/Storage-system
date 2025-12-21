@@ -105,8 +105,8 @@ impl Database {
         let conn = Connection::open(db_path)?;
 
         // Enable foreign keys and WAL mode
-        conn.execute("PRAGMA foreign_keys = ON", [])?;
-        conn.execute("PRAGMA journal_mode = WAL", [])?;
+        conn.pragma_update(None, "foreign_keys", "ON")?;
+        conn.pragma_update(None, "journal_mode", "WAL")?;
 
         let db = Database { conn };
         db.create_tables()?;
@@ -145,11 +145,7 @@ impl Database {
             [],
         )?;
 
-        // Update client table to add foreign key reference to shipping
-        self.conn.execute(
-            "ALTER TABLE client ADD CONSTRAINT fk_client_shipping_id FOREIGN KEY (shipping_id) REFERENCES shipping(id)",
-            [],
-        ).ok(); // Ignore error if constraint already exists
+
 
         // Create products table
         self.conn.execute(
