@@ -92,16 +92,26 @@ pub struct Database {
 }
 
 impl Database {
-    // Initialize database with proper app data directory
+    // Initialize database with custom path or app data directory
     pub fn new(app_handle: &AppHandle) -> Result<Self> {
-        let app_data_dir = app_handle
-            .path()
-            .app_data_dir()
-            .expect("Failed to get app data directory");
+        Self::new_with_path(app_handle, None)
+    }
 
-        std::fs::create_dir_all(&app_data_dir).expect("Failed to create app data directory");
+    // Initialize database with custom path
+    pub fn new_with_path(app_handle: &AppHandle, custom_path: Option<&str>) -> Result<Self> {
+        let db_dir = if let Some(path) = custom_path {
+            std::path::PathBuf::from(path)
+        } else {
+            let app_data_dir = app_handle
+                .path()
+                .app_data_dir()
+                .expect("Failed to get app data directory");
+            app_data_dir
+        };
 
-        let db_path = app_data_dir.join("storagesystem.db");
+        std::fs::create_dir_all(&db_dir).expect("Failed to create database directory");
+
+        let db_path = db_dir.join("storagesystem.db");
         let conn = Connection::open(db_path)?;
 
         // Enable foreign keys and WAL mode

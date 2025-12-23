@@ -7,6 +7,7 @@ use commands::DatabaseState;
 pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_log::Builder::default().build())
+    .plugin(tauri_plugin_dialog::init())
     .manage(DatabaseState(Default::default()))
     .invoke_handler(tauri::generate_handler![
       commands::initialize_database,
@@ -20,6 +21,7 @@ pub fn run() {
       commands::get_rooms,
       commands::get_store_products,
       commands::upload_file,
+      commands::select_storage_directory,
     ])
     .setup(|app| {
       // Initialize database on app startup

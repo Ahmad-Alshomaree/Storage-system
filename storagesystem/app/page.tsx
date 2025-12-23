@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Header } from "@/components/header"
+import { SetupPage } from "@/components/setup-page"
 import { ProductsTab } from "@/components/ProductsTab"
 import { ShippingTab } from "@/components/ShippingTab"
 import { ClientsTab } from "@/components/ClientsTab"
@@ -18,7 +19,36 @@ import "../i18n.client"
 export default function Home() {
   const { products, shipping, clients, debits, isLoading, error, refetch } = useAppData()
   const [activeTab, setActiveTab] = useState<TabType>("products")
+  const [setupCompleted, setSetupCompleted] = useState<boolean | null>(null)
   const { t } = useTranslation()
+
+  // Check if setup is completed on mount
+  useEffect(() => {
+    const isSetupCompleted = localStorage.getItem("setupCompleted") === "true"
+    console.log("Setup check - setupCompleted:", localStorage.getItem("setupCompleted"), "isSetupCompleted:", isSetupCompleted)
+    // TEMPORARY: Force setup page to show for testing
+    setSetupCompleted(false)
+  }, [])
+
+  const handleSetupComplete = () => {
+    setSetupCompleted(true)
+  }
+
+  // Show loading while checking setup status
+  if (setupCompleted === null) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">{t("Loading...")}</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show setup page if not completed
+  if (!setupCompleted) {
+    return <SetupPage onComplete={handleSetupComplete} />
+  }
 
   if (error) {
     return (

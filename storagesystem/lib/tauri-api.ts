@@ -16,7 +16,8 @@ export const tauriApi = {
         console.log('tauriApi: Running in Tauri, calling initialize_database')
         // @ts-ignore
         const { invoke } = await import('@tauri-apps/api/core')
-        return await invoke('initialize_database')
+        const storagePath = localStorage.getItem('storagePath')
+        return await invoke('initialize_database', { storagePath })
       } catch (error) {
         console.error('tauriApi: Failed to initialize database in Tauri:', error)
         // Fallback to no-op in development
@@ -238,5 +239,24 @@ export const tauriApi = {
     // In development, this would use API routes, but for now just return the path
     console.log('tauriApi: File upload not supported in web mode')
     return filePath
+  },
+
+  // Select storage directory
+  selectStorageDirectory: async (): Promise<string> => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Selecting storage directory via Tauri')
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('select_storage_directory')
+      } catch (error) {
+        console.error('tauriApi: Failed to select storage directory via Tauri:', error)
+        throw new Error('Failed to select storage directory')
+      }
+    }
+    // In development, just return a default path
+    console.log('tauriApi: Directory selection not supported in web mode')
+    return '/default/storage/path'
   },
 }

@@ -27,3 +27,4 @@ rusqlite = { version = "0.32", features = ["bundled"] }
 tokio = { version = "1.0", features = ["full"] }
 uuid = { version = "1.0", features = ["v4"] }
 chrono = { version = "0.4", features = ["serde"] }
+tauri-plugin-dialog = "2.4.2"

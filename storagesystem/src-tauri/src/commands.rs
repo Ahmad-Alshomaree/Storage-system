@@ -16,8 +16,16 @@ pub fn initialize_database_blocking(app_handle: AppHandle) -> Result<(), String>
 
 // Initialize database command (async version for IPC)
 #[tauri::command]
-pub async fn initialize_database(app_handle: AppHandle, state: State<'_, DatabaseState>) -> Result<(), String> {
-    let db = Database::new(&app_handle).map_err(|e| e.to_string())?;
+pub async fn initialize_database(
+    app_handle: AppHandle,
+    state: State<'_, DatabaseState>,
+    storage_path: Option<String>
+) -> Result<(), String> {
+    let db = if let Some(path) = storage_path {
+        Database::new_with_path(&app_handle, Some(&path)).map_err(|e| e.to_string())?
+    } else {
+        Database::new(&app_handle).map_err(|e| e.to_string())?
+    };
     *state.0.lock().unwrap() = Some(db);
     Ok(())
 }
@@ -118,4 +126,21 @@ pub async fn upload_file(file_path: String) -> Result<String, String> {
     // For now, just return the file path
     // In a real implementation, you'd handle file copying/uploading to app data directory
     Ok(file_path)
+}
+
+// Select storage directory command
+#[tauri::command]
+pub async fn select_storage_directory(app_handle: tauri::AppHandle) -> Result<String, String> {
+    use tauri_plugin_dialog::DialogExt;
+
+    let selected_path = app_handle
+        .dialog()
+        .file()
+        .set_directory(".")
+        .blocking_pick_folder();
+
+    match selected_path {
+        Some(path) => Ok(path.to_string()),
+        None => Err("No directory selected".to_string()),
+    }
 }
