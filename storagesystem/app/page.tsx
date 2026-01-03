@@ -26,8 +26,8 @@ export default function Home() {
   useEffect(() => {
     const isSetupCompleted = localStorage.getItem("setupCompleted") === "true"
     console.log("Setup check - setupCompleted:", localStorage.getItem("setupCompleted"), "isSetupCompleted:", isSetupCompleted)
-    // TEMPORARY: Force setup page to show for testing
-    setSetupCompleted(false)
+    // TEMPORARY: Force setup as completed for testing
+    setSetupCompleted(true)
   }, [])
 
   const handleSetupComplete = () => {
@@ -70,17 +70,9 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto py-8 px-4">
-        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground text-balance">{t("Product Storage System")}</h1>
-            <p className="text-muted-foreground mt-1">{t("Manage products, shipping, clients, and financial records efficiently")}</p>
-          </div>
-          <Link href="/store" passHref>
-            <Button variant="secondary" className="gap-2">
-              <Warehouse className="w-4 h-4" />
-              {t("Store Overview")}
-            </Button>
-          </Link>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground text-balance">{t("Product Storage System")}</h1>
+          <p className="text-muted-foreground mt-1">{t("Manage products, shipping, clients, and financial records efficiently")}</p>
         </div>
 
         <div className="mb-6 flex gap-2 border-b border-border">
@@ -135,7 +127,7 @@ export default function Home() {
         )}
 
         {activeTab === "shipping" && (
-          <ShippingTab shipping={shipping} isLoading={isLoading} refetch={refetch} />
+          <ShippingTab shipping={shipping} clients={clients} isLoading={isLoading} refetch={refetch} />
         )}
 
         {activeTab === "clients" && (

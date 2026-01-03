@@ -92,15 +92,28 @@ export interface Debit {
   }
 }
 
+interface ShippingTableClient {
+  id: number
+  client_name: string
+  phone_number?: string | null
+}
+
 export interface Shipping {
   id: number
   type: string
   shipping_date: string
   receiving_date: string
-  receiver: string
-  sender: string
+  receiver_client_id?: number
+  sender_client_id?: number
+  receiver: ShippingTableClient
+  sender: ShippingTableClient
+  paid?: number
+  ship_price?: number
+  currency?: string
+  note?: string | null
   created_at: string
   file_path?: string | null
+  products?: any[]
 }
 
 export interface Client {

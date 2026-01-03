@@ -14,20 +14,28 @@ export interface ShippingTableClient {
 
 interface Product {
   id: number
+  shipping_id?: number | null
+  item_no?: string | null
   box_code: string
   product_name?: string | null
-  product_type?: string | null
-  original_price: number
+  cost: number
   selling_price: number
-  Total_pices?: number | null
-  total_original_price?: number | null
-  number_of_boxes: number
-  size_of_box: number
-  total_box_size: number
+  storage?: string | null
   weight?: number | null
   image?: string | null
-  currency?: string | null
+  pice_per_box: number
+  total_pices: number
+  total_cost: number
+  size_of_box: number
+  total_box_size: number
+  number_of_boxes: number
+  extracted_pieces: number
+  status: string
+  grope_item_price?: number | null
+  currency: string
   note?: string | null
+  created_at?: string | null
+  updated_at?: string | null
 }
 
 interface Shipping {
@@ -50,11 +58,12 @@ interface Shipping {
 
 interface ShippingTableProps {
   shipping: Shipping[]
+  clients: ShippingTableClient[]
   onDelete: (id: number) => void
   onUpdate: (id: number, updates: Partial<Shipping>) => void
 }
 
-export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTableProps) {
+export function ShippingTable({ shipping, clients, onDelete, onUpdate }: ShippingTableProps) {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editValues, setEditValues] = useState<Partial<Shipping>>({})
   const [selectedShipping, setSelectedShipping] = useState<Shipping | null>(null)
@@ -64,28 +73,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
     receiver: '',
     shippingDate: '',
   })
-  const [clients, setClients] = useState<ShippingTableClient[]>([])
-  const [loadingClients, setLoadingClients] = useState(true)
   const { t } = useTranslation()
-
-  // Fetch clients on component mount
-  useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        const response = await fetch('/api/clients')
-        if (response.ok) {
-          const data = await response.json()
-          setClients(data)
-        }
-      } catch (error) {
-        console.error('Error fetching clients:', error)
-      } finally {
-        setLoadingClients(false)
-      }
-    }
-
-    fetchClients()
-  }, [])
 
   const filteredShipping = shipping.filter(record => {
     return (
@@ -252,7 +240,6 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                       value={editValues.receiver_client_id || ""}
                       onChange={(e) => setEditValues({ ...editValues, receiver_client_id: parseInt(e.target.value) || undefined })}
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                      disabled={loadingClients}
                     >
                       <option value="">{t("Select Receiver")}</option>
                       {clients.map((client) => (
@@ -267,7 +254,6 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                       value={editValues.sender_client_id || ""}
                       onChange={(e) => setEditValues({ ...editValues, sender_client_id: parseInt(e.target.value) || undefined })}
                       className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                      disabled={loadingClients}
                     >
                       <option value="">{t("Select Sender")}</option>
                       {clients.map((client) => (
@@ -281,7 +267,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                     <div className="text-xs text-muted-foreground">
                       {record.products && record.products.length > 0
                         ? record.products.map(p =>
-                            `${p.product_name || p.box_code} (${p.number_of_boxes} boxes${p.Total_pices ? `, ${p.Total_pices} pcs` : ''})`
+                            `${p.product_name || p.box_code} (${p.number_of_boxes} boxes${p.total_pices ? `, ${p.total_pices} pcs` : ''})`
                           ).join("; ")
                         : "No products"
                       }
@@ -355,7 +341,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
                     <div className="text-xs max-w-xs truncate">
                       {record.products && record.products.length > 0
                         ? record.products.map(p =>
-                            `${p.product_name || p.box_code} (${p.number_of_boxes} boxes${p.Total_pices ? `, ${p.Total_pices} pcs` : ''})`
+                            `${p.product_name || p.box_code} (${p.number_of_boxes} boxes${p.total_pices ? `, ${p.total_pices} pcs` : ''})`
                           ).join("; ")
                         : "No products"
                       }
@@ -399,6 +385,7 @@ export function ShippingTable({ shipping, onDelete, onUpdate }: ShippingTablePro
 
       <ShippingDetailsModal
         shipping={selectedShipping}
+        clients={clients}
         open={showDetailsModal}
         onOpenChange={setShowDetailsModal}
         onEdit={onUpdate}

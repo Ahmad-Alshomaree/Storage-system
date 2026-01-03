@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import React from "react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
@@ -86,6 +86,27 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
           : value,
     }))
   }
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleChange(e)
+    // Force close date picker immediately after selection
+    setTimeout(() => e.target.blur(), 0)
+  }
+
+  // Close date picker when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      // If clicking outside any input, blur all date inputs to close pickers
+      if (!target.closest('input[type="date"]')) {
+        const dateInputs = document.querySelectorAll('input[type="date"]') as NodeListOf<HTMLInputElement>
+        dateInputs.forEach(input => input.blur())
+      }
+    }
+
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -219,7 +240,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
             type="date"
             name="transaction_date"
             value={formData.transaction_date}
-            onChange={handleChange}
+            onChange={handleDateChange}
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>

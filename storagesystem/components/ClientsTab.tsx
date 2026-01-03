@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { ClientTable } from "@/components/client-table"
 import { AddClientForm } from "@/components/add-client-form"
 import type { Client } from "@/lib/types"
+import { tauriApi } from "@/lib/tauri-api"
 import { useTranslation } from "react-i18next"
 import "../i18n.client"
 
@@ -22,15 +23,7 @@ export function ClientsTab({ clients, isLoading, refetch }: ClientsTabProps) {
 
   const handleDeleteClient = async (id: number) => {
     try {
-      const response = await fetch(`/api/clients/${id}`, { method: "DELETE" })
-      if (!response.ok) {
-        if (response.status === 400) {
-          const errorData = await response.json()
-          alert(errorData.error)
-          return
-        }
-        throw new Error(`Failed to delete client: ${response.status}`)
-      }
+      await tauriApi.deleteClient(id)
       refetch()
     } catch (error) {
       console.error("Error deleting client:", error)
@@ -40,14 +33,7 @@ export function ClientsTab({ clients, isLoading, refetch }: ClientsTabProps) {
 
   const handleUpdateClient = async (id: number, updates: Partial<Client>) => {
     try {
-      const response = await fetch(`/api/clients/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updates),
-      })
-      if (!response.ok) {
-        throw new Error(`Failed to update client: ${response.status}`)
-      }
+      await tauriApi.updateClient(id, updates)
       refetch()
     } catch (error) {
       console.error("Error updating client:", error)

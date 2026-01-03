@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Loader2, X, Upload, Truck, Link } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { tauriApi } from "@/lib/tauri-api"
 import "../i18n.client"
 
 interface AddProductFormProps {
@@ -62,6 +63,8 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [showNewClientForm, setShowNewClientForm] = useState<"sender" | "receiver" | null>(null)
   const [newClientName, setNewClientName] = useState("")
+  const [showNewRoomForm, setShowNewRoomForm] = useState(false)
+  const [newRoomName, setNewRoomName] = useState("")
 
   useEffect(() => {
     fetchClients()
@@ -71,11 +74,8 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
 
   const fetchClients = async () => {
     try {
-      const response = await fetch("/api/clients")
-      if (response.ok) {
-        const data = await response.json()
-        setClients(data)
-      }
+      const data = await tauriApi.getClients()
+      setClients(data)
     } catch (error) {
       console.error("Error fetching clients:", error)
     }
@@ -83,11 +83,8 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
 
   const fetchShippings = async () => {
     try {
-      const response = await fetch("/api/shipping")
-      if (response.ok) {
-        const data = await response.json()
-        setExistingShippings(data)
-      }
+      const data = await tauriApi.getShipping()
+      setExistingShippings(data)
     } catch (error) {
       console.error("Error fetching shipping options:", error)
     }
@@ -96,15 +93,9 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
   const fetchRooms = async () => {
     try {
       console.log("Fetching rooms...")
-      const response = await fetch("/api/rooms")
-      console.log("Rooms API response status:", response.status)
-      if (response.ok) {
-        const data = await response.json()
-        console.log("Fetched rooms:", data)
-        setRooms(data)
-      } else {
-        console.error("Failed to fetch rooms:", response.status, response.statusText)
-      }
+      const data = await tauriApi.getRooms()
+      console.log("Fetched rooms:", data)
+      setRooms(data)
     } catch (error) {
       console.error("Error fetching rooms:", error)
     }
@@ -112,24 +103,14 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
 
   const createClient = async (clientName: string): Promise<string> => {
     try {
-      const response = await fetch("/api/clients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          client_name: clientName,
-          phone_number: "",
-          history: "",
-          debt: 0,
-        }),
+      const newClient = await tauriApi.createClient({
+        client_name: clientName,
+        phone_number: "",
+        history: "",
+        debt: 0,
       })
-
-      if (response.ok) {
-        const newClient = await response.json()
-        setClients(prev => [...prev, newClient])
-        return newClient.client_name
-      } else {
-        throw new Error(t("Failed to add client"))
-      }
+      setClients(prev => [...prev, newClient])
+      return newClient.client_name
     } catch (error) {
       console.error("Error creating client:", error)
       throw error
@@ -139,7 +120,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
   const createShipping = async (): Promise<number | null> => {
     try {
       const shippingPayload = {
-        type: shippingData.type, // Use the actual selected type
+        "r#type": shippingData.type, // Use the actual selected type
         shipping_date: shippingData.shippingDate || new Date().toISOString().split('T')[0],
         receiving_date: shippingData.receivingDate || null,
         receiver_client_id: clients.find(c => c.client_name === shippingData.receiver)?.id || null,
@@ -148,21 +129,12 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
         ship_price: shippingData.shipPrice || 0,
         currency: shippingData.currency,
         note: shippingData.note || null,
+        created_at: new Date().toISOString(),
       }
       console.log("Sending to shipping API:", shippingPayload)
 
-      const response = await fetch("/api/shipping", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(shippingPayload),
-      })
-
-      if (response.ok) {
-        const newShipping = await response.json()
-        return newShipping.id
-      } else {
-        throw new Error(t("Failed to create shipping record"))
-      }
+      const newShipping = await tauriApi.createShipping(shippingPayload)
+      return newShipping.id
     } catch (error) {
       console.error("Error creating shipping:", error)
       throw error
@@ -170,28 +142,13 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
   }
 
   const uploadImage = async (): Promise<string | null> => {
+    // For now, return the image preview URL or null
+    // Image upload functionality would need to be implemented in Tauri backend
     if (!selectedImage) return null
 
-    try {
-      const formDataObj = new FormData()
-      formDataObj.append("image", selectedImage)
-
-      const response = await fetch("/api/upload/image", {
-        method: "POST",
-        body: formDataObj,
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || t("Failed to upload file"))
-      }
-
-      const result = await response.json()
-      return result.imageUrl
-    } catch (error) {
-      console.error("Error uploading image:", error)
-      throw error
-    }
+    // Return the object URL for preview (this won't persist after app restart)
+    // In a full implementation, you'd upload to a proper storage location
+    return imagePreview || null
   }
 
   const handleProductDataChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -247,6 +204,40 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
     }
   }
 
+  const createRoom = async (roomName: string): Promise<string> => {
+    try {
+      // For rooms, we don't have a Tauri API yet, so we'll use a simple approach
+      // This would need to be implemented in the Tauri backend
+      // For now, we'll add it to the local state only
+      const newRoom = {
+        id: Date.now(), // Temporary ID
+        room_name: roomName
+      }
+      setRooms(prev => [...prev, newRoom])
+      return newRoom.room_name
+    } catch (error) {
+      console.error("Error creating room:", error)
+      throw error
+    }
+  }
+
+  const handleCreateRoom = async () => {
+    if (!newRoomName.trim()) return
+
+    try {
+      setIsLoading(true)
+      const roomName = await createRoom(newRoomName)
+      setProductData(prev => ({ ...prev, storage: roomName }))
+      setShowNewRoomForm(false)
+      setNewRoomName("")
+      setError("") // Clear any previous errors
+    } catch (error) {
+      setError(t("Failed to add storage location"))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -281,22 +272,67 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
         }
       }
 
-      // Create product
-      const response = await fetch("/api/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...productData,
-          image: imageUrl,
-          shipping_id: shippingId,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error(t("Failed to create product"))
+      // Validate required fields
+      if (!productData.box_code.trim()) {
+        setError("Box code is required")
+        setIsLoading(false)
+        return
+      }
+      if (!productData.cost || productData.cost <= 0) {
+        setError("Cost must be greater than 0")
+        setIsLoading(false)
+        return
+      }
+      if (!productData.selling_price || productData.selling_price <= 0) {
+        setError("Selling price must be greater than 0")
+        setIsLoading(false)
+        return
+      }
+      if (!productData.size_of_box || productData.size_of_box <= 0) {
+        setError("Size of box must be greater than 0")
+        setIsLoading(false)
+        return
+      }
+      if (!productData.total_box_size || productData.total_box_size <= 0) {
+        setError("Total box size must be greater than 0")
+        setIsLoading(false)
+        return
+      }
+      if (!productData.number_of_boxes || productData.number_of_boxes <= 0) {
+        setError("Number of boxes must be greater than 0")
+        setIsLoading(false)
+        return
       }
 
-      const newProduct = await response.json()
+      // Prepare product data with proper types and calculations
+      const productToCreate = {
+        box_code: productData.box_code.trim(),
+        product_name: productData.product_name?.trim() || null,
+        cost: productData.cost,
+        selling_price: productData.selling_price,
+        storage: productData.storage?.trim() || null,
+        weight: productData.weight || null,
+        image: imageUrl || null,
+        pice_per_box: productData.pice_per_box || null,
+        total_pices: Math.round((productData.pice_per_box || 0) * (productData.number_of_boxes || 0)),
+        total_cost: (productData.number_of_boxes || 0) * (productData.pice_per_box || 0) * (productData.cost || 0),
+        size_of_box: productData.size_of_box,
+        total_box_size: productData.total_box_size,
+        number_of_boxes: Math.round(productData.number_of_boxes),
+        extracted_pieces: Math.round(productData.extracted_pieces || 0),
+        status: productData.status,
+        grope_item_price: productData.group_item_price || null,
+        currency: productData.currency,
+        note: productData.note?.trim() || null,
+        shipping_id: shippingId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+
+      console.log("Creating product with data:", productToCreate)
+
+      // Create product
+      const newProduct = await tauriApi.createProduct(productToCreate)
 
       // Reset form
       setProductData({
@@ -380,7 +416,13 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
             <select
               name="storage"
               value={productData.storage}
-              onChange={handleProductDataChange}
+              onChange={(e) => {
+                if (e.target.value === "create-new") {
+                  setShowNewRoomForm(true)
+                } else {
+                  handleProductDataChange(e)
+                }
+              }}
               className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="">{t("Select Storage Location")}</option>
@@ -389,6 +431,9 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
                   {room.room_name}
                 </option>
               ))}
+              <option value="create-new" className="font-medium text-primary">
+                + {t("Add New Storage Location")}
+              </option>
               {rooms.length === 0 && <option disabled>{t("Loading...")}</option>}
             </select>
             <p className="text-xs text-muted-foreground mt-1">
@@ -410,6 +455,41 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
           </div>
         </div>
       </div>
+
+      {/* New Room Form */}
+      {showNewRoomForm && (
+        <div className="border border-primary/20 bg-primary/5 p-4 rounded-lg">
+          <h4 className="text-sm font-medium text-foreground mb-3">{t("Add New Storage Location")}</h4>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newRoomName}
+              onChange={(e) => setNewRoomName(e.target.value)}
+              placeholder={t("Enter storage location name")}
+              className="flex-1 px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  handleCreateRoom()
+                }
+              }}
+            />
+            <Button onClick={handleCreateRoom} size="sm">
+              {t("Add")}
+            </Button>
+            <Button
+              onClick={() => {
+                setShowNewRoomForm(false)
+                setNewRoomName("")
+              }}
+              variant="outline"
+              size="sm"
+            >
+              {t("Cancel")}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Pricing Information */}
       <div className="space-y-4">

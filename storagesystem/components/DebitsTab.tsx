@@ -7,6 +7,7 @@ import { DebitTable } from "@/components/debit-table"
 import { AddDebitForm } from "@/components/add-debit-form"
 import { DebitDetailsModal } from "@/components/debit-details-modal"
 import type { Debit } from "@/lib/types"
+import { tauriApi } from "@/lib/tauri-api"
 import { useTranslation } from "react-i18next"
 import "../i18n.client"
 
@@ -25,16 +26,12 @@ export function DebitsTab({ debits, isLoading, refetch }: DebitsTabProps) {
   const validDebits = debits.filter(debit => debit && debit.receiver && debit.receiver.client_name)
 
   const handleDeleteDebit = async (id: number) => {
-    await fetch(`/api/debits/${id}`, { method: "DELETE" })
+    await tauriApi.deleteDebit(id)
     refetch()
   }
 
   const handleUpdateDebit = async (id: number, updates: Partial<Debit>) => {
-    await fetch(`/api/debits/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
-    })
+    await tauriApi.updateDebit(id, updates)
     refetch()
   }
 

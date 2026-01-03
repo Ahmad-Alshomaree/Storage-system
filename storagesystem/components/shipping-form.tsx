@@ -1,11 +1,12 @@
 "use client"
 
-import type React from "react"
+import React from "react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Loader2, Plus, Trash2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { tauriApi } from "@/lib/tauri-api"
 import "../i18n.client"
 
 interface Product {
@@ -115,15 +116,13 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
   const [selectedOutputProducts, setSelectedOutputProducts] = useState<OutputLoadProductSelection[]>([])
   const [productDialogOpen, setProductDialogOpen] = useState(false)
   const [currentProductSelection, setCurrentProductSelection] = useState<OutputLoadProductSelection | null>(null)
+  const [newlyAddedClients, setNewlyAddedClients] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const response = await fetch("/api/clients")
-        if (response.ok) {
-          const clients = await response.json()
-          setExistingClients(clients)
-        }
+        const clients = await tauriApi.getClients()
+        setExistingClients(clients)
       } catch (error) {
         console.error("Failed to fetch clients:", error)
       } finally {
@@ -217,6 +216,27 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
     }))
   }
 
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleChange(e)
+    // Force close date picker immediately after selection
+    setTimeout(() => e.target.blur(), 0)
+  }
+
+  // Close date picker when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      // If clicking outside any input, blur all date inputs to close pickers
+      if (!target.closest('input[type="date"]')) {
+        const dateInputs = document.querySelectorAll('input[type="date"]') as NodeListOf<HTMLInputElement>
+        dateInputs.forEach(input => input.blur())
+      }
+    }
+
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [])
+
   const handleClientSelectChange = (field: 'receiver' | 'sender', value: string) => {
     if (value === 'add-new-client') {
       setTargetField(field)
@@ -289,17 +309,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
       note: formData.note || null,
     }
 
-    const response = await fetch("/api/shipping", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(shippingData),
-    })
-
-    if (!response.ok) {
-      throw new Error("Failed to create shipping record")
-    }
-
-    const newShipping = await response.json()
+    const newShipping = await tauriApi.createShipping(shippingData)
     setCurrentShippingId(newShipping.id)
     return newShipping.id
   }
@@ -392,17 +402,10 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         total_debts: 0,
       }
 
-      const response = await fetch("/api/clients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(clientData),
-      })
+      const newClient = await tauriApi.createClient(clientData)
 
-      if (!response.ok) {
-        throw new Error(t("Failed to add client"))
-      }
-
-      const newClient = await response.json()
+      // Track newly added clients to prevent automatic linking to shipping
+      setNewlyAddedClients(prev => new Set(prev).add(newClient.id))
 
       // Update clients list
       setExistingClients(prev => [...prev, newClient])
@@ -460,22 +463,12 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         note: formData.note || null,
       }
 
-      const response = await fetch("/api/shipping", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(shippingData),
-      })
+      const newShipping = await tauriApi.createShipping(shippingData)
 
-      if (!response.ok) {
-        throw new Error("Failed to create shipping record")
-      }
-
-      const newShipping = await response.json()
-
-      // Handle client assignment
+      // Handle client assignment - only link existing clients, not newly added ones
       if (formData.receiver) {
         const existingClient = existingClients.find(client => client.client_name === formData.receiver)
-        if (existingClient) {
+        if (existingClient && !newlyAddedClients.has(existingClient.id)) {
           await fetch(`/api/clients/${existingClient.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -489,6 +482,9 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
 
       // Notify success - shipping information saved
       onSuccess(newShipping)
+
+      // Clear newly added clients tracking for next form submission
+      setNewlyAddedClients(new Set())
 
       // Show success message but keep form data for potential order saving
       setError("") // Clear any errors
@@ -527,7 +523,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
             type="date"
             name="shipping_date"
             value={formData.shipping_date}
-            onChange={handleChange}
+            onChange={handleDateChange}
             required
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
@@ -539,7 +535,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
             type="date"
             name="receiving_date"
             value={formData.receiving_date}
-            onChange={handleChange}
+            onChange={handleDateChange}
             required
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />

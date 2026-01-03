@@ -16,7 +16,7 @@ export function AddClientForm({ onSuccess }: AddClientFormProps) {
   const [formData, setFormData] = useState({
     client_name: "",
     phone_number: "",
-    shipping_id: "",
+    shipping_id: null,
     history: "",
     debt: 0,
   })
@@ -58,11 +58,21 @@ export function AddClientForm({ onSuccess }: AddClientFormProps) {
     setError("")
 
     try {
-      const newClient = await tauriApi.createClient(formData)
+      // Prepare client data, including debt
+      const clientData: any = {
+        client_name: formData.client_name,
+        phone_number: formData.phone_number,
+        history: formData.history,
+        debt: formData.debt > 0 ? formData.debt : undefined,
+      }
+      if (formData.shipping_id !== null) {
+        clientData.shipping_id = formData.shipping_id
+      }
+      const newClient = await tauriApi.createClient(clientData)
       setFormData({
         client_name: "",
         phone_number: "",
-        shipping_id: "",
+        shipping_id: null,
         history: "",
         debt: 0,
       })
@@ -110,7 +120,7 @@ export function AddClientForm({ onSuccess }: AddClientFormProps) {
           <label className="block text-sm font-medium text-foreground mb-2">{t("Shipping")}</label>
           <select
             name="shipping_id"
-            value={formData.shipping_id}
+            value={formData.shipping_id || ""}
             onChange={handleChange}
             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >

@@ -8,37 +8,7 @@ import {
 } from "@/components/ui/dialog"
 import { useTranslation } from "react-i18next"
 import "../i18n.client"
-
-interface Debit {
-  id: number
-  sender_id?: number | null
-  receiver_id: number
-  shipping_id?: number | null
-  amount: number
-  currency: string
-  note?: string | null
-  transaction_date: string
-  created_at: string
-  total_debit?: number | null
-  sender?: {
-    id: number
-    client_name: string
-    phone_number?: string | null
-  } | null
-  receiver: {
-    id: number
-    client_name: string
-    phone_number?: string | null
-  }
-  shipping?: {
-    id: number
-    type: string
-    shipping_date: string
-    receiver: string
-    file_path?: string | null
-    created_at: string
-  }
-}
+import type { Debit } from "@/lib/types"
 
 interface DebitDetailsModalProps {
   debit: Debit | null
@@ -149,7 +119,7 @@ export function DebitDetailsModal({ debit, open, onOpenChange }: DebitDetailsMod
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">{t("Receiver")}</label>
-                  <p className="text-sm">{debit.shipping.receiver}</p>
+                  <p className="text-sm">{debit.shipping.receiver?.client_name}</p>
                 </div>
               </div>
               {debit.shipping.file_path && (

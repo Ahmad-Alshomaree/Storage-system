@@ -74,6 +74,30 @@ export const tauriApi = {
     return response.json()
   },
 
+  updateProduct: async (id: number, updates: any) => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Updating product via Tauri')
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('update_product', { id, productData: updates })
+      } catch (error) {
+        console.error('tauriApi: Failed to update product via Tauri:', error)
+        throw new Error('Failed to update product')
+      }
+    }
+    // In development, use API routes
+    console.log('tauriApi: Updating product via HTTP API')
+    const response = await fetch(`/api/products/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    })
+    if (!response.ok) throw new Error('Failed to update product')
+    return response.json()
+  },
+
   deleteProduct: async (id: number) => {
     // In Tauri environment
     if (tauriApi.isTauri()) {
@@ -118,13 +142,13 @@ export const tauriApi = {
     // In Tauri environment
     if (tauriApi.isTauri()) {
       try {
-        console.log('tauriApi: Creating client via Tauri')
+        console.log('tauriApi: Creating client via Tauri', client)
         // @ts-ignore
         const { invoke } = await import('@tauri-apps/api/core')
         return await invoke('create_client', { clientData: client })
       } catch (error) {
         console.error('tauriApi: Failed to create client via Tauri:', error)
-        throw new Error('Failed to create client')
+        throw new Error(`Failed to create client: ${error}`)
       }
     }
     // In development, use API routes
@@ -136,6 +160,49 @@ export const tauriApi = {
     })
     if (!response.ok) throw new Error('Failed to create client')
     return response.json()
+  },
+
+  updateClient: async (id: number, updates: any) => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Updating client via Tauri')
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('update_client', { id, clientData: updates })
+      } catch (error) {
+        console.error('tauriApi: Failed to update client via Tauri:', error)
+        throw new Error('Failed to update client')
+      }
+    }
+    // In development, use API routes
+    console.log('tauriApi: Updating client via HTTP API')
+    const response = await fetch(`/api/clients/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    })
+    if (!response.ok) throw new Error('Failed to update client')
+    return response.json()
+  },
+
+  deleteClient: async (id: number) => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Deleting client via Tauri')
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('delete_client', { id })
+      } catch (error) {
+        console.error('tauriApi: Failed to delete client via Tauri:', error)
+        throw new Error('Failed to delete client')
+      }
+    }
+    // In development, use API routes
+    console.log('tauriApi: Deleting client via HTTP API')
+    const response = await fetch(`/api/clients/${id}`, { method: 'DELETE' })
+    if (!response.ok) throw new Error('Failed to delete client')
   },
 
   // Shipping
@@ -159,6 +226,73 @@ export const tauriApi = {
     return response.json()
   },
 
+  createShipping: async (shipping: any) => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Creating shipping via Tauri', shipping)
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('create_shipping', { shippingData: shipping })
+      } catch (error) {
+        console.error('tauriApi: Failed to create shipping via Tauri:', error)
+        throw new Error(`Failed to create shipping: ${error}`)
+      }
+    }
+    // In development, use API routes
+    console.log('tauriApi: Creating shipping via HTTP API')
+    const response = await fetch('/api/shipping', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(shipping),
+    })
+    if (!response.ok) throw new Error('Failed to create shipping')
+    return response.json()
+  },
+
+  updateShipping: async (id: number, updates: any) => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Updating shipping via Tauri')
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('update_shipping', { id, shippingData: updates })
+      } catch (error) {
+        console.error('tauriApi: Failed to update shipping via Tauri:', error)
+        throw new Error('Failed to update shipping')
+      }
+    }
+    // In development, use API routes
+    console.log('tauriApi: Updating shipping via HTTP API')
+    const response = await fetch(`/api/shipping/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    })
+    if (!response.ok) throw new Error('Failed to update shipping')
+    return response.json()
+  },
+
+  deleteShipping: async (id: number) => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Deleting shipping via Tauri')
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('delete_shipping', { id })
+      } catch (error) {
+        console.error('tauriApi: Failed to delete shipping via Tauri:', error)
+        throw new Error('Failed to delete shipping')
+      }
+    }
+    // In development, use API routes
+    console.log('tauriApi: Deleting shipping via HTTP API')
+    const response = await fetch(`/api/shipping/${id}`, { method: 'DELETE' })
+    if (!response.ok) throw new Error('Failed to delete shipping')
+  },
+
   // Debits
   getDebits: async (): Promise<any[]> => {
     // In Tauri environment
@@ -178,6 +312,49 @@ export const tauriApi = {
     const response = await fetch('/api/debits')
     if (!response.ok) throw new Error('Failed to fetch debits')
     return response.json()
+  },
+
+  updateDebit: async (id: number, updates: any) => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Updating debit via Tauri')
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('update_debit', { id, debitData: updates })
+      } catch (error) {
+        console.error('tauriApi: Failed to update debit via Tauri:', error)
+        throw new Error('Failed to update debit')
+      }
+    }
+    // In development, use API routes
+    console.log('tauriApi: Updating debit via HTTP API')
+    const response = await fetch(`/api/debits/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    })
+    if (!response.ok) throw new Error('Failed to update debit')
+    return response.json()
+  },
+
+  deleteDebit: async (id: number) => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Deleting debit via Tauri')
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('delete_debit', { id })
+      } catch (error) {
+        console.error('tauriApi: Failed to delete debit via Tauri:', error)
+        throw new Error('Failed to delete debit')
+      }
+    }
+    // In development, use API routes
+    console.log('tauriApi: Deleting debit via HTTP API')
+    const response = await fetch(`/api/debits/${id}`, { method: 'DELETE' })
+    if (!response.ok) throw new Error('Failed to delete debit')
   },
 
   // Rooms

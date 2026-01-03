@@ -4,27 +4,6 @@ import { useState } from "react"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ShippingTable, ShippingTableClient } from "@/components/shipping-table"
-import { ShippingForm } from "@/components/shipping-form"
-import { useTranslation } from "react-i18next"
-import "../i18n.client"
-
-interface Product {
-  id: number
-  box_code: string
-  product_name?: string | null
-  product_type?: string | null
-  original_price: number
-  selling_price: number
-  Total_pices?: number | null
-  total_original_price?: number | null
-  number_of_boxes: number
-  size_of_box: number
-  total_box_size: number
-  weight?: number | null
-  image?: string | null
-  currency?: string | null
-  note?: string | null
-}
 
 interface Shipping {
   id: number
@@ -41,33 +20,44 @@ interface Shipping {
   note?: string | null
   created_at: string
   file_path?: string | null
-  products?: Product[]
+  products?: any[]
+}
+import { ShippingForm } from "@/components/shipping-form"
+import { tauriApi } from "@/lib/tauri-api"
+import { useTranslation } from "react-i18next"
+import "../i18n.client"
+
+interface Client {
+  id: number
+  client_name: string
+  phone_number?: string | null
+  shipping_id?: number | null
+  history?: string | null
+  debt: number
+  total_debts: number
 }
 
 interface ShippingTabProps {
   shipping: Shipping[]
+  clients: Client[]
   isLoading: boolean
   refetch: () => void
 }
 
-export function ShippingTab({ shipping, isLoading, refetch }: ShippingTabProps) {
+export function ShippingTab({ shipping, clients, isLoading, refetch }: ShippingTabProps) {
   const [showShippingForm, setShowShippingForm] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const { t } = useTranslation()
 
   const handleDeleteShipping = async (id: number) => {
     if (confirm(t("Are you sure you want to delete this shipping record?"))) {
-      await fetch(`/api/shipping/${id}`, { method: "DELETE" })
+      await tauriApi.deleteShipping(id)
       refetch()
     }
   }
 
   const handleUpdateShipping = async (id: number, updates: Partial<Shipping>) => {
-    await fetch(`/api/shipping/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
-    })
+    await tauriApi.updateShipping(id, updates)
     refetch()
   }
 
@@ -115,6 +105,7 @@ export function ShippingTab({ shipping, isLoading, refetch }: ShippingTabProps) 
       ) : (
         <ShippingTable
           shipping={filteredShipping}
+          clients={clients}
           onDelete={handleDeleteShipping}
           onUpdate={handleUpdateShipping}
         />

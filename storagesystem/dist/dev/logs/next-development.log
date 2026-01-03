@@ -1,0 +1,4 @@
+[00:00:01.274] Server  LOG      ✓ Ready in 813ms
+[00:00:06.910] Server  LOG      ○ Compiling / ...
+[00:00:23.718] Server  ERROR    ⨯ Error: Page "/api/clients/[id]/route" is missing exported function "generateStaticParams()", which is required with "output: export" config.
+[00:01:21.027] Server  ERROR    ⨯ Error: Page "/api/shipping/[id]/route" is missing exported function "generateStaticParams()", which is required with "output: export" config.

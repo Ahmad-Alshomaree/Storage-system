@@ -7,6 +7,7 @@ import { ProductTable } from "@/components/product-table"
 import { AddProductForm } from "@/components/add-product-form"
 import { UploadExcelForm } from "@/components/upload-excel-form"
 import type { Product } from "@/lib/types"
+import { tauriApi } from "@/lib/tauri-api"
 import { useTranslation } from "react-i18next"
 import "../i18n.client"
 
@@ -24,17 +25,13 @@ export function ProductsTab({ products, isLoading, refetch }: ProductsTabProps) 
 
   const handleDeleteProduct = async (id: number) => {
     if (confirm(t("Are you sure you want to delete this product?"))) {
-      await fetch(`/api/products/${id}`, { method: "DELETE" })
+      await tauriApi.deleteProduct(id)
       refetch()
     }
   }
 
   const handleUpdateProduct = async (id: number, updates: Partial<Product>) => {
-    await fetch(`/api/products/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
-    })
+    await tauriApi.updateProduct(id, updates)
     refetch()
   }
 

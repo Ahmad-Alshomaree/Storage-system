@@ -19,22 +19,36 @@ interface Client {
   phone_number?: string | null
 }
 
+interface ShippingTableClient {
+  id: number
+  client_name: string
+  phone_number?: string | null
+}
+
 interface Product {
   id: number
+  shipping_id?: number | null
+  item_no?: string | null
   box_code: string
   product_name?: string | null
-  product_type?: string | null
   cost: number
   selling_price: number
-  Total_pices?: number | null
-  total_cost?: number | null
-  number_of_boxes: number
-  size_of_box: number
-  total_box_size: number
+  storage?: string | null
   weight?: number | null
   image?: string | null
-  currency?: string | null
+  pice_per_box: number
+  total_pices: number
+  total_cost: number
+  size_of_box: number
+  total_box_size: number
+  number_of_boxes: number
+  extracted_pieces: number
+  status: string
+  grope_item_price?: number | null
+  currency: string
   note?: string | null
+  created_at?: string | null
+  updated_at?: string | null
 }
 
 interface Shipping {
@@ -57,39 +71,27 @@ interface Shipping {
 
 interface ShippingDetailsModalProps {
   shipping: Shipping | null
+  clients?: ShippingTableClient[]
   open: boolean
   onOpenChange: (open: boolean) => void
   onEdit?: (id: number, updates: Partial<Shipping>) => void
   onDelete?: (id: number) => void
 }
 
-export function ShippingDetailsModal({ shipping, open, onOpenChange, onEdit, onDelete }: ShippingDetailsModalProps) {
+export function ShippingDetailsModal({ shipping, clients: propClients = [], open, onOpenChange, onEdit, onDelete }: ShippingDetailsModalProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValues, setEditValues] = useState<Partial<Shipping>>({})
-  const [clients, setClients] = useState<Client[]>([])
-  const [loadingClients, setLoadingClients] = useState(true)
+  const [clients, setClients] = useState<Client[]>(propClients)
+  const [loadingClients, setLoadingClients] = useState(propClients.length === 0)
   const { t } = useTranslation()
 
-  // Fetch clients on component mount
+  // Update clients when prop changes
   useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        const response = await fetch('/api/clients')
-        if (response.ok) {
-          const data = await response.json()
-          setClients(data)
-        }
-      } catch (error) {
-        console.error('Error fetching clients:', error)
-      } finally {
-        setLoadingClients(false)
-      }
+    if (propClients.length > 0) {
+      setClients(propClients)
+      setLoadingClients(false)
     }
-
-    if (open) {
-      fetchClients()
-    }
-  }, [open])
+  }, [propClients])
 
   if (!shipping) return null
 
@@ -160,7 +162,7 @@ ${t("Financial Information")}:
 
 ${t("Products")} (${shipping.products?.length || 0}):
 ${shipping.products?.map(product =>
-  `- ${product.product_name || product.box_code} (${product.number_of_boxes} boxes, ${product.Total_pices ?? 0} pcs)`
+  `- ${product.product_name || product.box_code} (${product.number_of_boxes} boxes, ${product.total_pices ?? 0} pcs)`
 ).join('\n') || t('No products')}
 
 ${t("Notes")}: ${shipping.note || t("No notes")}
@@ -385,26 +387,22 @@ ${t("Generated on")}: ${new Date().toLocaleString()}
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 mt-2">
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">{t("Product Type")}</label>
-                        <p className="text-sm">{product.product_type || t("N/A")}</p>
-                      </div>
+                    <div className="grid grid-cols-3 gap-4 mt-2">
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">{t("Currency")}</label>
                         <p className="text-sm">{t(product.currency || "Dollar")}</p>
                       </div>
-                    </div>
-
-                    <div className="grid grid-cols-4 gap-4 mt-3">
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">{t("Number of boxes")}</label>
                         <p className="text-sm font-bold">{product.number_of_boxes}</p>
                       </div>
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">{t("Total Pieces")}</label>
-                        <p className="text-sm font-bold">{product.Total_pices ?? 0}</p>
+                        <p className="text-sm font-bold">{product.total_pices ?? 0}</p>
                       </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4 mt-3">
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">{t("Cost")}</label>
                         <p className="text-sm font-bold">{(product.cost).toFixed(2)}</p>

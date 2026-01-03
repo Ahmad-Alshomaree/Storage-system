@@ -37,6 +37,18 @@ pub struct Client {
     pub phone_number: Option<String>,
     pub shipping_id: Option<i64>,
     pub history: Option<String>,
+    pub debt: Option<f64>,
+    pub total_debts: Option<f64>,
+}
+
+// Separate struct for client creation (without id)
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreateClient {
+    pub client_name: String,
+    pub phone_number: Option<String>,
+    pub shipping_id: Option<i64>,
+    pub history: Option<String>,
+    pub debt: Option<f64>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -55,11 +67,27 @@ pub struct Shipping {
     pub created_at: String,
 }
 
+// Separate struct for shipping creation (without id and created_at)
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreateShipping {
+    pub r#type: String, // "input load" or "output load"
+    pub shipping_date: String,
+    pub receiving_date: String,
+    pub receiver_client_id: i64,
+    pub sender_client_id: i64,
+    pub file_path: Option<String>,
+    pub paid: i64,
+    pub ship_price: f64,
+    pub currency: String,
+    pub note: Option<String>,
+}
+
+// Simplified Debit struct for database operations
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Debit {
     pub id: i64,
     pub sender_id: Option<i64>,
-    pub receiver_id: Option<i64>,
+    pub receiver_id: i64, // Required in schema
     pub shipping_id: Option<i64>,
     pub amount: f64,
     pub currency: String,
@@ -68,6 +96,8 @@ pub struct Debit {
     pub total_debit: Option<f64>,
     pub created_at: String,
 }
+
+
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Room {
@@ -93,6 +123,7 @@ pub struct Database {
 
 impl Database {
     // Initialize database with custom path or app data directory
+    #[allow(dead_code)]
     pub fn new(app_handle: &AppHandle) -> Result<Self> {
         Self::new_with_path(app_handle, None)
     }
@@ -354,7 +385,11 @@ impl Database {
     // Client operations
     pub fn get_clients(&self) -> Result<Vec<Client>> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, client_name, phone_number, shipping_id, history FROM client"
+            "SELECT c.id, c.client_name, c.phone_number, c.shipping_id, c.history,
+                    COALESCE(SUM(d.amount), 0) as total_debt
+             FROM client c
+             LEFT JOIN debits d ON c.id = d.receiver_id
+             GROUP BY c.id, c.client_name, c.phone_number, c.shipping_id, c.history"
         )?;
 
         let clients = stmt.query_map([], |row| {
@@ -364,6 +399,8 @@ impl Database {
                 phone_number: row.get(2)?,
                 shipping_id: row.get(3)?,
                 history: row.get(4)?,
+                debt: Some(row.get::<_, f64>(5)?), // Total debt from debits
+                total_debts: Some(row.get::<_, f64>(5)?), // Same as debt for now
             })
         })?;
 
@@ -382,15 +419,37 @@ impl Database {
             ],
         )?;
 
-        let id = self.conn.last_insert_rowid();
-        let mut stmt = self.conn.prepare("SELECT * FROM client WHERE id = ?")?;
-        let mut rows = stmt.query_map([id], |row| {
+        let client_id = self.conn.last_insert_rowid();
+
+        // If debt is provided and > 0, create a debit record
+        if let Some(debt_amount) = client.debt {
+            if debt_amount > 0.0 {
+                let debit = Debit {
+                    id: 0, // Will be set by database
+                    sender_id: None, // No sender for initial debt
+                    receiver_id: client_id, // The client owes this amount
+                    shipping_id: None, // Not related to shipping
+                    amount: debt_amount,
+                    currency: "Dollar".to_string(), // Default currency
+                    note: Some(format!("Initial debt for client {}", client.client_name)),
+                    transaction_date: Some(chrono::Utc::now().to_rfc3339()),
+                    total_debit: None, // Will be calculated
+                    created_at: chrono::Utc::now().to_rfc3339(),
+                };
+                self.create_debit(&debit)?;
+            }
+        }
+
+        let mut stmt = self.conn.prepare("SELECT id, client_name, phone_number, shipping_id, history FROM client WHERE id = ?")?;
+        let mut rows = stmt.query_map([client_id], |row| {
             Ok(Client {
                 id: row.get(0)?,
                 client_name: row.get(1)?,
                 phone_number: row.get(2)?,
                 shipping_id: row.get(3)?,
                 history: row.get(4)?,
+                debt: None, // Calculated field, not stored in database
+                total_debts: None, // Calculated field, not stored in database
             })
         })?;
 
@@ -398,14 +457,101 @@ impl Database {
     }
 
     // Shipping operations
-    pub fn get_shipping(&self) -> Result<Vec<Shipping>> {
+    pub fn get_shipping(&self) -> Result<Vec<serde_json::Value>> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, type, shipping_date, receiving_date, receiver_client_id,
-                    sender_client_id, file_path, paid, ship_price, currency, note, created_at
-             FROM shipping"
+            "SELECT s.id, s.type, s.shipping_date, s.receiving_date, s.receiver_client_id,
+                    s.sender_client_id, s.file_path, s.paid, s.ship_price, s.currency, s.note, s.created_at,
+                    receiver.client_name as receiver_name, receiver.phone_number as receiver_phone,
+                    sender.client_name as sender_name, sender.phone_number as sender_phone
+             FROM shipping s
+             LEFT JOIN client receiver ON s.receiver_client_id = receiver.id
+             LEFT JOIN client sender ON s.sender_client_id = sender.id
+             ORDER BY s.created_at DESC"
         )?;
 
         let shipping = stmt.query_map([], |row| {
+            let receiver = serde_json::json!({
+                "id": row.get::<_, i64>(4)?,
+                "client_name": row.get::<_, String>(12)?,
+                "phone_number": row.get::<_, Option<String>>(13)?
+            });
+
+            let sender = serde_json::json!({
+                "id": row.get::<_, i64>(5)?,
+                "client_name": row.get::<_, String>(14)?,
+                "phone_number": row.get::<_, Option<String>>(15)?
+            });
+
+            Ok(serde_json::json!({
+                "id": row.get::<_, i64>(0)?,
+                "type": row.get::<_, String>(1)?,
+                "shipping_date": row.get::<_, String>(2)?,
+                "receiving_date": row.get::<_, String>(3)?,
+                "receiver_client_id": row.get::<_, i64>(4)?,
+                "sender_client_id": row.get::<_, i64>(5)?,
+                "receiver": receiver,
+                "sender": sender,
+                "file_path": row.get::<_, Option<String>>(6)?,
+                "paid": row.get::<_, i64>(7)?,
+                "ship_price": row.get::<_, f64>(8)?,
+                "currency": row.get::<_, String>(9)?,
+                "note": row.get::<_, Option<String>>(10)?,
+                "created_at": row.get::<_, String>(11)?
+            }))
+        })?;
+
+        shipping.collect()
+    }
+
+    pub fn create_shipping(&self, shipping: &Shipping) -> Result<Shipping> {
+        let created_at = chrono::Utc::now().to_rfc3339();
+        self.conn.execute(
+            "INSERT INTO shipping (type, shipping_date, receiving_date, receiver_client_id,
+                                 sender_client_id, file_path, paid, ship_price, currency, note, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            params![
+                shipping.r#type,
+                shipping.shipping_date,
+                shipping.receiving_date,
+                shipping.receiver_client_id,
+                shipping.sender_client_id,
+                shipping.file_path,
+                shipping.paid,
+                shipping.ship_price,
+                shipping.currency,
+                shipping.note,
+                created_at,
+            ],
+        )?;
+
+        let shipping_id = self.conn.last_insert_rowid();
+
+        // Create debit record for the shipping transaction between the two clients
+        let remaining_amount = shipping.ship_price - shipping.paid as f64;
+        if remaining_amount > 0.0 {
+            let transaction_date = Some(chrono::Utc::now().to_rfc3339());
+
+            // The receiver (customer) owes the sender (supplier) the remaining shipping cost
+            let shipping_debit = Debit {
+                id: 0,
+                sender_id: Some(shipping.receiver_client_id), // debtor: who owes money (receiver/customer)
+                receiver_id: shipping.sender_client_id,       // creditor: who is owed money (sender/supplier)
+                shipping_id: Some(shipping_id),
+                amount: remaining_amount,
+                currency: shipping.currency.clone(),
+                note: Some(format!("Remaining shipping cost for shipping #{} (total: {}, paid: {})",
+                    shipping_id, shipping.ship_price, shipping.paid)),
+                transaction_date: transaction_date,
+                total_debit: None,
+                created_at: chrono::Utc::now().to_rfc3339(),
+            };
+            self.create_debit(&shipping_debit)?;
+        }
+
+        let mut stmt = self.conn.prepare("SELECT id, type, shipping_date, receiving_date, receiver_client_id,
+                                                sender_client_id, file_path, paid, ship_price, currency, note, created_at
+                                         FROM shipping WHERE id = ?")?;
+        let mut rows = stmt.query_map([shipping_id], |row| {
             Ok(Shipping {
                 id: row.get(0)?,
                 r#type: row.get(1)?,
@@ -422,17 +568,83 @@ impl Database {
             })
         })?;
 
-        shipping.collect()
+        rows.next().unwrap()
     }
 
     // Debit operations
-    pub fn get_debits(&self) -> Result<Vec<Debit>> {
+    pub fn get_debits(&self) -> Result<Vec<serde_json::Value>> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, sender_id, receiver_id, shipping_id, amount, currency,
-                    note, transaction_date, total_debit, created_at FROM debits"
+            "SELECT d.id, d.sender_id, d.receiver_id, d.shipping_id, d.amount, d.currency,
+                    d.note, d.transaction_date, d.total_debit, d.created_at,
+                    sender.client_name as sender_name, sender.phone_number as sender_phone,
+                    receiver.client_name as receiver_name, receiver.phone_number as receiver_phone
+             FROM debits d
+             LEFT JOIN client sender ON d.sender_id = sender.id
+             LEFT JOIN client receiver ON d.receiver_id = receiver.id
+             ORDER BY d.created_at DESC"
         )?;
 
         let debits = stmt.query_map([], |row| {
+            let sender = if row.get::<_, Option<String>>(10)?.is_some() {
+                Some(serde_json::json!({
+                    "id": row.get::<_, Option<i64>>(1)?,
+                    "client_name": row.get::<_, Option<String>>(10)?,
+                    "phone_number": row.get::<_, Option<String>>(11)?
+                }))
+            } else {
+                None
+            };
+
+            let receiver = if row.get::<_, Option<String>>(12)?.is_some() {
+                Some(serde_json::json!({
+                    "id": row.get::<_, Option<i64>>(2)?,
+                    "client_name": row.get::<_, Option<String>>(12)?,
+                    "phone_number": row.get::<_, Option<String>>(13)?
+                }))
+            } else {
+                None
+            };
+
+            Ok(serde_json::json!({
+                "id": row.get::<_, i64>(0)?,
+                "sender_id": row.get::<_, Option<i64>>(1)?,
+                "receiver_id": row.get::<_, i64>(2)?,
+                "shipping_id": row.get::<_, Option<i64>>(3)?,
+                "amount": row.get::<_, f64>(4)?,
+                "currency": row.get::<_, String>(5)?,
+                "note": row.get::<_, Option<String>>(6)?,
+                "transaction_date": row.get::<_, Option<String>>(7)?,
+                "total_debit": row.get::<_, Option<f64>>(8)?,
+                "created_at": row.get::<_, String>(9)?,
+                "sender": sender,
+                "receiver": receiver
+            }))
+        })?;
+
+        debits.collect()
+    }
+
+    pub fn create_debit(&self, debit: &Debit) -> Result<Debit> {
+        self.conn.execute(
+            "INSERT INTO debits (sender_id, receiver_id, shipping_id, amount, currency,
+                                note, transaction_date, total_debit, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            params![
+                debit.sender_id,
+                debit.receiver_id,
+                debit.shipping_id,
+                debit.amount,
+                debit.currency,
+                debit.note,
+                debit.transaction_date,
+                debit.total_debit,
+                debit.created_at,
+            ],
+        )?;
+
+        let id = self.conn.last_insert_rowid();
+        let mut stmt = self.conn.prepare("SELECT * FROM debits WHERE id = ?")?;
+        let mut rows = stmt.query_map([id], |row| {
             Ok(Debit {
                 id: row.get(0)?,
                 sender_id: row.get(1)?,
@@ -447,7 +659,35 @@ impl Database {
             })
         })?;
 
-        debits.collect()
+        rows.next().unwrap()
+    }
+
+    // Delete operations
+    pub fn delete_product(&self, id: i64) -> Result<()> {
+        self.conn.execute("DELETE FROM products WHERE id = ?", [id])?;
+        Ok(())
+    }
+
+    pub fn delete_client(&self, id: i64) -> Result<()> {
+        // First delete related debits
+        self.conn.execute("DELETE FROM debits WHERE sender_id = ? OR receiver_id = ?", [id, id])?;
+        // Then delete the client
+        self.conn.execute("DELETE FROM client WHERE id = ?", [id])?;
+        Ok(())
+    }
+
+    pub fn delete_shipping(&self, id: i64) -> Result<()> {
+        // First delete related products and debits
+        self.conn.execute("DELETE FROM products WHERE shipping_id = ?", [id])?;
+        self.conn.execute("DELETE FROM debits WHERE shipping_id = ?", [id])?;
+        // Then delete the shipping record
+        self.conn.execute("DELETE FROM shipping WHERE id = ?", [id])?;
+        Ok(())
+    }
+
+    pub fn delete_debit(&self, id: i64) -> Result<()> {
+        self.conn.execute("DELETE FROM debits WHERE id = ?", [id])?;
+        Ok(())
     }
 
     // Room operations
