@@ -1,3 +1,6 @@
+// Static export compatibility; not actually used by the desktop app.
+export const dynamic = 'force-static';
+
 import { NextResponse } from 'next/server'
 import { tauriApi } from '@/lib/tauri-api'
 

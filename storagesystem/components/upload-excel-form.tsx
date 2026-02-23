@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Upload, Loader2, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { tauriApi } from "@/lib/tauri-api"
 import "../i18n.client"
 
 interface UploadExcelFormProps {
@@ -27,6 +28,30 @@ export function UploadExcelForm({ onSuccess }: UploadExcelFormProps) {
   const [receiverId, setReceiverId] = useState("")
   const [senderId, setSenderId] = useState("")
   const [shippingDate, setShippingDate] = useState("")
+
+  // helper to blur the picker after selection
+  const handleDateTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setShippingDate(e.target.value)
+    setTimeout(() => {
+      if (e.target instanceof HTMLInputElement) {
+        e.target.blur()
+      }
+    }, 0)
+  }
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (!target.closest('input[type="date"], input[type="datetime-local"], input[type="time"]')) {
+        const inputs = document.querySelectorAll(
+          'input[type="date"], input[type="datetime-local"], input[type="time"]',
+        ) as NodeListOf<HTMLInputElement>
+        inputs.forEach(input => input.blur())
+      }
+    }
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [])
   const [type, setType] = useState("input load")
   const [cost, setCost] = useState("")
   const [paid, setPaid] = useState("")
@@ -35,6 +60,10 @@ export function UploadExcelForm({ onSuccess }: UploadExcelFormProps) {
   const [uploadProductsOnly, setUploadProductsOnly] = useState(false)
   const [isLoadingClients, setIsLoadingClients] = useState(true)
   const [isLoadingRooms, setIsLoadingRooms] = useState(true)
+
+  // room creation state
+  const [showNewRoomForm, setShowNewRoomForm] = useState(false)
+  const [newRoomName, setNewRoomName] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [previewData, setPreviewData] = useState<any[] | null>(null)
@@ -60,11 +89,9 @@ export function UploadExcelForm({ onSuccess }: UploadExcelFormProps) {
 
     const fetchRooms = async () => {
       try {
-        const response = await fetch("/api/rooms")
-        if (response.ok) {
-          const roomsData = await response.json()
-          setRooms(roomsData)
-        }
+        // use tauriApi for consistency with other parts of the app
+        const roomsData = await tauriApi.getRooms()
+        setRooms(roomsData)
       } catch (error) {
         console.error("Failed to fetch rooms:", error)
       } finally {
@@ -77,6 +104,28 @@ export function UploadExcelForm({ onSuccess }: UploadExcelFormProps) {
   }, [])
 
   // Auto preview when file is selected
+
+  const createRoom = async (roomName: string): Promise<void> => {
+    if (!roomName.trim()) return
+    try {
+      const response = await fetch('/api/rooms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room_name: roomName }),
+      })
+      if (!response.ok) throw new Error('Failed to create room')
+      const saved = await response.json()
+      setRooms(prev => [...prev, saved])
+    } catch (err) {
+      console.error('Error creating room', err)
+    }
+  }
+
+  const handleCreateRoom = async () => {
+    await createRoom(newRoomName)
+    setNewRoomName("")
+    setShowNewRoomForm(false)
+  }
   const loadFilePreview = async () => {
     if (!file) return
 
@@ -329,11 +378,11 @@ export function UploadExcelForm({ onSuccess }: UploadExcelFormProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">{t("Shipping Date")}</label>
+              <label className="block text-sm font-medium mb-1">{t("Shipping Date/Time")}</label>
               <input
-                type="date"
+                type="datetime-local"
                 value={shippingDate}
-                onChange={(e) => setShippingDate(e.target.value)}
+                onChange={handleDateTimeChange}
                 className="w-full px-3 py-2 border border-input rounded-md bg-background"
                 required={!uploadProductsOnly}
               />
@@ -443,7 +492,46 @@ export function UploadExcelForm({ onSuccess }: UploadExcelFormProps) {
                 </tr>
               </thead>
               <tbody>
-                {previewData.map((row, index) => (
+                {/* global room creation control */}
+      <tr>
+        <td colSpan={12} className="p-3">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="px-3 py-1 bg-primary text-white rounded"
+              onClick={() => setShowNewRoomForm(true)}
+            >
+              {t("Add Room")}
+            </button>
+            {showNewRoomForm && (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newRoomName}
+                  onChange={(e) => setNewRoomName(e.target.value)}
+                  placeholder={t("Room name")}
+                  className="px-2 py-1 border rounded"
+                />
+                <button
+                  type="button"
+                  className="px-3 py-1 bg-primary text-white rounded"
+                  onClick={handleCreateRoom}
+                >
+                  {t("Add")}
+                </button>
+                <button
+                  type="button"
+                  className="px-3 py-1 border rounded"
+                  onClick={() => setShowNewRoomForm(false)}
+                >
+                  {t("Cancel")}
+                </button>
+              </div>
+            )}
+          </div>
+        </td>
+      </tr>
+      {previewData.map((row, index) => (
                   <tr key={index} className="hover:bg-muted/50">
                     <td className="border border-border p-3 text-center font-mono">{index + 1}</td>
                     <td className="border border-border p-3">{row.itemNo}</td>

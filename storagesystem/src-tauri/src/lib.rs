@@ -23,6 +23,7 @@ pub fn run() {
       commands::get_debits,
       commands::delete_debit,
       commands::get_rooms,
+      commands::create_room,
       commands::get_store_products,
       commands::upload_file,
       commands::select_storage_directory,

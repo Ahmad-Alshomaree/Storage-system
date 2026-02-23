@@ -1,3 +1,10 @@
+// API routes are only needed for web development/deployment. When
+// `output: 'export'` is used for the Next build (as required by Tauri),
+// they must be marked static so the static exporter will succeed. The
+// routes themselves are not invoked inside the desktop app because the
+// tauriApi helper bypasses them.
+export const dynamic = 'force-static';
+
 import { NextResponse } from 'next/server'
 import { tauriApi } from '@/lib/tauri-api'
 

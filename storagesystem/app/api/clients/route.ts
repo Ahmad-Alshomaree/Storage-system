@@ -1,3 +1,8 @@
+// Mark as static so Next's exporter doesn't complain. These endpoints
+// are unused inside the desktop build (tauriApi talks directly to Tauri),
+// but they are kept for the web version.
+export const dynamic = 'force-static';
+
 import { NextResponse } from 'next/server'
 import { tauriApi } from '@/lib/tauri-api'
 

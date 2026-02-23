@@ -58,7 +58,13 @@ export function useAppData(): UseAppDataReturn {
       }) : [])
 
       // Process shipping - keep full objects for components that need them
-      setShipping(Array.isArray(shippingData) ? shippingData : [])
+      setShipping(Array.isArray(shippingData)
+        ? shippingData.map((s: any) => ({
+            ...s,
+            receiver: (s.receiver && typeof s.receiver === 'object') ? s.receiver : { client_name: '', id: 0 },
+            sender: (s.sender && typeof s.sender === 'object') ? s.sender : { client_name: '', id: 0 },
+          }))
+        : [])
 
       // Process clients
       setClients(Array.isArray(clientsData) ? clientsData.map((c: any) => ({

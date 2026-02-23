@@ -378,6 +378,30 @@ export const tauriApi = {
     return response.json()
   },
 
+  createRoom: async (room: any) => {
+    // In Tauri environment
+    if (tauriApi.isTauri()) {
+      try {
+        console.log('tauriApi: Creating room via Tauri', room)
+        // @ts-ignore
+        const { invoke } = await import('@tauri-apps/api/core')
+        return await invoke('create_room', { roomData: room })
+      } catch (error) {
+        console.error('tauriApi: Failed to create room via Tauri:', error)
+        throw new Error('Failed to create room')
+      }
+    }
+    // In development, use API routes
+    console.log('tauriApi: Creating room via HTTP API')
+    const response = await fetch('/api/rooms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(room),
+    })
+    if (!response.ok) throw new Error('Failed to create room')
+    return response.json()
+  },
+
   // Store Products
   getStoreProducts: async (): Promise<any[]> => {
     // In Tauri environment

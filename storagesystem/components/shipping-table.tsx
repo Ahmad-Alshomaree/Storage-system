@@ -68,6 +68,8 @@ export function ShippingTable({ shipping, clients, onDelete, onUpdate }: Shippin
   const [editValues, setEditValues] = useState<Partial<Shipping>>({})
   const [selectedShipping, setSelectedShipping] = useState<Shipping | null>(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [confirmedShippingDate, setConfirmedShippingDate] = useState(false)
+  const [confirmedReceivingDate, setConfirmedReceivingDate] = useState(false)
   const [filters, setFilters] = useState({
     type: '',
     receiver: '',
@@ -76,31 +78,30 @@ export function ShippingTable({ shipping, clients, onDelete, onUpdate }: Shippin
   const { t } = useTranslation()
 
   const filteredShipping = shipping.filter(record => {
+    const receiverName = record.receiver?.client_name || ""
     return (
       (filters.type === '' || record.type === filters.type) &&
-      (filters.receiver === '' || record.receiver.client_name.toLowerCase().includes(filters.receiver.toLowerCase())) &&
+      (filters.receiver === '' || receiverName.toLowerCase().includes(filters.receiver.toLowerCase())) &&
       (filters.shippingDate === '' || formatDate(record.shipping_date).toLowerCase().includes(filters.shippingDate.toLowerCase()))
     )
   })
 
+  // adapt any stored date/time string into something suitable for
+  // `<input type="datetime-local" />` when performing inline edits.
   const convertToDateInput = (dateString: string) => {
     try {
-      // Handle different date formats
-      if (dateString.includes("/")) {
-        // Format: "12/12/2025" -> convert to YYYY-MM-DD
-        const [month, day, year] = dateString.split('/')
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-      } else if (dateString.includes("-") && !dateString.includes("T")) {
-        // Format: "2024-01-01" -> already in correct format
-        return dateString
-      } else if (dateString.includes("T")) {
-        // ISO format -> extract date part
-        return dateString.slice(0, 10)
+      const dt = new Date(dateString)
+      if (!isNaN(dt.getTime())) {
+        // keep minutes precision
+        return dt.toISOString().slice(0, 16)
       }
-      // Default fallback
-      return new Date().toISOString().slice(0, 10)
+      if (dateString.includes("/")) {
+        const [month, day, year] = dateString.split('/')
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00`
+      }
+      return new Date().toISOString().slice(0, 16)
     } catch {
-      return new Date().toISOString().slice(0, 10)
+      return new Date().toISOString().slice(0, 16)
     }
   }
 
@@ -111,21 +112,29 @@ export function ShippingTable({ shipping, clients, onDelete, onUpdate }: Shippin
       shipping_date: convertToDateInput(record.shipping_date),
       receiving_date: convertToDateInput(record.receiving_date),
     })
+    setConfirmedShippingDate(false)
+    setConfirmedReceivingDate(false)
   }
 
   const saveEdit = async (id: number) => {
     await onUpdate(id, editValues)
     setEditingId(null)
     setEditValues({})
+    setConfirmedShippingDate(false)
+    setConfirmedReceivingDate(false)
   }
 
   const cancelEdit = () => {
     setEditingId(null)
     setEditValues({})
-  }
+    setConfirmedShippingDate(false)
+    setConfirmedReceivingDate(false)
+  }  }
 
+  // show both date and time in table cells
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString()
+    const dt = new Date(dateString)
+    return isNaN(dt.getTime()) ? '' : dt.toLocaleString()
   }
 
   const getShippingTypeColor = (type: string) => {
@@ -173,7 +182,7 @@ export function ShippingTable({ shipping, clients, onDelete, onUpdate }: Shippin
           />
           <input
             type="text"
-            placeholder={t("Shipping Date")}
+            placeholder={t("Shipping Date/Time")}
             className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
             value={filters.shippingDate}
             onChange={(e) => setFilters({ ...filters, shippingDate: e.target.value })}
@@ -191,7 +200,7 @@ export function ShippingTable({ shipping, clients, onDelete, onUpdate }: Shippin
         <thead>
           <tr className="border-b border-border bg-muted">
             <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Type")}</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Shipping Date")}</th>
+            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Shipping Date/Time")}</th>
             <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Receiving Date")}</th>
             <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Receiver")}</th>
             <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Sender")}</th>
@@ -220,20 +229,66 @@ export function ShippingTable({ shipping, clients, onDelete, onUpdate }: Shippin
                     </select>
                   </td>
                   <td className="px-2 py-3">
-                    <input
-                      type="date"
-                      value={editValues.shipping_date || ""}
-                      onChange={(e) => setEditValues({ ...editValues, shipping_date: e.target.value })}
-                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                    />
+                    <div className="flex gap-1 items-center">
+                      <input
+                        type="datetime-local"
+                        value={editValues.shipping_date || ""}
+                        onChange={(e) => setEditValues({ ...editValues, shipping_date: e.target.value })}
+                        disabled={confirmedShippingDate}
+                        className={`flex-1 px-2 py-1 bg-input text-foreground text-xs rounded ${
+                          confirmedShippingDate ? 'opacity-60 cursor-not-allowed' : ''
+                        }`}
+                      />
+                      {!confirmedShippingDate ? (
+                        <button
+                          onClick={() => setConfirmedShippingDate(true)}
+                          disabled={!editValues.shipping_date}
+                          className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                          title={t("Confirm")}
+                        >
+                          ✓
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmedShippingDate(false)}
+                          className="px-2 py-1 text-xs bg-secondary text-secondary-foreground rounded hover:opacity-90"
+                          title={t("Edit")}
+                        >
+                          ✎
+                        </button>
+                      )}
+                    </div>
                   </td>
                   <td className="px-2 py-3">
-                    <input
-                      type="date"
-                      value={editValues.receiving_date || ""}
-                      onChange={(e) => setEditValues({ ...editValues, receiving_date: e.target.value })}
-                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                    />
+                    <div className="flex gap-1 items-center">
+                      <input
+                        type="datetime-local"
+                        value={editValues.receiving_date || ""}
+                        onChange={(e) => setEditValues({ ...editValues, receiving_date: e.target.value })}
+                        disabled={confirmedReceivingDate}
+                        className={`flex-1 px-2 py-1 bg-input text-foreground text-xs rounded ${
+                          confirmedReceivingDate ? 'opacity-60 cursor-not-allowed' : ''
+                        }`}
+                      />
+                      {!confirmedReceivingDate ? (
+                        <button
+                          onClick={() => setConfirmedReceivingDate(true)}
+                          disabled={!editValues.receiving_date}
+                          className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                          title={t("Confirm")}
+                        >
+                          ✓
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmedReceivingDate(false)}
+                          className="px-2 py-1 text-xs bg-secondary text-secondary-foreground rounded hover:opacity-90"
+                          title={t("Edit")}
+                        >
+                          ✎
+                        </button>
+                      )}
+                    </div>
                   </td>
                   <td className="px-2 py-3">
                     <select
@@ -335,8 +390,8 @@ export function ShippingTable({ shipping, clients, onDelete, onUpdate }: Shippin
                   </td>
                   <td className="px-2 py-3 text-foreground text-xs">{formatDate(record.shipping_date)}</td>
                   <td className="px-2 py-3 text-foreground text-xs">{formatDate(record.receiving_date)}</td>
-                  <td className="px-2 py-3 text-foreground text-xs">{record.receiver.client_name}</td>
-                  <td className="px-2 py-3 text-foreground text-xs">{record.sender.client_name}</td>
+                  <td className="px-2 py-3 text-foreground text-xs">{record.receiver?.client_name || ""}</td>
+                  <td className="px-2 py-3 text-foreground text-xs">{record.sender?.client_name || ""}</td>
                   <td className="px-2 py-3 text-foreground text-xs">
                     <div className="text-xs max-w-xs truncate">
                       {record.products && record.products.length > 0

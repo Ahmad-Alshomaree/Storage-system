@@ -62,7 +62,7 @@ export function ShippingTab({ shipping, clients, isLoading, refetch }: ShippingT
   }
 
   const filteredShipping = shipping.filter((record) =>
-    record.receiver.client_name.toLowerCase().includes(searchTerm.toLowerCase())
+    (record.receiver?.client_name || "").toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   return (

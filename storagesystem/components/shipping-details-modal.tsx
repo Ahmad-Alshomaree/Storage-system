@@ -83,6 +83,8 @@ export function ShippingDetailsModal({ shipping, clients: propClients = [], open
   const [editValues, setEditValues] = useState<Partial<Shipping>>({})
   const [clients, setClients] = useState<Client[]>(propClients)
   const [loadingClients, setLoadingClients] = useState(propClients.length === 0)
+  const [confirmedShippingDate, setConfirmedShippingDate] = useState(false)
+  const [confirmedReceivingDate, setConfirmedReceivingDate] = useState(false)
   const { t } = useTranslation()
 
   // Update clients when prop changes
@@ -96,19 +98,24 @@ export function ShippingDetailsModal({ shipping, clients: propClients = [], open
   if (!shipping) return null
 
   // Helper function to convert date to date format
+  // convert a stored shipping_date/receiving_date value into something the
+  // `<input type="datetime-local" />` understands.  We try to be generous with
+  // the accepted formats since the database just stores freeform text.
   const convertToDateInput = (dateString: string) => {
     try {
+      const dt = new Date(dateString)
+      if (!isNaN(dt.getTime())) {
+        // slice to minutes because datetime-local inputs don't support seconds
+        return dt.toISOString().slice(0, 16)
+      }
+      // fallback for slashes or other weird formats
       if (dateString.includes("/")) {
         const [month, day, year] = dateString.split('/')
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-      } else if (dateString.includes("-") && !dateString.includes("T")) {
-        return dateString
-      } else if (dateString.includes("T")) {
-        return dateString.slice(0, 10)
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00`
       }
-      return new Date().toISOString().slice(0, 10)
+      return new Date().toISOString().slice(0, 16)
     } catch {
-      return new Date().toISOString().slice(0, 10)
+      return new Date().toISOString().slice(0, 16)
     }
   }
 
@@ -119,6 +126,8 @@ export function ShippingDetailsModal({ shipping, clients: propClients = [], open
       shipping_date: convertToDateInput(shipping.shipping_date),
       receiving_date: convertToDateInput(shipping.receiving_date),
     })
+    setConfirmedShippingDate(false)
+    setConfirmedReceivingDate(false)
   }
 
   const saveEdit = async () => {
@@ -129,9 +138,38 @@ export function ShippingDetailsModal({ shipping, clients: propClients = [], open
     setEditValues({})
   }
 
+  // when editing, we sometimes open the native date/time dropdown; clicking
+  // outside should close it, otherwise the picker can stay open and block the
+  // rest of the UI. this mirrors the behaviour in ShippingForm.
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (!target.closest('input[type="date"], input[type="datetime-local"], input[type="time"]')) {
+        const inputs = document.querySelectorAll(
+          'input[type="date"], input[type="datetime-local"], input[type="time"]',
+        ) as NodeListOf<HTMLInputElement>
+        inputs.forEach(input => input.blur())
+      }
+    }
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [])
+
   const cancelEdit = () => {
     setIsEditing(false)
     setEditValues({})
+    setConfirmedShippingDate(false)
+    setConfirmedReceivingDate(false)
+  }
+
+  // blur the picker after the user selects something so it doesn't stay on top
+  const handleDateTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditValues({ ...editValues, [e.target.name]: e.target.value })
+    setTimeout(() => {
+      if (e.target instanceof HTMLInputElement) {
+        e.target.blur()
+      }
+    }, 0)
   }
 
   const handleDelete = async () => {
@@ -332,29 +370,85 @@ ${t("Generated on")}: ${new Date().toLocaleString()}
           {/* Date Information */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Shipping Date")}</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("Shipping Date/Time")}</label>
               {isEditing ? (
-                <input
-                  type="date"
-                  value={editValues.shipping_date || ""}
-                  onChange={(e) => setEditValues({ ...editValues, shipping_date: e.target.value })}
-                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded"
-                />
+                <div className="flex gap-2 mt-1">
+                  <input
+                    type="datetime-local"
+                    name="shipping_date"
+                    value={editValues.shipping_date || ""}
+                    onChange={handleDateTimeChange}
+                    disabled={confirmedShippingDate}
+                    className={`flex-1 px-2 py-1 bg-input text-foreground text-sm rounded ${
+                      confirmedShippingDate ? 'opacity-60 cursor-not-allowed' : ''
+                    }`}
+                  />
+                  {!confirmedShippingDate ? (
+                    <Button
+                      type="button"
+                      onClick={() => setConfirmedShippingDate(true)}
+                      disabled={!editValues.shipping_date}
+                      variant="outline"
+                      size="sm"
+                      className="px-2"
+                    >
+                      {t("Confirm")}
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      onClick={() => setConfirmedShippingDate(false)}
+                      variant="outline"
+                      size="sm"
+                      className="px-2"
+                    >
+                      {t("Edit")}
+                    </Button>
+                  )}
+                </div>
               ) : (
-                <p className="text-sm font-semibold">{new Date(shipping.shipping_date).toLocaleDateString()}</p>
+                <p className="text-sm font-semibold">{new Date(shipping.shipping_date).toLocaleString()}</p>
               )}
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Receiving Date")}</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("Receiving Date/Time")}</label>
               {isEditing ? (
-                <input
-                  type="date"
-                  value={editValues.receiving_date || ""}
-                  onChange={(e) => setEditValues({ ...editValues, receiving_date: e.target.value })}
-                  className="w-full px-2 py-1 bg-input text-foreground text-sm rounded"
-                />
+                <div className="flex gap-2 mt-1">
+                  <input
+                    type="datetime-local"
+                    name="receiving_date"
+                    value={editValues.receiving_date || ""}
+                    onChange={handleDateTimeChange}
+                    disabled={confirmedReceivingDate}
+                    className={`flex-1 px-2 py-1 bg-input text-foreground text-sm rounded ${
+                      confirmedReceivingDate ? 'opacity-60 cursor-not-allowed' : ''
+                    }`}
+                  />
+                  {!confirmedReceivingDate ? (
+                    <Button
+                      type="button"
+                      onClick={() => setConfirmedReceivingDate(true)}
+                      disabled={!editValues.receiving_date}
+                      variant="outline"
+                      size="sm"
+                      className="px-2"
+                    >
+                      {t("Confirm")}
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      onClick={() => setConfirmedReceivingDate(false)}
+                      variant="outline"
+                      size="sm"
+                      className="px-2"
+                    >
+                      {t("Edit")}
+                    </Button>
+                  )}
+                </div>
               ) : (
-                <p className="text-sm font-semibold">{new Date(shipping.receiving_date).toLocaleDateString()}</p>
+                <p className="text-sm font-semibold">{new Date(shipping.receiving_date).toLocaleString()}</p>
               )}
             </div>
           </div>

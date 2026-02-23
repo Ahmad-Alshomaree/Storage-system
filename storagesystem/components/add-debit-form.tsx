@@ -44,6 +44,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
   const [error, setError] = useState("")
   const [clients, setClients] = useState<Client[]>([])
   const [shipping, setShipping] = useState<Shipping[]>([])
+  const [confirmedTransactionDate, setConfirmedTransactionDate] = useState(false)
   const { t } = useTranslation()
 
   useEffect(() => {
@@ -140,6 +141,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
         note: "",
         transaction_date: new Date().toISOString().split('T')[0],
       })
+      setConfirmedTransactionDate(false)
       onSuccess(newDebit)
     } catch (err) {
       setError(err instanceof Error ? err.message : t("An error occurred"))
@@ -236,13 +238,42 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
 
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">{t("Transaction Date")} ({t("Optional")})</label>
-          <input
-            type="date"
-            name="transaction_date"
-            value={formData.transaction_date}
-            onChange={handleDateChange}
-            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+          <div className="flex gap-2">
+            <input
+              type="date"
+              name="transaction_date"
+              value={formData.transaction_date}
+              onChange={handleDateChange}
+              disabled={confirmedTransactionDate}
+              className={`flex-1 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${
+                confirmedTransactionDate ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
+            />
+            {!confirmedTransactionDate ? (
+              <Button
+                type="button"
+                onClick={() => {
+                  if (formData.transaction_date) {
+                    setConfirmedTransactionDate(true)
+                  }
+                }}
+                disabled={!formData.transaction_date}
+                variant="outline"
+                className="px-4"
+              >
+                {t("Confirm")}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={() => setConfirmedTransactionDate(false)}
+                variant="outline"
+                className="px-4"
+              >
+                {t("Edit")}
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="md:col-span-2">

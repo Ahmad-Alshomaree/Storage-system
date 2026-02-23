@@ -1,4 +1,4 @@
-use crate::database::{Database, Product, Client, CreateClient, Shipping, CreateShipping, Room, StoreProduct};
+use crate::database::{Database, Product, Client, CreateClient, Shipping, CreateShipping, Room, CreateRoom, StoreProduct};
 use tauri::{AppHandle, State};
 use std::sync::Mutex;
 
@@ -454,6 +454,20 @@ pub async fn get_rooms(state: State<'_, DatabaseState>) -> Result<Vec<Room>, Str
     let db = state.0.lock().unwrap();
     let db = db.as_ref().ok_or("Database not initialized")?;
     db.get_rooms().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn create_room(
+    room_data: serde_json::Value,
+    state: State<'_, DatabaseState>
+) -> Result<Room, String> {
+    let db = state.0.lock().unwrap();
+    let db = db.as_ref().ok_or("Database not initialized")?;
+
+    let create_room: CreateRoom = serde_json::from_value(room_data)
+        .map_err(|e| format!("Invalid room data: {}", e))?;
+
+    db.create_room(&create_room).map_err(|e| e.to_string())
 }
 
 // Store product commands

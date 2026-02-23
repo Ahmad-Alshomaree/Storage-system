@@ -84,6 +84,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
   const { t } = useTranslation()
   const [formData, setFormData] = useState({
     type: "input load",
+    // store full ISO timestamp (date and time) so we can support selecting a time as well
     shipping_date: "",
     receiving_date: "",
     receiver: "",
@@ -117,6 +118,24 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
   const [productDialogOpen, setProductDialogOpen] = useState(false)
   const [currentProductSelection, setCurrentProductSelection] = useState<OutputLoadProductSelection | null>(null)
   const [newlyAddedClients, setNewlyAddedClients] = useState<Set<number>>(new Set())
+  const [confirmedShippingDate, setConfirmedShippingDate] = useState(false)
+  const [confirmedReceivingDate, setConfirmedReceivingDate] = useState(false)
+
+  const handleConfirmDate = (dateType: 'shipping' | 'receiving') => {
+    if (dateType === 'shipping') {
+      setConfirmedShippingDate(true)
+    } else {
+      setConfirmedReceivingDate(true)
+    }
+  }
+
+  const handleEditDate = (dateType: 'shipping' | 'receiving') => {
+    if (dateType === 'shipping') {
+      setConfirmedShippingDate(false)
+    } else {
+      setConfirmedReceivingDate(false)
+    }
+  }
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -216,20 +235,29 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
     }))
   }
 
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDateTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleChange(e)
-    // Force close date picker immediately after selection
-    setTimeout(() => e.target.blur(), 0)
+    // we force a blur on the input so the browser will close the picker. this helps cases
+    // where the user selects a date/time and then the native control stays open and
+    // prevents the user from interacting with the rest of the form.
+    setTimeout(() => {
+      if (e.target instanceof HTMLInputElement) {
+        e.target.blur()
+      }
+    }, 0)
   }
 
-  // Close date picker when clicking outside
+  // Close any open date/time pickers when the user clicks outside the inputs.
+  // we include `date`, `datetime-local` and `time` types so the logic still works
+  // if we ever change to a different kind of picker.
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement
-      // If clicking outside any input, blur all date inputs to close pickers
-      if (!target.closest('input[type="date"]')) {
-        const dateInputs = document.querySelectorAll('input[type="date"]') as NodeListOf<HTMLInputElement>
-        dateInputs.forEach(input => input.blur())
+      if (!target.closest('input[type="date"], input[type="datetime-local"], input[type="time"]')) {
+        const inputs = document.querySelectorAll(
+          'input[type="date"], input[type="datetime-local"], input[type="time"]',
+        ) as NodeListOf<HTMLInputElement>
+        inputs.forEach(input => input.blur())
       }
     }
 
@@ -518,27 +546,85 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Shipping Date")} *</label>
-          <input
-            type="date"
-            name="shipping_date"
-            value={formData.shipping_date}
-            onChange={handleDateChange}
-            required
-            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Shipping Date/Time")} *</label>
+          <div className="flex gap-2">
+            <input
+              type="datetime-local"
+              name="shipping_date"
+              value={formData.shipping_date}
+              onChange={handleDateTimeChange}
+              disabled={confirmedShippingDate}
+              required
+              className={`flex-1 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${
+                confirmedShippingDate ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
+            />
+            {!confirmedShippingDate ? (
+              <Button
+                type="button"
+                onClick={() => {
+                  if (formData.shipping_date) {
+                    handleConfirmDate('shipping')
+                  }
+                }}
+                disabled={!formData.shipping_date}
+                variant="outline"
+                className="px-4"
+              >
+                {t("Confirm")}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={() => handleEditDate('shipping')}
+                variant="outline"
+                className="px-4"
+              >
+                {t("Edit")}
+              </Button>
+            )}
+          </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Receiving Date")} *</label>
-          <input
-            type="date"
-            name="receiving_date"
-            value={formData.receiving_date}
-            onChange={handleDateChange}
-            required
-            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+          <label className="block text-sm font-medium text-foreground mb-2">{t("Receiving Date/Time")} *</label>
+          <div className="flex gap-2">
+            <input
+              type="datetime-local"
+              name="receiving_date"
+              value={formData.receiving_date}
+              onChange={handleDateTimeChange}
+              disabled={confirmedReceivingDate}
+              required
+              className={`flex-1 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${
+                confirmedReceivingDate ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
+            />
+            {!confirmedReceivingDate ? (
+              <Button
+                type="button"
+                onClick={() => {
+                  if (formData.receiving_date) {
+                    handleConfirmDate('receiving')
+                  }
+                }}
+                disabled={!formData.receiving_date}
+                variant="outline"
+                className="px-4"
+              >
+                {t("Confirm")}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={() => handleEditDate('receiving')}
+                variant="outline"
+                className="px-4"
+              >
+                {t("Edit")}
+              </Button>
+            )}
+          </div>
         </div>
 
         <div>

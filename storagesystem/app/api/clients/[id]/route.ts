@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { tauriApi } from '@/lib/tauri-api'
 
+// export an empty params list so static export doesn't attempt to
+// pre-render any dynamic API endpoints. These routes are unused in the
+// packaged desktop app.
+export const dynamic = 'force-static';
+
+export function generateStaticParams() {
+  return []
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }

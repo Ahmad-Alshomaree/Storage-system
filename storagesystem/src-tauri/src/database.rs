@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 
 // Database models matching the TypeScript schema
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Product {
     pub id: i64,
     pub shipping_id: Option<i64>,
@@ -30,7 +30,7 @@ pub struct Product {
     pub updated_at: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Client {
     pub id: i64,
     pub client_name: String,
@@ -51,7 +51,7 @@ pub struct CreateClient {
     pub debt: Option<f64>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Shipping {
     pub id: i64,
     pub r#type: String, // "input load" or "output load"
@@ -99,9 +99,15 @@ pub struct Debit {
 
 
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Room {
     pub id: i64,
+    pub room_name: String,
+}
+
+// Struct used when inserting a new room (id assigned by database)
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreateRoom {
     pub room_name: String,
 }
 
@@ -702,6 +708,24 @@ impl Database {
         })?;
 
         rooms.collect()
+    }
+
+    pub fn create_room(&self, room: &CreateRoom) -> Result<Room> {
+        self.conn.execute(
+            "INSERT INTO rooms (room_name) VALUES (?)",
+            params![room.room_name],
+        )?;
+
+        let room_id = self.conn.last_insert_rowid();
+        let mut stmt = self.conn.prepare("SELECT id, room_name FROM rooms WHERE id = ?")?;
+        let mut rows = stmt.query_map([room_id], |row| {
+            Ok(Room {
+                id: row.get(0)?,
+                room_name: row.get(1)?,
+            })
+        })?;
+
+        rows.next().unwrap()
     }
 
     // Store product operations

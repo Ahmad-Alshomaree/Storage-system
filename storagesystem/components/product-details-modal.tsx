@@ -319,11 +319,11 @@ export function ProductDetailsModal({ product, open, onOpenChange, onEdit, onDel
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">{t("Shipping Date")}</label>
-                  <p className="text-sm">{product.shipping.shipping_date ? new Date(product.shipping.shipping_date).toLocaleDateString() : t("N/A")}</p>
+                  <p className="text-sm">{product.shipping.shipping_date ? new Date(product.shipping.shipping_date).toLocaleString() : t("N/A")}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">{t("Receiving Date")}</label>
-                  <p className="text-sm">{product.shipping.receiving_date ? new Date(product.shipping.receiving_date).toLocaleDateString() : t("N/A")}</p>
+                  <p className="text-sm">{product.shipping.receiving_date ? new Date(product.shipping.receiving_date).toLocaleString() : t("N/A")}</p>
                 </div>
               </div>
 

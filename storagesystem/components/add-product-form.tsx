@@ -48,6 +48,30 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
     note: "",
   })
 
+  // helper to blur the date/time picker after selection
+  const handleShippingDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setShippingData(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    setTimeout(() => {
+      if (e.target instanceof HTMLInputElement) {
+        e.target.blur()
+      }
+    }, 0)
+  }
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (!target.closest('input[type="date"], input[type="datetime-local"], input[type="time"]')) {
+        const inputs = document.querySelectorAll(
+          'input[type="date"], input[type="datetime-local"], input[type="time"]',
+        ) as NodeListOf<HTMLInputElement>
+        inputs.forEach(input => input.blur())
+      }
+    }
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [])
+
   // Existing shipping data for linking
   const [existingShippings, setExistingShippings] = useState<any[]>([])
   const [selectedShippingId, setSelectedShippingId] = useState<number | null>(null)
@@ -121,7 +145,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
     try {
       const shippingPayload = {
         "r#type": shippingData.type, // Use the actual selected type
-        shipping_date: shippingData.shippingDate || new Date().toISOString().split('T')[0],
+        shipping_date: shippingData.shippingDate || new Date().toISOString().slice(0,16),
         receiving_date: shippingData.receivingDate || null,
         receiver_client_id: clients.find(c => c.client_name === shippingData.receiver)?.id || null,
         sender_client_id: clients.find(c => c.client_name === shippingData.sender)?.id || null,
@@ -206,13 +230,9 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
 
   const createRoom = async (roomName: string): Promise<string> => {
     try {
-      // For rooms, we don't have a Tauri API yet, so we'll use a simple approach
-      // This would need to be implemented in the Tauri backend
-      // For now, we'll add it to the local state only
-      const newRoom = {
-        id: Date.now(), // Temporary ID
-        room_name: roomName
-      }
+      // Persist the room via API/tauri
+      const payload = { room_name: roomName }
+      const newRoom = await tauriApi.createRoom(payload)
       setRooms(prev => [...prev, newRoom])
       return newRoom.room_name
     } catch (error) {
@@ -720,21 +740,23 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">{t("Shipping Date")}</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">{t("Shipping Date/Time")}</label>
                   <input
-                    type="date"
+                    type="datetime-local"
+                    name="shippingDate"
                     value={shippingData.shippingDate}
-                    onChange={(e) => setShippingData(prev => ({ ...prev, shippingDate: e.target.value }))}
+                    onChange={handleShippingDateChange}
                     className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">{t("Receiving Date")}</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">{t("Receiving Date/Time")}</label>
                   <input
-                    type="date"
+                    type="datetime-local"
+                    name="receivingDate"
                     value={shippingData.receivingDate}
-                    onChange={(e) => setShippingData(prev => ({ ...prev, receivingDate: e.target.value }))}
+                    onChange={handleShippingDateChange}
                     className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
