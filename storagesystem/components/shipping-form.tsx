@@ -750,7 +750,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
           <div className="flex items-center justify-between">
             <label className="block text-sm font-medium text-foreground mb-2">{t("Add New Products")}</label>
             <Button type="button" onClick={addNewProduct} variant="outline" size="sm">
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 me-2" />
               {t("Add Product")}
             </Button>
           </div>
@@ -1050,14 +1050,14 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                   <div key={selection.productId} className="flex items-center justify-between bg-muted p-3 rounded">
                     <div className="flex-1">
                       <span className="font-medium text-sm">{selection.product?.box_code} - {selection.product?.product_name}</span>
-                      <span className="text-xs text-muted-foreground ml-2">
+                      <span className="text-xs text-muted-foreground ms-2">
                         {selection.quantity} {selection.quantityType} @ ${selection.sellingPrice}
                       </span>
                     </div>
                     <button
                       type="button"
                       onClick={() => removeProductSelection(selection.productId)}
-                      className="text-destructive hover:text-destructive/80 ml-2"
+                      className="text-destructive hover:text-destructive/80 ms-2"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -1078,7 +1078,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
               {currentProductSelection && (
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <label htmlFor="quantity-type" className="text-right">
+                    <label htmlFor="quantity-type" className="text-start">
                       {t("Type")}
                     </label>
                     <select
@@ -1096,8 +1096,8 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                   </div>
 
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <label htmlFor="quantity" className="text-right">
-                      Quantity
+                    <label htmlFor="quantity" className="text-start">
+                      {t("Quantity")}
                     </label>
                     <input
                       id="quantity"
@@ -1114,7 +1114,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                   </div>
 
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <label htmlFor="selling-price" className="text-right">
+                    <label htmlFor="selling-price" className="text-start">
                       {t("Selling Price")}
                     </label>
                     <input

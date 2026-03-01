@@ -98,17 +98,17 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border bg-muted">
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Box Code")}</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Product Name")}</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Selling Price")}</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Group Item Price")}</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Storage")}</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Number of boxes")}</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Pieces per box")}</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Extracted Pieces")}</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Status")}</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Shipping ID")}</th>
-            <th className="px-3 py-3 text-left text-xs font-semibold text-foreground">{t("Actions")}</th>
+            <th className="px-3 py-3 text-start text-xs font-semibold text-foreground">{t("Box Code")}</th>
+            <th className="px-3 py-3 text-start text-xs font-semibold text-foreground">{t("Product Name")}</th>
+            <th className="px-3 py-3 text-start text-xs font-semibold text-foreground">{t("Selling Price")}</th>
+            <th className="px-3 py-3 text-start text-xs font-semibold text-foreground">{t("Group Item Price")}</th>
+            <th className="px-3 py-3 text-start text-xs font-semibold text-foreground">{t("Storage")}</th>
+            <th className="px-3 py-3 text-start text-xs font-semibold text-foreground">{t("Number of boxes")}</th>
+            <th className="px-3 py-3 text-start text-xs font-semibold text-foreground">{t("Pieces per box")}</th>
+            <th className="px-3 py-3 text-start text-xs font-semibold text-foreground">{t("Extracted Pieces")}</th>
+            <th className="px-3 py-3 text-start text-xs font-semibold text-foreground">{t("Status")}</th>
+            <th className="px-3 py-3 text-start text-xs font-semibold text-foreground">{t("Shipping ID")}</th>
+            <th className="px-3 py-3 text-start text-xs font-semibold text-foreground">{t("Actions")}</th>
           </tr>
         </thead>
         <tbody>

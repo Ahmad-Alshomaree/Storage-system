@@ -210,7 +210,35 @@ const resources = {
       "Upload Excel File": "Upload Excel File",
       "Excel File": "Excel File",
       "Cost": "Cost",
-      "Uploading...": "Uploading..."
+      "Uploading...": "Uploading...",
+
+      // Setup and settings
+      "Loading...": "Loading...",
+      "Application Settings": "Application Settings",
+      "Storage Settings": "Storage Settings",
+      "Choose Storage Location": "Choose Storage Location",
+      "Choose where to store your application data on your local device": "Choose where to store your application data on your local device",
+      "Welcome to Product Storage System": "Welcome to Product Storage System",
+      "Let's set up your workspace": "Let's set up your workspace",
+      "Select where you want to store your application data on your local device": "Select where you want to store your application data on your local device",
+      "Storage Directory": "Storage Directory",
+      "No directory selected": "No directory selected",
+      "Selecting...": "Selecting...",
+      "Browse": "Browse",
+      "Setting up...": "Setting up...",
+      "Continue": "Continue",
+      "You can change this setting later in the application settings": "You can change this setting later in the application settings",
+      "Your data will be stored securely on your local device": "Your data will be stored securely on your local device",
+      "Your application data will be stored in:": "Your application data will be stored in:",
+      "Note: You can change this setting at any time. The application will use this directory to store your data files.": "Note: You can change this setting at any time. The application will use this directory to store your data files.",
+      "Creditor": "Creditor",
+      "Debtor": "Debtor",
+      "Client": "Client",
+      "Ship Cost": "Ship Cost",
+      "Total Debts": "Total Debts",
+      "No history": "No history",
+      "Please try again.": "Please try again.",
+      "Settings": "Settings",
     }
   },
   ar: {
@@ -443,7 +471,35 @@ const resources = {
       "Please choose a file": "يرجى اختر ملف",
 
       // Image Upload Specific (not duplicated)
-      "Optional": "اختياري"
+      "Optional": "اختياري",
+
+      // Setup and settings
+      "Loading...": "جاري التحميل...",
+      "Application Settings": "إعدادات التطبيق",
+      "Storage Settings": "إعدادات التخزين",
+      "Choose Storage Location": "اختر موقع التخزين",
+      "Choose where to store your application data on your local device": "اختر مكان حفظ بيانات التطبيق على جهازك المحلي",
+      "Welcome to Product Storage System": "مرحبًا بك في نظام تخزين المنتجات",
+      "Let's set up your workspace": "لنقم بإعداد مساحة العمل الخاصة بك",
+      "Select where you want to store your application data on your local device": "حدد المكان الذي تريد تخزين بيانات التطبيق فيه على جهازك المحلي",
+      "Storage Directory": "دليل التخزين",
+      "No directory selected": "لم يتم اختيار دليل",
+      "Selecting...": "جارٍ الاختيار...",
+      "Browse": "استعراض",
+      "Setting up...": "جارٍ الإعداد...",
+      "Continue": "متابعة",
+      "You can change this setting later in the application settings": "يمكنك تغيير هذا الإعداد لاحقًا من إعدادات التطبيق",
+      "Your data will be stored securely on your local device": "سيتم تخزين بياناتك بأمان على جهازك المحلي",
+      "Your application data will be stored in:": "سيتم تخزين بيانات التطبيق في:",
+      "Note: You can change this setting at any time. The application will use this directory to store your data files.": "ملاحظة: يمكنك تغيير هذا الإعداد في أي وقت. سيستخدم التطبيق هذا الدليل لتخزين ملفات بياناتك.",
+      "Creditor": "الدائن",
+      "Debtor": "المدين",
+      "Client": "العميل",
+      "Ship Cost": "تكلفة الشحن",
+      "Total Debts": "إجمالي الديون",
+      "No history": "لا يوجد سجل",
+      "Please try again.": "يرجى المحاولة مرة أخرى.",
+      "Settings": "الإعدادات",
     }
   }
 }
