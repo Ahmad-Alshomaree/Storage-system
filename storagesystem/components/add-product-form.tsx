@@ -143,17 +143,19 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
 
   const createShipping = async (): Promise<number | null> => {
     try {
+      const receiverClient = clients.find(c => c.client_name === shippingData.receiver)
+      const senderClient = clients.find(c => c.client_name === shippingData.sender)
+
       const shippingPayload = {
-        "r#type": shippingData.type, // Use the actual selected type
-        shipping_date: shippingData.shippingDate || new Date().toISOString().slice(0,16),
-        receiving_date: shippingData.receivingDate || null,
-        receiver_client_id: clients.find(c => c.client_name === shippingData.receiver)?.id || null,
-        sender_client_id: clients.find(c => c.client_name === shippingData.sender)?.id || null,
+        type: shippingData.type,
+        shipping_date: shippingData.shippingDate || new Date().toISOString().slice(0, 16),
+        receiving_date: shippingData.receivingDate || new Date().toISOString().slice(0, 16),
+        receiver_client_id: receiverClient?.id ?? 0,
+        sender_client_id: senderClient?.id ?? 0,
         paid: shippingData.paid || 0,
         ship_price: shippingData.shipPrice || 0,
         currency: shippingData.currency,
         note: shippingData.note || null,
-        created_at: new Date().toISOString(),
       }
       console.log("Sending to shipping API:", shippingPayload)
 
@@ -179,7 +181,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
     const { name, value } = e.target
     setProductData((prev) => ({
       ...prev,
-      [name]: name.includes("price") || ["weight", "pice_per_box", "size_of_box", "total_box_size", "number_of_boxes", "extracted_pieces", "group_item_price"].includes(name)
+      [name]: name.includes("price") || ["cost", "weight", "pice_per_box", "size_of_box", "total_box_size", "number_of_boxes", "extracted_pieces", "group_item_price"].includes(name)
         ? Number.parseFloat(value) || 0
         : value,
     }))
@@ -695,11 +697,10 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
               <button
                 type="button"
                 onClick={() => setUseExistingShipping(false)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  !useExistingShipping
-                    ? 'bg-primary text-primary-foreground shadow'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${!useExistingShipping
+                  ? 'bg-primary text-primary-foreground shadow'
+                  : 'text-muted-foreground hover:text-foreground'
+                  }`}
               >
                 <Truck className="w-4 h-4" />
                 {t("Create New Shipping")}
@@ -707,11 +708,10 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
               <button
                 type="button"
                 onClick={() => setUseExistingShipping(true)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  useExistingShipping
-                    ? 'bg-primary text-primary-foreground shadow'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${useExistingShipping
+                  ? 'bg-primary text-primary-foreground shadow'
+                  : 'text-muted-foreground hover:text-foreground'
+                  }`}
               >
                 <Link className="w-4 h-4" />
                 {t("Link Existing Shipping")}

@@ -11,6 +11,8 @@ pub fn initialize_database_blocking(app_handle: AppHandle) -> Result<(), String>
     let db_path = std::env::current_dir()
         .map_err(|e| format!("Failed to get current directory: {}", e))?
         .join("database");
+    // Move out of src-tauri/ so file watcher doesn't trigger rebuilds
+    let db_path = db_path.parent().unwrap().parent().unwrap().join("database");
 
     let db = Database::new_with_path(&app_handle, Some(db_path.to_str().unwrap())).map_err(|e| e.to_string())?;
     // For now, just ensure database can be created
@@ -33,6 +35,8 @@ pub async fn initialize_database(
         let db_path = std::env::current_dir()
             .map_err(|e| format!("Failed to get current directory: {}", e))?
             .join("database");
+        // Move out of src-tauri/ so file watcher doesn't trigger rebuilds
+        let db_path = db_path.parent().unwrap().parent().unwrap().join("database");
         Database::new_with_path(&app_handle, Some(db_path.to_str().unwrap())).map_err(|e| e.to_string())?
     };
     *state.0.lock().unwrap() = Some(db);
@@ -57,9 +61,48 @@ pub async fn create_product(
 
     println!("Received product data: {:?}", product_data);
 
-    // Parse the product data
-    let product: Product = serde_json::from_value(product_data)
-        .map_err(|e| format!("Invalid product data: {}", e))?;
+    // Manually map JSON fields to Product struct so we can handle:
+    // - missing 'id' (assigned by database)
+    // - field name variants (original_price -> cost, Total_pices -> total_pices, etc.)
+    let product = Product {
+        id: 0, // assigned by database
+        shipping_id: product_data.get("shipping_id").and_then(|v| v.as_i64()),
+        item_no: product_data.get("item_no").and_then(|v| v.as_str()).map(|s| s.to_string()),
+        box_code: product_data.get("box_code").and_then(|v| v.as_str())
+            .ok_or("Missing required field: box_code")?.to_string(),
+        product_name: product_data.get("product_name").and_then(|v| v.as_str()).map(|s| s.to_string()),
+        // Accept 'cost' or 'original_price' as the cost field
+        cost: product_data.get("cost").and_then(|v| v.as_f64())
+            .or_else(|| product_data.get("original_price").and_then(|v| v.as_f64()))
+            .unwrap_or(0.0),
+        selling_price: product_data.get("selling_price").and_then(|v| v.as_f64()).unwrap_or(0.0),
+        storage: product_data.get("storage").and_then(|v| v.as_str()).map(|s| s.to_string()),
+        weight: product_data.get("weight").and_then(|v| v.as_f64()),
+        image: product_data.get("image").and_then(|v| v.as_str()).map(|s| s.to_string()),
+        pice_per_box: product_data.get("pice_per_box").and_then(|v| v.as_i64()).unwrap_or(0),
+        // Accept 'total_pices' or 'Total_pices'
+        total_pices: product_data.get("total_pices").and_then(|v| v.as_i64())
+            .or_else(|| product_data.get("Total_pices").and_then(|v| v.as_i64()))
+            .unwrap_or(0),
+        // Accept 'total_cost' or 'total_original_price'
+        total_cost: product_data.get("total_cost").and_then(|v| v.as_f64())
+            .or_else(|| product_data.get("total_original_price").and_then(|v| v.as_f64()))
+            .unwrap_or(0.0),
+        size_of_box: product_data.get("size_of_box").and_then(|v| v.as_f64()).unwrap_or(0.0),
+        total_box_size: product_data.get("total_box_size").and_then(|v| v.as_f64()).unwrap_or(0.0),
+        number_of_boxes: product_data.get("number_of_boxes").and_then(|v| v.as_i64()).unwrap_or(0),
+        extracted_pieces: product_data.get("extracted_pieces").and_then(|v| v.as_i64()).unwrap_or(0),
+        status: product_data.get("status").and_then(|v| v.as_str()).unwrap_or("available").to_string(),
+        grope_item_price: product_data.get("grope_item_price").and_then(|v| v.as_f64()),
+        currency: product_data.get("currency").and_then(|v| v.as_str()).unwrap_or("Dollar").to_string(),
+        note: product_data.get("note").and_then(|v| v.as_str()).map(|s| s.to_string()),
+        created_at: product_data.get("created_at").and_then(|v| v.as_str())
+            .map(|s| s.to_string())
+            .or_else(|| Some(chrono::Utc::now().to_rfc3339())),
+        updated_at: product_data.get("updated_at").and_then(|v| v.as_str())
+            .map(|s| s.to_string())
+            .or_else(|| Some(chrono::Utc::now().to_rfc3339())),
+    };
 
     println!("Parsed product: {:?}", product);
 
@@ -68,6 +111,7 @@ pub async fn create_product(
         e.to_string()
     })
 }
+
 
 #[tauri::command]
 pub async fn update_product(
@@ -78,50 +122,39 @@ pub async fn update_product(
     let db = state.0.lock().unwrap();
     let db = db.as_ref().ok_or("Database not initialized")?;
 
-    // Get existing product
+    // Get existing product first
     let products = db.get_products().map_err(|e| e.to_string())?;
-    let existing_product = products.into_iter().find(|p| p.id == id)
+    let existing = products.into_iter().find(|p| p.id == id)
         .ok_or("Product not found")?;
 
-    // Parse update data
-    let updates: serde_json::Value = product_data;
+    // Merge updates onto existing product
+    let updated = Product {
+        id: existing.id,
+        shipping_id: product_data.get("shipping_id").and_then(|v| v.as_i64()).or(existing.shipping_id),
+        item_no: product_data.get("item_no").and_then(|v| v.as_str()).map(|s| s.to_string()).or(existing.item_no),
+        box_code: product_data.get("box_code").and_then(|v| v.as_str()).unwrap_or(&existing.box_code).to_string(),
+        product_name: product_data.get("product_name").and_then(|v| v.as_str()).map(|s| s.to_string()).or(existing.product_name),
+        cost: product_data.get("cost").and_then(|v| v.as_f64()).unwrap_or(existing.cost),
+        selling_price: product_data.get("selling_price").and_then(|v| v.as_f64()).unwrap_or(existing.selling_price),
+        storage: product_data.get("storage").and_then(|v| v.as_str()).map(|s| s.to_string()).or(existing.storage),
+        weight: product_data.get("weight").and_then(|v| v.as_f64()).or(existing.weight),
+        image: product_data.get("image").and_then(|v| v.as_str()).map(|s| s.to_string()).or(existing.image),
+        pice_per_box: product_data.get("pice_per_box").and_then(|v| v.as_i64()).unwrap_or(existing.pice_per_box),
+        total_pices: product_data.get("total_pices").and_then(|v| v.as_i64()).unwrap_or(existing.total_pices),
+        total_cost: product_data.get("total_cost").and_then(|v| v.as_f64()).unwrap_or(existing.total_cost),
+        size_of_box: product_data.get("size_of_box").and_then(|v| v.as_f64()).unwrap_or(existing.size_of_box),
+        total_box_size: product_data.get("total_box_size").and_then(|v| v.as_f64()).unwrap_or(existing.total_box_size),
+        number_of_boxes: product_data.get("number_of_boxes").and_then(|v| v.as_i64()).unwrap_or(existing.number_of_boxes),
+        extracted_pieces: product_data.get("extracted_pieces").and_then(|v| v.as_i64()).unwrap_or(existing.extracted_pieces),
+        status: product_data.get("status").and_then(|v| v.as_str()).unwrap_or(&existing.status).to_string(),
+        grope_item_price: product_data.get("grope_item_price").and_then(|v| v.as_f64()).or(existing.grope_item_price),
+        currency: product_data.get("currency").and_then(|v| v.as_str()).unwrap_or(&existing.currency).to_string(),
+        note: product_data.get("note").and_then(|v| v.as_str()).map(|s| s.to_string()).or(existing.note),
+        created_at: existing.created_at,
+        updated_at: existing.updated_at,
+    };
 
-    // Create updated product by merging existing with updates
-    let mut updated_product = existing_product.clone();
-
-    if let Some(name) = updates.get("product_name").and_then(|v| v.as_str()) {
-        updated_product.product_name = Some(name.to_string());
-    }
-    if let Some(box_code) = updates.get("box_code").and_then(|v| v.as_str()) {
-        updated_product.box_code = box_code.to_string();
-    }
-    if let Some(selling_price) = updates.get("selling_price").and_then(|v| v.as_f64()) {
-        updated_product.selling_price = selling_price;
-    }
-    if let Some(grope_item_price) = updates.get("Grope_Item_price").and_then(|v| v.as_f64()) {
-        updated_product.grope_item_price = Some(grope_item_price);
-    }
-    if let Some(storage) = updates.get("storage").and_then(|v| v.as_str()) {
-        updated_product.storage = Some(storage.to_string());
-    }
-    if let Some(number_of_boxes) = updates.get("number_of_boxes").and_then(|v| v.as_f64()) {
-        updated_product.number_of_boxes = number_of_boxes as i64;
-    }
-    if let Some(pice_per_box) = updates.get("pice_per_box").and_then(|v| v.as_i64()) {
-        updated_product.pice_per_box = pice_per_box;
-    }
-    if let Some(extracted_pieces) = updates.get("extracted_pieces").and_then(|v| v.as_i64()) {
-        updated_product.extracted_pieces = extracted_pieces;
-    }
-    if let Some(status) = updates.get("status").and_then(|v| v.as_str()) {
-        updated_product.status = status.to_string();
-    }
-
-    // Update the product in database
-    db.create_product(&updated_product).map_err(|e| {
-        println!("Database error: {}", e);
-        e.to_string()
-    })
+    db.update_product(id, &updated).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -175,55 +208,7 @@ pub async fn update_client(
 ) -> Result<Client, String> {
     let db = state.0.lock().unwrap();
     let db = db.as_ref().ok_or("Database not initialized")?;
-
-    // Get existing client
-    let clients = db.get_clients().map_err(|e| e.to_string())?;
-    let existing_client = clients.into_iter().find(|c| c.id == id)
-        .ok_or("Client not found")?;
-
-    // Parse update data
-    let updates: serde_json::Value = client_data;
-
-    // Create updated client by merging existing with updates
-    let mut updated_client = existing_client.clone();
-
-    if let Some(client_name) = updates.get("client_name").and_then(|v| v.as_str()) {
-        updated_client.client_name = client_name.to_string();
-    }
-    if let Some(phone_number) = updates.get("phone_number").and_then(|v| v.as_str()) {
-        updated_client.phone_number = Some(phone_number.to_string());
-    }
-    if let Some(shipping_id) = updates.get("shipping_id").and_then(|v| v.as_i64()) {
-        updated_client.shipping_id = Some(shipping_id);
-    }
-    if let Some(history) = updates.get("history").and_then(|v| v.as_str()) {
-        updated_client.history = Some(history.to_string());
-    }
-
-    // For client updates, we need to create a new record since we don't have a direct update method
-    // This is a workaround - in a real app, you'd add an update_client method to the database
-    let create_client = CreateClient {
-        client_name: updated_client.client_name.clone(),
-        phone_number: updated_client.phone_number.clone(),
-        shipping_id: updated_client.shipping_id,
-        history: updated_client.history.clone(),
-        debt: updated_client.debt,
-    };
-
-    let create_data = serde_json::to_value(create_client)
-        .map_err(|e| format!("Failed to serialize client data: {}", e))?;
-
-    // Delete old client and create new one
-    db.delete_client(id).map_err(|e| e.to_string())?;
-    db.create_client(&Client {
-        id: 0, // Will be set by database
-        client_name: updated_client.client_name,
-        phone_number: updated_client.phone_number,
-        shipping_id: updated_client.shipping_id,
-        history: updated_client.history,
-        debt: updated_client.debt,
-        total_debts: updated_client.total_debts,
-    }).map_err(|e| e.to_string())
+    db.update_client(id, &client_data).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -282,81 +267,7 @@ pub async fn update_shipping(
 ) -> Result<Shipping, String> {
     let db = state.0.lock().unwrap();
     let db = db.as_ref().ok_or("Database not initialized")?;
-
-    // Get existing shipping
-    let shipping_records = db.get_shipping().map_err(|e| e.to_string())?;
-    let existing_shipping: Shipping = shipping_records.iter()
-        .find(|s| s.get("id").and_then(|v| v.as_i64()) == Some(id))
-        .and_then(|s| serde_json::from_value(s.clone()).ok())
-        .ok_or("Shipping record not found")?;
-
-    // Parse update data
-    let updates: serde_json::Value = shipping_data;
-
-    // Create updated shipping by merging existing with updates
-    let mut updated_shipping = existing_shipping.clone();
-
-    if let Some(r#type) = updates.get("type").and_then(|v| v.as_str()) {
-        updated_shipping.r#type = r#type.to_string();
-    }
-    if let Some(shipping_date) = updates.get("shipping_date").and_then(|v| v.as_str()) {
-        updated_shipping.shipping_date = shipping_date.to_string();
-    }
-    if let Some(receiving_date) = updates.get("receiving_date").and_then(|v| v.as_str()) {
-        updated_shipping.receiving_date = receiving_date.to_string();
-    }
-    if let Some(receiver_client_id) = updates.get("receiver_client_id").and_then(|v| v.as_i64()) {
-        updated_shipping.receiver_client_id = receiver_client_id;
-    }
-    if let Some(sender_client_id) = updates.get("sender_client_id").and_then(|v| v.as_i64()) {
-        updated_shipping.sender_client_id = sender_client_id;
-    }
-    if let Some(paid) = updates.get("paid").and_then(|v| v.as_f64()) {
-        updated_shipping.paid = paid as i64;
-    }
-    if let Some(ship_price) = updates.get("ship_price").and_then(|v| v.as_f64()) {
-        updated_shipping.ship_price = ship_price;
-    }
-    if let Some(currency) = updates.get("currency").and_then(|v| v.as_str()) {
-        updated_shipping.currency = currency.to_string();
-    }
-    if let Some(note) = updates.get("note").and_then(|v| v.as_str()) {
-        updated_shipping.note = Some(note.to_string());
-    }
-
-    // For shipping updates, we need to delete and recreate since we don't have a direct update method
-    let create_shipping = CreateShipping {
-        r#type: updated_shipping.r#type.clone(),
-        shipping_date: updated_shipping.shipping_date.clone(),
-        receiving_date: updated_shipping.receiving_date.clone(),
-        receiver_client_id: updated_shipping.receiver_client_id,
-        sender_client_id: updated_shipping.sender_client_id,
-        file_path: updated_shipping.file_path.clone(),
-        paid: updated_shipping.paid,
-        ship_price: updated_shipping.ship_price,
-        currency: updated_shipping.currency.clone(),
-        note: updated_shipping.note.clone(),
-    };
-
-    let create_data = serde_json::to_value(create_shipping)
-        .map_err(|e| format!("Failed to serialize shipping data: {}", e))?;
-
-    // Delete old shipping and create new one
-    db.delete_shipping(id).map_err(|e| e.to_string())?;
-    db.create_shipping(&Shipping {
-        id: 0, // Will be set by database
-        r#type: updated_shipping.r#type,
-        shipping_date: updated_shipping.shipping_date,
-        receiving_date: updated_shipping.receiving_date,
-        receiver_client_id: updated_shipping.receiver_client_id,
-        sender_client_id: updated_shipping.sender_client_id,
-        file_path: updated_shipping.file_path,
-        paid: updated_shipping.paid,
-        ship_price: updated_shipping.ship_price,
-        currency: updated_shipping.currency,
-        note: updated_shipping.note,
-        created_at: updated_shipping.created_at,
-    }).map_err(|e| e.to_string())
+    db.update_shipping(id, &shipping_data).map_err(|e| e.to_string())
 }
 
 #[tauri::command]

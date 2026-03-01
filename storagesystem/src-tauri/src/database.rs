@@ -388,6 +388,75 @@ impl Database {
         rows.next().unwrap()
     }
 
+    pub fn update_product(&self, id: i64, product: &Product) -> Result<Product> {
+        self.conn.execute(
+            "UPDATE products SET shipping_id=?, item_no=?, box_code=?, product_name=?, cost=?,
+             selling_price=?, storage=?, weight=?, image=?, pice_per_box=?, total_pices=?,
+             total_cost=?, size_of_box=?, total_box_size=?, number_of_boxes=?, extracted_pieces=?,
+             status=?, grope_item_price=?, currency=?, note=?, updated_at=?
+             WHERE id=?",
+            params![
+                product.shipping_id,
+                product.item_no,
+                product.box_code,
+                product.product_name,
+                product.cost,
+                product.selling_price,
+                product.storage,
+                product.weight,
+                product.image,
+                product.pice_per_box,
+                product.total_pices,
+                product.total_cost,
+                product.size_of_box,
+                product.total_box_size,
+                product.number_of_boxes,
+                product.extracted_pieces,
+                product.status,
+                product.grope_item_price,
+                product.currency,
+                product.note,
+                chrono::Utc::now().to_rfc3339(),
+                id,
+            ],
+        )?;
+        let mut stmt = self.conn.prepare(
+            "SELECT id, shipping_id, item_no, box_code, product_name, cost, selling_price,
+                    storage, weight, image, pice_per_box, total_pices, total_cost,
+                    size_of_box, total_box_size, number_of_boxes, extracted_pieces,
+                    status, grope_item_price, currency, note, created_at, updated_at
+             FROM products WHERE id = ?"
+        )?;
+        let mut rows = stmt.query_map([id], |row| {
+            Ok(Product {
+                id: row.get(0)?,
+                shipping_id: row.get(1)?,
+                item_no: row.get(2)?,
+                box_code: row.get(3)?,
+                product_name: row.get(4)?,
+                cost: row.get(5)?,
+                selling_price: row.get(6)?,
+                storage: row.get(7)?,
+                weight: row.get(8)?,
+                image: row.get(9)?,
+                pice_per_box: row.get(10)?,
+                total_pices: row.get(11)?,
+                total_cost: row.get(12)?,
+                size_of_box: row.get(13)?,
+                total_box_size: row.get(14)?,
+                number_of_boxes: row.get(15)?,
+                extracted_pieces: row.get(16)?,
+                status: row.get(17)?,
+                grope_item_price: row.get(18)?,
+                currency: row.get(19)?,
+                note: row.get(20)?,
+                created_at: row.get(21)?,
+                updated_at: row.get(22)?,
+            })
+        })?;
+        rows.next().unwrap()
+    }
+
     // Client operations
     pub fn get_clients(&self) -> Result<Vec<Client>> {
         let mut stmt = self.conn.prepare(
@@ -462,7 +531,42 @@ impl Database {
         rows.next().unwrap()
     }
 
-    // Shipping operations
+    pub fn update_client(&self, id: i64, updates: &serde_json::Value) -> Result<Client> {
+        // Fetch existing client
+        let clients = self.get_clients()?;
+        let existing = clients.into_iter().find(|c| c.id == id)
+            .ok_or_else(|| rusqlite::Error::QueryReturnedNoRows)?;
+
+        let client_name = updates.get("client_name").and_then(|v| v.as_str())
+            .unwrap_or(&existing.client_name).to_string();
+        let phone_number: Option<String> = updates.get("phone_number").and_then(|v| v.as_str())
+            .map(|s| s.to_string()).or(existing.phone_number);
+        let shipping_id: Option<i64> = updates.get("shipping_id").and_then(|v| v.as_i64())
+            .or(existing.shipping_id);
+        let history: Option<String> = updates.get("history").and_then(|v| v.as_str())
+            .map(|s| s.to_string()).or(existing.history);
+
+        self.conn.execute(
+            "UPDATE client SET client_name=?, phone_number=?, shipping_id=?, history=? WHERE id=?",
+            params![client_name, phone_number, shipping_id, history, id],
+        )?;
+
+        let mut stmt = self.conn.prepare(
+            "SELECT id, client_name, phone_number, shipping_id, history FROM client WHERE id = ?"
+        )?;
+        let mut rows = stmt.query_map([id], |row| {
+            Ok(Client {
+                id: row.get(0)?,
+                client_name: row.get(1)?,
+                phone_number: row.get(2)?,
+                shipping_id: row.get(3)?,
+                history: row.get(4)?,
+                debt: None,
+                total_debts: None,
+            })
+        })?;
+        rows.next().unwrap()
+    }
     pub fn get_shipping(&self) -> Result<Vec<serde_json::Value>> {
         let mut stmt = self.conn.prepare(
             "SELECT s.id, s.type, s.shipping_date, s.receiving_date, s.receiver_client_id,
@@ -577,7 +681,69 @@ impl Database {
         rows.next().unwrap()
     }
 
-    // Debit operations
+    pub fn update_shipping(&self, id: i64, updates: &serde_json::Value) -> Result<Shipping> {
+        // Fetch existing via raw query since get_shipping returns Value
+        let mut stmt = self.conn.prepare(
+            "SELECT id, type, shipping_date, receiving_date, receiver_client_id, sender_client_id,
+                    file_path, paid, ship_price, currency, note, created_at FROM shipping WHERE id = ?"
+        )?;
+        let existing = stmt.query_map([id], |row| {
+            Ok(Shipping {
+                id: row.get(0)?,
+                r#type: row.get(1)?,
+                shipping_date: row.get(2)?,
+                receiving_date: row.get(3)?,
+                receiver_client_id: row.get(4)?,
+                sender_client_id: row.get(5)?,
+                file_path: row.get(6)?,
+                paid: row.get(7)?,
+                ship_price: row.get(8)?,
+                currency: row.get(9)?,
+                note: row.get(10)?,
+                created_at: row.get(11)?,
+            })
+        })?.next().ok_or(rusqlite::Error::QueryReturnedNoRows)??;
+
+        let r#type = updates.get("type").and_then(|v| v.as_str()).unwrap_or(&existing.r#type).to_string();
+        let shipping_date = updates.get("shipping_date").and_then(|v| v.as_str()).unwrap_or(&existing.shipping_date).to_string();
+        let receiving_date = updates.get("receiving_date").and_then(|v| v.as_str()).unwrap_or(&existing.receiving_date).to_string();
+        let receiver_client_id = updates.get("receiver_client_id").and_then(|v| v.as_i64()).unwrap_or(existing.receiver_client_id);
+        let sender_client_id = updates.get("sender_client_id").and_then(|v| v.as_i64()).unwrap_or(existing.sender_client_id);
+        let paid = updates.get("paid").and_then(|v| v.as_i64()).unwrap_or(existing.paid);
+        let ship_price = updates.get("ship_price").and_then(|v| v.as_f64()).unwrap_or(existing.ship_price);
+        let currency = updates.get("currency").and_then(|v| v.as_str()).unwrap_or(&existing.currency).to_string();
+        let note: Option<String> = updates.get("note").and_then(|v| v.as_str()).map(|s| s.to_string()).or(existing.note);
+        let file_path: Option<String> = existing.file_path;
+
+        self.conn.execute(
+            "UPDATE shipping SET type=?, shipping_date=?, receiving_date=?, receiver_client_id=?,
+             sender_client_id=?, file_path=?, paid=?, ship_price=?, currency=?, note=? WHERE id=?",
+            params![r#type, shipping_date, receiving_date, receiver_client_id, sender_client_id,
+                    file_path, paid, ship_price, currency, note, id],
+        )?;
+
+        let mut stmt2 = self.conn.prepare(
+            "SELECT id, type, shipping_date, receiving_date, receiver_client_id, sender_client_id,
+                    file_path, paid, ship_price, currency, note, created_at FROM shipping WHERE id = ?"
+        )?;
+        let mut rows = stmt2.query_map([id], |row| {
+            Ok(Shipping {
+                id: row.get(0)?,
+                r#type: row.get(1)?,
+                shipping_date: row.get(2)?,
+                receiving_date: row.get(3)?,
+                receiver_client_id: row.get(4)?,
+                sender_client_id: row.get(5)?,
+                file_path: row.get(6)?,
+                paid: row.get(7)?,
+                ship_price: row.get(8)?,
+                currency: row.get(9)?,
+                note: row.get(10)?,
+                created_at: row.get(11)?,
+            })
+        })?;
+        rows.next().unwrap()
+    }
     pub fn get_debits(&self) -> Result<Vec<serde_json::Value>> {
         let mut stmt = self.conn.prepare(
             "SELECT d.id, d.sender_id, d.receiver_id, d.shipping_id, d.amount, d.currency,

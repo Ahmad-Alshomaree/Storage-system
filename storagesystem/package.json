@@ -6,8 +6,6 @@
     "dev": "next dev",
     "build": "next build",
     "lint": "eslint",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "ts-node lib/migrate.ts",
     "tauri": "tauri",
     "tauri:build": "tauri build"
   },
@@ -17,8 +15,6 @@
     "@tauri-apps/api": "^2.9.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "drizzle-orm": "^0.44.7",
-    "formidable": "^3.5.4",
     "i18next": "^25.7.0",
     "lucide-react": "^0.554.0",
     "next": "16.0.4",
@@ -32,26 +28,14 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/better-sqlite3": "^7.6.11",
-    "@types/formidable": "^3.4.6",
-    "@types/multer": "^2.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/uuid": "^11.0.0",
     "baseline-browser-mapping": "^2.8.32",
-    "better-sqlite3": "^11.1.2",
-    "drizzle-kit": "^0.31.7",
     "eslint": "^9",
     "eslint-config-next": "16.0.4",
     "tailwindcss": "^4",
-    "ts-node": "^10.9.2",
-    "tsx": "^4.16.2",
     "typescript": "^5"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "better-sqlite3"
-    ]
   }
 }

@@ -189,10 +189,8 @@ const resources = {
       "Add Transaction": "Add Transaction",
       "Save Shipping Information": "Save Shipping Information",
       "Save Product": "Save Product",
-      "Add New Transaction": "Add New Transaction",
       "Create": "Create",
       "Submit": "Submit",
-      "Search": "Search",
       "Search by product name or box code...": "Search by product name or box code...",
       "No products found. Start by adding your first product!": "No products found. Start by adding your first product!",
 
@@ -275,6 +273,15 @@ const resources = {
       "Update": "Update",
       "e.g., BOX-001": "e.g., BOX-001",
       "rooms available": "rooms available",
+      "Pieces": "Pieces",
+      "Kilos": "Kilos",
+      "Saved to products table": "Saved to products table",
+      "Not saved yet": "Not saved yet",
+
+      "Loading products...": "Loading products...",
+      "No available products to select for output load": "No available products to select for output load",
+      "Select Product Quantity": "Select Product Quantity",
+      "No products added. Click \"Add Product\" to create new products for this shipment.": "No products added. Click \"Add Product\" to create new products for this shipment.",
     }
   },
   ar: {
@@ -467,7 +474,7 @@ const resources = {
       "Save Product": "حفظ المنتج",
       "Create": "إنشاء",
       "Submit": "إرسال",
-      "Search": "بحث",
+
       "Search by product name or box code...": "البحث باسم المنتج أو كود الصندوق...",
       "No products found. Start by adding your first product!": "لم يتم العثور على منتجات. ابدأ بإضافة منتجك الأول!",
 
@@ -570,6 +577,15 @@ const resources = {
       "Update": "تحديث",
       "e.g., BOX-001": "مثال: BOX-001",
       "rooms available": "غرف متاحة",
+      "Pieces": "قطع",
+      "Kilos": "كيلو",
+      "Saved to products table": "تم الحفظ في جدول المنتجات",
+      "Not saved yet": "لم يتم الحفظ بعد",
+
+      "Loading products...": "جاري تحميل المنتجات...",
+      "No available products to select for output load": "لا توجد منتجات متاحة للاختيار لحمل الخروج",
+      "Select Product Quantity": "حدد كمية المنتج",
+      "No products added. Click \"Add Product\" to create new products for this shipment.": "لم تتم إضافة منتجات. انقر على \"إضافة منتج\" لإنشاء منتجات جديدة لهذه الشحنة.",
     }
   }
 }

@@ -968,9 +968,9 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                   {/* Save Product Button */}
                   <div className="flex items-center justify-between pt-2 border-t border-border">
                     <div className={`text-xs ${product.isSaved ? 'text-green-600' : 'text-muted-foreground'}`}>
-                      {product.isSaved ? `✓ Saved to products table (ID: ${product.savedProductId})` : 'Not saved yet'}
+                      {product.isSaved ? `✓ ${t("Saved to products table")} (ID: ${product.savedProductId})` : t('Not saved yet')}
                     </div>
-                    <Button
+                    <Button 
                       type="button"
                       onClick={() => saveIndividualProduct(product)}
                       disabled={product.isSaved || savingProductId === product.id}
@@ -981,7 +981,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                       {savingProductId === product.id ? (
                         <>
                           <Loader2 className="w-3 h-3 animate-spin" />
-                          Saving...
+                          {t("Saving...")}
                         </>
                       ) : product.isSaved ? (
                         t('Saved') + ' ✓'
@@ -1000,10 +1000,10 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">{t("Select products for shipment")}</label>
             {isLoadingProducts ? (
-              <div className="p-4 text-center text-muted-foreground">Loading products...</div>
+              <div className="p-4 text-center text-muted-foreground">{t("Loading products...")}</div>
             ) : availableProducts.length === 0 ? (
               <div className="p-4 text-center text-muted-foreground border border-dashed border-border rounded-lg">
-                No available products to select for output load
+                {t("No available products to select for output load")}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1030,8 +1030,8 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
 
                       {selection && (
                         <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-                          <div>Quantity: {selection.quantity} {selection.quantityType}</div>
-                          <div>Selling Price: ${selection.sellingPrice}</div>
+                          <div>{t("Quantity")}: {selection.quantity} {selection.quantityType === 'pieces' ? t('Pieces') : t('Kilos')}</div>
+                          <div>{t("Selling Price")}: ${selection.sellingPrice}</div>
                         </div>
                       )}
                     </div>
@@ -1072,7 +1072,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>
-                  {currentProductSelection?.product?.product_name || 'Select Product Quantity'}
+                  {currentProductSelection?.product?.product_name || t('Select Product Quantity')}
                 </DialogTitle>
               </DialogHeader>
               {currentProductSelection && (
@@ -1090,8 +1090,8 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                       })}
                       className="col-span-3 px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                     >
-                      <option value="pieces">Pieces</option>
-                      <option value="kilos">Kilos</option>
+                      <option value="pieces">{t("Pieces")}</option>
+                      <option value="kilos">{t("Kilos")}</option>
                     </select>
                   </div>
 

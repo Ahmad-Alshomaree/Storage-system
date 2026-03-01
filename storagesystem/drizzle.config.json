@@ -1,8 +1,0 @@
-{
-  "schema": "./lib/schema.ts",
-  "out": "./drizzle",
-  "dialect": "sqlite",
-  "dbCredentials": {
-    "url": "./data/products.db"
-  }
-}

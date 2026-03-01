@@ -13,8 +13,6 @@ const nextConfig = {
   assetPrefix: './',
   basePath: '',
   trailingSlash: true,
-  serverExternalPackages: ['@tauri-apps/api'],
-  experimental: {},
 }
 
 export default nextConfig
