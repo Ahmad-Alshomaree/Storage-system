@@ -897,7 +897,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
                     size="sm"
                     onClick={() => setUseExistingShipping(false)}
                   >
-                    <Truck className="w-4 h-4 mr-2" />
+                    <Truck className="w-4 h-4 me-2" />
                     {t("Create New Shipping Instead")}
                   </Button>
                 </div>
@@ -978,7 +978,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
       {/* Submit Button */}
       <div className="pt-4">
         <Button type="submit" disabled={isLoading} className="w-full py-3">
-          {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+          {isLoading ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
           {t("Create Product")}
         </Button>
       </div>
