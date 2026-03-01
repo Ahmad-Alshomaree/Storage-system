@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Edit2, Trash2, Download, Check, X } from "lucide-react"
 import {
   Dialog,
@@ -141,7 +141,7 @@ export function ShippingDetailsModal({ shipping, clients: propClients = [], open
   // when editing, we sometimes open the native date/time dropdown; clicking
   // outside should close it, otherwise the picker can stay open and block the
   // rest of the UI. this mirrors the behaviour in ShippingForm.
-  React.useEffect(() => {
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement
       if (!target.closest('input[type="date"], input[type="datetime-local"], input[type="time"]')) {
@@ -200,8 +200,8 @@ ${t("Financial Information")}:
 
 ${t("Products")} (${shipping.products?.length || 0}):
 ${shipping.products?.map(product =>
-  `- ${product.product_name || product.box_code} (${product.number_of_boxes} boxes, ${product.total_pices ?? 0} pcs)`
-).join('\n') || t('No products')}
+      `- ${product.product_name || product.box_code} (${product.number_of_boxes} boxes, ${product.total_pices ?? 0} pcs)`
+    ).join('\n') || t('No products')}
 
 ${t("Notes")}: ${shipping.note || t("No notes")}
 
@@ -231,11 +231,11 @@ ${t("Generated on")}: ${new Date().toLocaleString()}
           {/* Basic Shipping Information */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Shipping ID")}</label>
-              <p className="text-sm font-semibold">#{shipping.id}</p>
+              <label className="text-sm font-medium text-muted-foreground text-start block">{t("Shipping ID")}</label>
+              <p className="text-sm font-semibold text-start">#{shipping.id}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Type")}</label>
+              <label className="text-sm font-medium text-muted-foreground text-start block">{t("Type")}</label>
               {isEditing ? (
                 <select
                   value={editValues.type || ""}
@@ -247,14 +247,19 @@ ${t("Generated on")}: ${new Date().toLocaleString()}
                   <option value="comming">{t("Coming")}</option>
                 </select>
               ) : (
-                <p className="text-lg font-bold capitalize">{t(shipping.type) || shipping.type}</p>
+                <p className="text-lg font-bold capitalize text-start">
+                  {t(shipping.type === 'input load' ? 'Input Load' :
+                    shipping.type === 'output load' ? 'Output Load' :
+                      shipping.type === 'comming' || shipping.type === 'coming' ? 'Coming' :
+                        shipping.type.charAt(0).toUpperCase() + shipping.type.slice(1))}
+                </p>
               )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Receiver")}</label>
+              <label className="text-sm font-medium text-muted-foreground text-start block">{t("Receiver")}</label>
               {isEditing ? (
                 <select
                   value={editValues.receiver_client_id || shipping.receiver_client_id || ""}
@@ -270,11 +275,11 @@ ${t("Generated on")}: ${new Date().toLocaleString()}
                   ))}
                 </select>
               ) : (
-                <p className="text-sm">{shipping.receiver.client_name}</p>
+                <p className="text-sm text-start">{shipping.receiver.client_name}</p>
               )}
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Sender")}</label>
+              <label className="text-sm font-medium text-muted-foreground text-start block">{t("Sender")}</label>
               {isEditing ? (
                 <select
                   value={editValues.sender_client_id || shipping.sender_client_id || ""}
@@ -290,14 +295,14 @@ ${t("Generated on")}: ${new Date().toLocaleString()}
                   ))}
                 </select>
               ) : (
-                <p className="text-sm">{shipping.sender.client_name}</p>
+                <p className="text-sm text-start">{shipping.sender.client_name}</p>
               )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Currency")}</label>
+              <label className="text-sm font-medium text-muted-foreground text-start block">{t("Currency")}</label>
               {isEditing ? (
                 <select
                   value={editValues.currency || ""}
@@ -308,11 +313,11 @@ ${t("Generated on")}: ${new Date().toLocaleString()}
                   <option value="Iraqi Dinar">{t("Iraqi Dinar")}</option>
                 </select>
               ) : (
-                <p className="text-sm">{t(shipping.currency || "Dollar")}</p>
+                <p className="text-sm text-start">{t(shipping.currency || "Dollar")}</p>
               )}
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Paid")}</label>
+              <label className="text-sm font-medium text-muted-foreground text-start block">{t("Paid")}</label>
               {isEditing ? (
                 <input
                   type="number"
@@ -323,14 +328,14 @@ ${t("Generated on")}: ${new Date().toLocaleString()}
                   placeholder="0.00"
                 />
               ) : (
-                <p className="text-sm">{shipping.paid ?? 0} {t(shipping.currency || "Dollar")}</p>
+                <p className="text-sm text-start">{shipping.paid ?? 0} {t(shipping.currency || "Dollar")}</p>
               )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Ship Price")}</label>
+              <label className="text-sm font-medium text-muted-foreground text-start block">{t("Ship Price")}</label>
               {isEditing ? (
                 <input
                   type="number"
@@ -341,12 +346,12 @@ ${t("Generated on")}: ${new Date().toLocaleString()}
                   placeholder="0.00"
                 />
               ) : (
-                <p className="text-sm">{shipping.ship_price ?? 0} {t(shipping.currency || "Dollar")}</p>
+                <p className="text-sm text-start">{shipping.ship_price ?? 0} {t(shipping.currency || "Dollar")}</p>
               )}
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Created At")}</label>
-              <p className="text-sm">{new Date(shipping.created_at).toLocaleString()}</p>
+              <label className="text-sm font-medium text-muted-foreground text-start block">{t("Created At")}</label>
+              <p className="text-sm text-start">{new Date(shipping.created_at).toLocaleString()}</p>
             </div>
           </div>
 
@@ -379,9 +384,8 @@ ${t("Generated on")}: ${new Date().toLocaleString()}
                     value={editValues.shipping_date || ""}
                     onChange={handleDateTimeChange}
                     disabled={confirmedShippingDate}
-                    className={`flex-1 px-2 py-1 bg-input text-foreground text-sm rounded ${
-                      confirmedShippingDate ? 'opacity-60 cursor-not-allowed' : ''
-                    }`}
+                    className={`flex-1 px-2 py-1 bg-input text-foreground text-sm rounded ${confirmedShippingDate ? 'opacity-60 cursor-not-allowed' : ''
+                      }`}
                   />
                   {!confirmedShippingDate ? (
                     <Button
@@ -420,9 +424,8 @@ ${t("Generated on")}: ${new Date().toLocaleString()}
                     value={editValues.receiving_date || ""}
                     onChange={handleDateTimeChange}
                     disabled={confirmedReceivingDate}
-                    className={`flex-1 px-2 py-1 bg-input text-foreground text-sm rounded ${
-                      confirmedReceivingDate ? 'opacity-60 cursor-not-allowed' : ''
-                    }`}
+                    className={`flex-1 px-2 py-1 bg-input text-foreground text-sm rounded ${confirmedReceivingDate ? 'opacity-60 cursor-not-allowed' : ''
+                      }`}
                   />
                   {!confirmedReceivingDate ? (
                     <Button

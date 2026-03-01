@@ -129,7 +129,8 @@ export function ShippingTable({ shipping, clients, onDelete, onUpdate }: Shippin
     setEditValues({})
     setConfirmedShippingDate(false)
     setConfirmedReceivingDate(false)
-  }  }
+  }
+
 
   // show both date and time in table cells
   const formatDate = (dateString: string) => {
@@ -195,258 +196,259 @@ export function ShippingTable({ shipping, clients, onDelete, onUpdate }: Shippin
           {t("Clear Filters")}
         </button>
       </div>
-    <div className="overflow-x-auto border border-border rounded-lg">
-      <table className="w-full text-sm min-w-[1200px]">
-        <thead>
-          <tr className="border-b border-border bg-muted">
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Type")}</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Shipping Date/Time")}</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Receiving Date")}</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Receiver")}</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Sender")}</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Products")}</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Paid")}</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Ship Price")}</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Currency")}</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Note")}</th>
-            <th className="px-2 py-3 text-left text-xs font-semibold text-foreground">{t("Actions")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredShipping.map((record) => (
-            <tr key={record.id} className="border-b border-border hover:bg-muted/50 transition-colors">
-              {editingId === record.id ? (
-                <>
-                  <td className="px-2 py-3">
-                    <select
-                      value={editValues.type || ""}
-                      onChange={(e) => setEditValues({ ...editValues, type: e.target.value })}
-                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                    >
-                      <option value="input load">{t("Input Load")}</option>
-                      <option value="output load">{t("Output Load")}</option>
-                      <option value="comming">{t("Coming")}</option>
-                    </select>
-                  </td>
-                  <td className="px-2 py-3">
-                    <div className="flex gap-1 items-center">
-                      <input
-                        type="datetime-local"
-                        value={editValues.shipping_date || ""}
-                        onChange={(e) => setEditValues({ ...editValues, shipping_date: e.target.value })}
-                        disabled={confirmedShippingDate}
-                        className={`flex-1 px-2 py-1 bg-input text-foreground text-xs rounded ${
-                          confirmedShippingDate ? 'opacity-60 cursor-not-allowed' : ''
-                        }`}
-                      />
-                      {!confirmedShippingDate ? (
-                        <button
-                          onClick={() => setConfirmedShippingDate(true)}
-                          disabled={!editValues.shipping_date}
-                          className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                          title={t("Confirm")}
-                        >
-                          ✓
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setConfirmedShippingDate(false)}
-                          className="px-2 py-1 text-xs bg-secondary text-secondary-foreground rounded hover:opacity-90"
-                          title={t("Edit")}
-                        >
-                          ✎
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-2 py-3">
-                    <div className="flex gap-1 items-center">
-                      <input
-                        type="datetime-local"
-                        value={editValues.receiving_date || ""}
-                        onChange={(e) => setEditValues({ ...editValues, receiving_date: e.target.value })}
-                        disabled={confirmedReceivingDate}
-                        className={`flex-1 px-2 py-1 bg-input text-foreground text-xs rounded ${
-                          confirmedReceivingDate ? 'opacity-60 cursor-not-allowed' : ''
-                        }`}
-                      />
-                      {!confirmedReceivingDate ? (
-                        <button
-                          onClick={() => setConfirmedReceivingDate(true)}
-                          disabled={!editValues.receiving_date}
-                          className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                          title={t("Confirm")}
-                        >
-                          ✓
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setConfirmedReceivingDate(false)}
-                          className="px-2 py-1 text-xs bg-secondary text-secondary-foreground rounded hover:opacity-90"
-                          title={t("Edit")}
-                        >
-                          ✎
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-2 py-3">
-                    <select
-                      value={editValues.receiver_client_id || ""}
-                      onChange={(e) => setEditValues({ ...editValues, receiver_client_id: parseInt(e.target.value) || undefined })}
-                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                    >
-                      <option value="">{t("Select Receiver")}</option>
-                      {clients.map((client) => (
-                        <option key={client.id} value={client.id}>
-                          {client.client_name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-2 py-3">
-                    <select
-                      value={editValues.sender_client_id || ""}
-                      onChange={(e) => setEditValues({ ...editValues, sender_client_id: parseInt(e.target.value) || undefined })}
-                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                    >
-                      <option value="">{t("Select Sender")}</option>
-                      {clients.map((client) => (
-                        <option key={client.id} value={client.id}>
-                          {client.client_name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-2 py-3">
-                    <div className="text-xs text-muted-foreground">
-                      {record.products && record.products.length > 0
-                        ? record.products.map(p =>
-                            `${p.product_name || p.box_code} (${p.number_of_boxes} boxes${p.total_pices ? `, ${p.total_pices} pcs` : ''})`
-                          ).join("; ")
-                        : "No products"
-                      }
-                    </div>
-                  </td>
-                  <td className="px-2 py-3">
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={editValues.paid || ""}
-                      onChange={(e) => setEditValues({ ...editValues, paid: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                      placeholder="0.00"
-                    />
-                  </td>
-                  <td className="px-2 py-3">
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={editValues.ship_price || ""}
-                      onChange={(e) => setEditValues({ ...editValues, ship_price: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                      placeholder="0.00"
-                    />
-                  </td>
-                  <td className="px-2 py-3">
-                    <select
-                      value={editValues.currency || ""}
-                      onChange={(e) => setEditValues({ ...editValues, currency: e.target.value })}
-                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                    >
-                      <option value="Dollar">Dollar</option>
-                      <option value="Iraqi Dinar">Iraqi Dinar</option>
-                    </select>
-                  </td>
-                  <td className="px-2 py-3">
-                    <textarea
-                      value={editValues.note || ""}
-                      onChange={(e) => setEditValues({ ...editValues, note: e.target.value })}
-                      rows={2}
-                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                      placeholder="Notes"
-                    />
-                  </td>
-                  <td className="px-2 py-3">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => saveEdit(record.id)}
-                        className="p-1 hover:bg-primary/10 rounded text-primary"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                      <button onClick={cancelEdit} className="p-1 hover:bg-destructive/10 rounded text-destructive">
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </>
-              ) : (
-                <>
-                  <td className="px-2 py-3">
-                    <span className={getShippingTypeColor(record.type)}>
-                      {t(record.type === 'comming' ? 'Coming' : record.type)}
-                    </span>
-                  </td>
-                  <td className="px-2 py-3 text-foreground text-xs">{formatDate(record.shipping_date)}</td>
-                  <td className="px-2 py-3 text-foreground text-xs">{formatDate(record.receiving_date)}</td>
-                  <td className="px-2 py-3 text-foreground text-xs">{record.receiver?.client_name || ""}</td>
-                  <td className="px-2 py-3 text-foreground text-xs">{record.sender?.client_name || ""}</td>
-                  <td className="px-2 py-3 text-foreground text-xs">
-                    <div className="text-xs max-w-xs truncate">
-                      {record.products && record.products.length > 0
-                        ? record.products.map(p =>
-                            `${p.product_name || p.box_code} (${p.number_of_boxes} boxes${p.total_pices ? `, ${p.total_pices} pcs` : ''})`
-                          ).join("; ")
-                        : "No products"
-                      }
-                    </div>
-                  </td>
-                  <td className="px-2 py-3 text-foreground text-xs">{record.paid ?? 0}</td>
-                  <td className="px-2 py-3 text-foreground text-xs">{record.ship_price ?? 0}</td>
-                  <td className="px-2 py-3 text-foreground text-xs">{record.currency || "Dollar"}</td>
-                  <td className="px-2 py-3 text-foreground text-xs max-w-xs truncate">{record.note || ""}</td>
-                  <td className="px-2 py-3">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          setSelectedShipping(record)
-                          setShowDetailsModal(true)
-                        }}
-                        className="p-1 hover:bg-primary/10 rounded text-primary transition-colors"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => startEdit(record)}
-                        className="p-1 hover:bg-primary/10 rounded text-primary transition-colors"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => onDelete(record.id)}
-                        className="p-1 hover:bg-destructive/10 rounded text-destructive transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </>
-              )}
+      <div className="overflow-x-auto border border-border rounded-lg">
+        <table className="w-full text-sm min-w-[1200px]">
+          <thead>
+            <tr className="border-b border-border bg-muted">
+              <th className="px-2 py-3 text-start text-xs font-semibold text-foreground">{t("Type")}</th>
+              <th className="px-2 py-3 text-start text-xs font-semibold text-foreground">{t("Shipping Date/Time")}</th>
+              <th className="px-2 py-3 text-start text-xs font-semibold text-foreground">{t("Receiving Date")}</th>
+              <th className="px-2 py-3 text-start text-xs font-semibold text-foreground">{t("Receiver")}</th>
+              <th className="px-2 py-3 text-start text-xs font-semibold text-foreground">{t("Sender")}</th>
+              <th className="px-2 py-3 text-start text-xs font-semibold text-foreground">{t("Products")}</th>
+              <th className="px-2 py-3 text-start text-xs font-semibold text-foreground">{t("Paid")}</th>
+              <th className="px-2 py-3 text-start text-xs font-semibold text-foreground">{t("Ship Price")}</th>
+              <th className="px-2 py-3 text-start text-xs font-semibold text-foreground">{t("Currency")}</th>
+              <th className="px-2 py-3 text-start text-xs font-semibold text-foreground">{t("Note")}</th>
+              <th className="px-2 py-3 text-start text-xs font-semibold text-foreground">{t("Actions")}</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredShipping.map((record) => (
+              <tr key={record.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                {editingId === record.id ? (
+                  <>
+                    <td className="px-2 py-3">
+                      <select
+                        value={editValues.type || ""}
+                        onChange={(e) => setEditValues({ ...editValues, type: e.target.value })}
+                        className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                      >
+                        <option value="input load">{t("Input Load")}</option>
+                        <option value="output load">{t("Output Load")}</option>
+                        <option value="comming">{t("Coming")}</option>
+                      </select>
+                    </td>
+                    <td className="px-2 py-3">
+                      <div className="flex gap-1 items-center">
+                        <input
+                          type="datetime-local"
+                          value={editValues.shipping_date || ""}
+                          onChange={(e) => setEditValues({ ...editValues, shipping_date: e.target.value })}
+                          disabled={confirmedShippingDate}
+                          className={`flex-1 px-2 py-1 bg-input text-foreground text-xs rounded ${confirmedShippingDate ? 'opacity-60 cursor-not-allowed' : ''
+                            }`}
+                        />
+                        {!confirmedShippingDate ? (
+                          <button
+                            onClick={() => setConfirmedShippingDate(true)}
+                            disabled={!editValues.shipping_date}
+                            className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={t("Confirm")}
+                          >
+                            ✓
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmedShippingDate(false)}
+                            className="px-2 py-1 text-xs bg-secondary text-secondary-foreground rounded hover:opacity-90"
+                            title={t("Edit")}
+                          >
+                            ✎
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-2 py-3">
+                      <div className="flex gap-1 items-center">
+                        <input
+                          type="datetime-local"
+                          value={editValues.receiving_date || ""}
+                          onChange={(e) => setEditValues({ ...editValues, receiving_date: e.target.value })}
+                          disabled={confirmedReceivingDate}
+                          className={`flex-1 px-2 py-1 bg-input text-foreground text-xs rounded ${confirmedReceivingDate ? 'opacity-60 cursor-not-allowed' : ''
+                            }`}
+                        />
+                        {!confirmedReceivingDate ? (
+                          <button
+                            onClick={() => setConfirmedReceivingDate(true)}
+                            disabled={!editValues.receiving_date}
+                            className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={t("Confirm")}
+                          >
+                            ✓
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmedReceivingDate(false)}
+                            className="px-2 py-1 text-xs bg-secondary text-secondary-foreground rounded hover:opacity-90"
+                            title={t("Edit")}
+                          >
+                            ✎
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-2 py-3">
+                      <select
+                        value={editValues.receiver_client_id || ""}
+                        onChange={(e) => setEditValues({ ...editValues, receiver_client_id: parseInt(e.target.value) || undefined })}
+                        className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                      >
+                        <option value="">{t("Select Receiver")}</option>
+                        {clients.map((client) => (
+                          <option key={client.id} value={client.id}>
+                            {client.client_name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-2 py-3">
+                      <select
+                        value={editValues.sender_client_id || ""}
+                        onChange={(e) => setEditValues({ ...editValues, sender_client_id: parseInt(e.target.value) || undefined })}
+                        className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                      >
+                        <option value="">{t("Select Sender")}</option>
+                        {clients.map((client) => (
+                          <option key={client.id} value={client.id}>
+                            {client.client_name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-2 py-3">
+                      <div className="text-xs text-muted-foreground">
+                        {record.products && record.products.length > 0
+                          ? record.products.map(p =>
+                            `${p.product_name || p.box_code} (${p.number_of_boxes} boxes${p.total_pices ? `, ${p.total_pices} pcs` : ''})`
+                          ).join("; ")
+                          : "No products"
+                        }
+                      </div>
+                    </td>
+                    <td className="px-2 py-3">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editValues.paid || ""}
+                        onChange={(e) => setEditValues({ ...editValues, paid: parseFloat(e.target.value) || 0 })}
+                        className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                        placeholder="0.00"
+                      />
+                    </td>
+                    <td className="px-2 py-3">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editValues.ship_price || ""}
+                        onChange={(e) => setEditValues({ ...editValues, ship_price: parseFloat(e.target.value) || 0 })}
+                        className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                        placeholder="0.00"
+                      />
+                    </td>
+                    <td className="px-2 py-3">
+                      <select
+                        value={editValues.currency || ""}
+                        onChange={(e) => setEditValues({ ...editValues, currency: e.target.value })}
+                        className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                      >
+                        <option value="Dollar">Dollar</option>
+                        <option value="Iraqi Dinar">Iraqi Dinar</option>
+                      </select>
+                    </td>
+                    <td className="px-2 py-3">
+                      <textarea
+                        value={editValues.note || ""}
+                        onChange={(e) => setEditValues({ ...editValues, note: e.target.value })}
+                        rows={2}
+                        className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                        placeholder="Notes"
+                      />
+                    </td>
+                    <td className="px-2 py-3">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => saveEdit(record.id)}
+                          className="p-1 hover:bg-primary/10 rounded text-primary"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button onClick={cancelEdit} className="p-1 hover:bg-destructive/10 rounded text-destructive">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td className="px-2 py-3">
+                      <span className={getShippingTypeColor(record.type)}>
+                        {t(record.type === 'input load' ? 'Input Load' :
+                          record.type === 'output load' ? 'Output Load' :
+                            record.type === 'comming' || record.type === 'coming' ? 'Coming' :
+                              record.type.charAt(0).toUpperCase() + record.type.slice(1))}
+                      </span>
+                    </td>
+                    <td className="px-2 py-3 text-foreground text-xs">{formatDate(record.shipping_date)}</td>
+                    <td className="px-2 py-3 text-foreground text-xs">{formatDate(record.receiving_date)}</td>
+                    <td className="px-2 py-3 text-foreground text-xs">{record.receiver?.client_name || ""}</td>
+                    <td className="px-2 py-3 text-foreground text-xs">{record.sender?.client_name || ""}</td>
+                    <td className="px-2 py-3 text-foreground text-xs">
+                      <div className="text-xs max-w-xs truncate">
+                        {record.products && record.products.length > 0
+                          ? record.products.map(p =>
+                            `${p.product_name || p.box_code} (${p.number_of_boxes} boxes${p.total_pices ? `, ${p.total_pices} pcs` : ''})`
+                          ).join("; ")
+                          : "No products"
+                        }
+                      </div>
+                    </td>
+                    <td className="px-2 py-3 text-foreground text-xs">{record.paid ?? 0}</td>
+                    <td className="px-2 py-3 text-foreground text-xs">{record.ship_price ?? 0}</td>
+                    <td className="px-2 py-3 text-foreground text-xs">{record.currency || "Dollar"}</td>
+                    <td className="px-2 py-3 text-foreground text-xs max-w-xs truncate">{record.note || ""}</td>
+                    <td className="px-2 py-3">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedShipping(record)
+                            setShowDetailsModal(true)
+                          }}
+                          className="p-1 hover:bg-primary/10 rounded text-primary transition-colors"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => startEdit(record)}
+                          className="p-1 hover:bg-primary/10 rounded text-primary transition-colors"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => onDelete(record.id)}
+                          className="p-1 hover:bg-destructive/10 rounded text-destructive transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-      <ShippingDetailsModal
-        shipping={selectedShipping}
-        clients={clients}
-        open={showDetailsModal}
-        onOpenChange={setShowDetailsModal}
-        onEdit={onUpdate}
-        onDelete={onDelete}
-      />
-    </div>
+        <ShippingDetailsModal
+          shipping={selectedShipping}
+          clients={clients}
+          open={showDetailsModal}
+          onOpenChange={setShowDetailsModal}
+          onEdit={onUpdate}
+          onDelete={onDelete}
+        />
+      </div>
     </>
   )
 }

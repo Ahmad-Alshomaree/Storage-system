@@ -158,7 +158,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Debtor")}</label>
+          <label className="block text-sm font-medium text-foreground mb-2 text-start">{t("Debtor")}</label>
           <select
             name="sender_id"
             value={formData.sender_id}
@@ -175,7 +175,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Creditor")} *</label>
+          <label className="block text-sm font-medium text-foreground mb-2 text-start">{t("Creditor")} *</label>
           <select
             name="receiver_id"
             value={formData.receiver_id}
@@ -193,7 +193,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Shipping")}</label>
+          <label className="block text-sm font-medium text-foreground mb-2 text-start">{t("Shipping")}</label>
           <select
             name="shipping_id"
             value={formData.shipping_id}
@@ -210,7 +210,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Amount")} *</label>
+          <label className="block text-sm font-medium text-foreground mb-2 text-start">{t("Amount")} *</label>
           <input
             type="number"
             name="amount"
@@ -225,7 +225,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Currency")}</label>
+          <label className="block text-sm font-medium text-foreground mb-2 text-start">{t("Currency")}</label>
           <input
             type="text"
             name="currency"
@@ -237,7 +237,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Transaction Date")} ({t("Optional")})</label>
+          <label className="block text-sm font-medium text-foreground mb-2 text-start">{t("Transaction Date")} ({t("Optional")})</label>
           <div className="flex gap-2">
             <input
               type="date"
@@ -245,9 +245,8 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
               value={formData.transaction_date}
               onChange={handleDateChange}
               disabled={confirmedTransactionDate}
-              className={`flex-1 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${
-                confirmedTransactionDate ? 'opacity-60 cursor-not-allowed' : ''
-              }`}
+              className={`flex-1 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${confirmedTransactionDate ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
             />
             {!confirmedTransactionDate ? (
               <Button
@@ -277,7 +276,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Note")}</label>
+          <label className="block text-sm font-medium text-foreground mb-2 text-start">{t("Note")}</label>
           <textarea
             name="note"
             value={formData.note}

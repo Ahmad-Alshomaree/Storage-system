@@ -129,6 +129,15 @@
     direction: rtl;
   }
 
+  /* Table RTL adjustments */
+  html[dir="rtl"] th {
+    text-align: right;
+  }
+
+  html[dir="rtl"] td {
+    text-align: right;
+  }
+
   /* Header RTL adjustments */
   html[dir="rtl"] header .flex {
     flex-direction: row-reverse;
@@ -153,5 +162,13 @@
     margin-right: 0;
   }
 
-  /* Container margins in RTL - removed extra padding since px-4 already handles it */
+  /* Icons RTL flip */
+  html[dir="rtl"] .lucide {
+    transform: scaleX(1); /* Default, some icons might need flip */
+  }
+
+  html[dir="rtl"] .lucide-chevron-right,
+  html[dir="rtl"] .lucide-arrow-right {
+    transform: rotate(180deg);
+  }
 }

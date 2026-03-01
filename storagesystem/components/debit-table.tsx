@@ -108,162 +108,162 @@ export function DebitTable({ debits, onDelete, onUpdate, onViewDetail }: DebitTa
           {t("Clear Filters")}
         </button>
       </div>
-    <div className="overflow-x-auto border border-border rounded-lg">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-border bg-muted">
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Creditor")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Debtor")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Shipping ID")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Ship Cost")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Amount")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Total Debits")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Currency")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Note")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Transaction Date")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">{t("Actions")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredDebits.map((debit) => (
-            <tr key={debit.id} className="border-b border-border hover:bg-muted/50 transition-colors">
-              {editingId === debit.id ? (
-                <>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {debit.sender?.client_name || t("None")}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {debit.receiver?.client_name || t("Receiver Missing")}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {debit.shipping?.id || debit.shipping_id || t("None")}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {debit.shipping?.ship_price ? debit.shipping.ship_price.toFixed(2) : "N/A"}
-                  </td>
-                  <td className="px-4 py-3">
-                    {debit.shipping_id ? (
-                      <span className="text-muted-foreground text-xs">
-                        {editValues.amount?.toFixed(2) || "0.00"}
-                      </span>
-                    ) : (
+      <div className="overflow-x-auto border border-border rounded-lg">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted">
+              <th className="px-4 py-3 text-start text-xs font-semibold text-foreground">{t("Creditor")}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-foreground">{t("Debtor")}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-foreground">{t("Shipping ID")}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-foreground">{t("Ship Cost")}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-foreground">{t("Amount")}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-foreground">{t("Total Debits")}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-foreground">{t("Currency")}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-foreground">{t("Note")}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-foreground">{t("Transaction Date")}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-foreground">{t("Actions")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredDebits.map((debit) => (
+              <tr key={debit.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                {editingId === debit.id ? (
+                  <>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {debit.sender?.client_name || t("None")}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {debit.receiver?.client_name || t("Receiver Missing")}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {debit.shipping?.id || debit.shipping_id || t("None")}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {debit.shipping?.ship_price ? debit.shipping.ship_price.toFixed(2) : "N/A"}
+                    </td>
+                    <td className="px-4 py-3">
+                      {debit.shipping_id ? (
+                        <span className="text-muted-foreground text-xs">
+                          {editValues.amount?.toFixed(2) || "0.00"}
+                        </span>
+                      ) : (
+                        <input
+                          type="number"
+                          value={editValues.amount || 0}
+                          onChange={(e) =>
+                            setEditValues({ ...editValues, amount: Number.parseFloat(e.target.value) })
+                          }
+                          step="0.01"
+                          className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                        />
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {(totalDebits[`${debit.sender_id ?? 'null'}-${debit.receiver_id}`] || 0).toFixed(2)}
+                    </td>
+                    <td className="px-4 py-3">
                       <input
-                        type="number"
-                        value={editValues.amount || 0}
-                        onChange={(e) =>
-                          setEditValues({ ...editValues, amount: Number.parseFloat(e.target.value) })
-                        }
-                        step="0.01"
+                        type="text"
+                        value={editValues.currency || ""}
+                        onChange={(e) => setEditValues({ ...editValues, currency: e.target.value })}
+                        className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                        placeholder={t("Dollar")}
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="text"
+                        value={editValues.note || ""}
+                        onChange={(e) => setEditValues({ ...editValues, note: e.target.value })}
                         className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
                       />
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {(totalDebits[`${debit.sender_id ?? 'null'}-${debit.receiver_id}`] || 0).toFixed(2)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <input
-                      type="text"
-                      value={editValues.currency || ""}
-                      onChange={(e) => setEditValues({ ...editValues, currency: e.target.value })}
-                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                      placeholder={t("Dollar")}
-                    />
-                  </td>
-                  <td className="px-4 py-3">
-                    <input
-                      type="text"
-                      value={editValues.note || ""}
-                      onChange={(e) => setEditValues({ ...editValues, note: e.target.value })}
-                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                    />
-                  </td>
-                  <td className="px-4 py-3">
-                    <input
-                      type="date"
-                      value={editValues.transaction_date || ""}
-                      onChange={(e) => setEditValues({ ...editValues, transaction_date: e.target.value })}
-                      className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
-                    />
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => saveEdit(debit.id)}
-                        className="p-1 hover:bg-primary/10 rounded text-primary"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                      <button onClick={cancelEdit} className="p-1 hover:bg-destructive/10 rounded text-destructive">
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </>
-              ) : (
-                (() => {
-                  const totalDebitsValue = totalDebits[`${debit.sender_id ?? 'null'}-${debit.receiver_id}`] || 0
-                  const isSenderDebtor = debit.sender && totalDebitsValue < 0
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="date"
+                        value={editValues.transaction_date || ""}
+                        onChange={(e) => setEditValues({ ...editValues, transaction_date: e.target.value })}
+                        className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => saveEdit(debit.id)}
+                          className="p-1 hover:bg-primary/10 rounded text-primary"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button onClick={cancelEdit} className="p-1 hover:bg-destructive/10 rounded text-destructive">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </>
+                ) : (
+                  (() => {
+                    const totalDebitsValue = totalDebits[`${debit.sender_id ?? 'null'}-${debit.receiver_id}`] || 0
+                    const isSenderDebtor = debit.sender && totalDebitsValue < 0
 
-                  return (
-                    <>
-                      <td className="px-4 py-3 font-medium text-foreground text-xs">
-                        {!debit.sender ? t("Client") :
-                         isSenderDebtor ? debit.sender.client_name : debit.receiver.client_name}
-                      </td>
-                      <td className="px-4 py-3 font-medium text-foreground text-xs">
-                        {!debit.sender ? "-" :
-                         isSenderDebtor ? debit.receiver.client_name : debit.sender.client_name}
-                      </td>
-                      <td className="px-4 py-3 text-foreground text-xs">{debit.shipping?.id || t("None")}</td>
-                      <td className="px-4 py-3 text-foreground text-xs font-bold">
-                        {debit.shipping?.ship_price ? debit.shipping.ship_price.toFixed(2) : "N/A"}
-                      </td>
-                      <td className="px-4 py-3 text-foreground text-xs font-bold">{debit.amount.toFixed(2)}</td>
-                      <td className="px-4 py-3 text-foreground text-xs font-semibold text-primary">
-                        {totalDebitsValue.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-3 text-foreground text-xs">{debit.currency}</td>
-                      <td className="px-4 py-3 text-foreground text-xs truncate max-w-xs" title={debit.note || undefined}>
-                        {debit.note || t("No note")}
-                      </td>
-                      <td className="px-4 py-3 text-foreground text-xs">
-                        {new Date(debit.transaction_date).toLocaleDateString()}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-2">
-                          {onViewDetail && (
+                    return (
+                      <>
+                        <td className="px-4 py-3 font-medium text-foreground text-xs">
+                          {!debit.sender ? t("Client") :
+                            isSenderDebtor ? debit.sender.client_name : debit.receiver.client_name}
+                        </td>
+                        <td className="px-4 py-3 font-medium text-foreground text-xs">
+                          {!debit.sender ? "-" :
+                            isSenderDebtor ? debit.receiver.client_name : debit.sender.client_name}
+                        </td>
+                        <td className="px-4 py-3 text-foreground text-xs">{debit.shipping?.id || t("None")}</td>
+                        <td className="px-4 py-3 text-foreground text-xs font-bold">
+                          {debit.shipping?.ship_price ? debit.shipping.ship_price.toFixed(2) : "N/A"}
+                        </td>
+                        <td className="px-4 py-3 text-foreground text-xs font-bold">{debit.amount.toFixed(2)}</td>
+                        <td className="px-4 py-3 text-foreground text-xs font-semibold text-primary">
+                          {totalDebitsValue.toFixed(2)}
+                        </td>
+                        <td className="px-4 py-3 text-foreground text-xs">{debit.currency}</td>
+                        <td className="px-4 py-3 text-foreground text-xs truncate max-w-xs" title={debit.note || undefined}>
+                          {debit.note || t("No note")}
+                        </td>
+                        <td className="px-4 py-3 text-foreground text-xs">
+                          {new Date(debit.transaction_date).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-2">
+                            {onViewDetail && (
+                              <button
+                                onClick={() => onViewDetail(debit)}
+                                className="p-1 hover:bg-secondary/10 rounded text-muted-foreground transition-colors"
+                                title={t("View Details")}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                            )}
                             <button
-                              onClick={() => onViewDetail(debit)}
-                              className="p-1 hover:bg-secondary/10 rounded text-muted-foreground transition-colors"
-                              title={t("View Details")}
+                              onClick={() => startEdit(debit)}
+                              className="p-1 hover:bg-primary/10 rounded text-primary transition-colors"
                             >
-                              <Eye className="w-4 h-4" />
+                              <Edit2 className="w-4 h-4" />
                             </button>
-                          )}
-                          <button
-                            onClick={() => startEdit(debit)}
-                            className="p-1 hover:bg-primary/10 rounded text-primary transition-colors"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => onDelete(debit.id)}
-                            className="p-1 hover:bg-destructive/10 rounded text-destructive transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </>
-                  )
-                })()
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+                            <button
+                              onClick={() => onDelete(debit.id)}
+                              className="p-1 hover:bg-destructive/10 rounded text-destructive transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </>
+                    )
+                  })()
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </>
   )
 }

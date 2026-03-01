@@ -532,7 +532,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Shipping Type")} *</label>
+          <label className="block text-sm font-medium text-foreground mb-2 text-start">{t("Shipping Type")} *</label>
           <select
             name="type"
             value={formData.type}
@@ -546,7 +546,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Shipping Date/Time")} *</label>
+          <label className="block text-sm font-medium text-foreground mb-2 text-start">{t("Shipping Date/Time")} *</label>
           <div className="flex gap-2">
             <input
               type="datetime-local"
@@ -555,9 +555,8 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
               onChange={handleDateTimeChange}
               disabled={confirmedShippingDate}
               required
-              className={`flex-1 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${
-                confirmedShippingDate ? 'opacity-60 cursor-not-allowed' : ''
-              }`}
+              className={`flex-1 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${confirmedShippingDate ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
             />
             {!confirmedShippingDate ? (
               <Button
@@ -587,7 +586,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Receiving Date/Time")} *</label>
+          <label className="block text-sm font-medium text-foreground mb-2 text-start">{t("Receiving Date/Time")} *</label>
           <div className="flex gap-2">
             <input
               type="datetime-local"
@@ -596,9 +595,8 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
               onChange={handleDateTimeChange}
               disabled={confirmedReceivingDate}
               required
-              className={`flex-1 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${
-                confirmedReceivingDate ? 'opacity-60 cursor-not-allowed' : ''
-              }`}
+              className={`flex-1 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${confirmedReceivingDate ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
             />
             {!confirmedReceivingDate ? (
               <Button
@@ -628,7 +626,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Receiver")} *</label>
+          <label className="block text-sm font-medium text-foreground mb-2 text-start">{t("Receiver")} *</label>
           <select
             value={formData.receiver}
             onChange={(e) => handleClientSelectChange('receiver', e.target.value)}
@@ -646,7 +644,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Sender")} *</label>
+          <label className="block text-sm font-medium text-foreground mb-2 text-start">{t("Sender")} *</label>
           <select
             value={formData.sender}
             onChange={(e) => handleClientSelectChange('sender', e.target.value)}

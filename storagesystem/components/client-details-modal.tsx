@@ -49,31 +49,31 @@ export function ClientDetailsModal({ client, open, onOpenChange }: ClientDetails
           {/* Basic Client Information */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Client ID")}</label>
-              <p className="text-sm font-semibold">#{client.id}</p>
+              <label className="text-sm font-medium text-muted-foreground text-start block">{t("Client ID")}</label>
+              <p className="text-sm font-semibold text-start">#{client.id}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Client Name")}</label>
-              <p className="text-lg font-bold">{client.client_name}</p>
+              <label className="text-sm font-medium text-muted-foreground text-start block">{t("Client Name")}</label>
+              <p className="text-lg font-bold text-start">{client.client_name}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Phone Number")}</label>
-              <p className="text-sm">{client.phone_number || t("N/A")}</p>
+              <label className="text-sm font-medium text-muted-foreground text-start block">{t("Phone Number")}</label>
+              <p className="text-sm text-start">{client.phone_number || t("N/A")}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Shipping ID")}</label>
-              <p className="text-sm">{client.shipping_id || t("None")}</p>
+              <label className="text-sm font-medium text-muted-foreground text-start block">{t("Shipping ID")}</label>
+              <p className="text-sm text-start">{client.shipping_id || t("None")}</p>
             </div>
           </div>
 
           {/* Financial Information - Total Debts only */}
           <div className="grid grid-cols-1 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Total Debts")}</label>
-              <p className={`text-sm font-bold ${(client.total_debts ?? 0) >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+              <label className="text-sm font-medium text-muted-foreground text-start block">{t("Total Debts")}</label>
+              <p className={`text-sm font-bold text-start ${(client.total_debts ?? 0) >= 0 ? 'text-red-600' : 'text-green-600'}`}>
                 ${(client.total_debts ?? 0).toFixed(2)}
               </p>
             </div>
@@ -81,12 +81,12 @@ export function ClientDetailsModal({ client, open, onOpenChange }: ClientDetails
 
           {/* Client History - Prominently displayed */}
           <div className="border-t pt-4">
-            <label className="text-sm font-medium text-muted-foreground block mb-2">{t("Client History")}</label>
+            <label className="text-sm font-medium text-muted-foreground block mb-2 text-start">{t("Client History")}</label>
             <div className="bg-muted p-4 rounded-lg min-h-[100px]">
               {client.history ? (
-                <p className="text-sm whitespace-pre-wrap leading-relaxed">{client.history}</p>
+                <p className="text-sm whitespace-pre-wrap leading-relaxed text-start">{client.history}</p>
               ) : (
-                <p className="text-sm text-muted-foreground italic">{t("No history recorded")}</p>
+                <p className="text-sm text-muted-foreground italic text-start">{t("No history recorded")}</p>
               )}
             </div>
           </div>
@@ -97,28 +97,28 @@ export function ClientDetailsModal({ client, open, onOpenChange }: ClientDetails
               <h3 className="text-md font-semibold mb-3">{t("Related Shipping Information")}</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">{t("Shipping Type")}</label>
-                  <p className="text-sm">{t(client.shipping.type) || client.shipping.type}</p>
+                  <label className="text-sm font-medium text-muted-foreground text-start block">{t("Shipping Type")}</label>
+                  <p className="text-sm text-start">{t(client.shipping.type) || client.shipping.type}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">{t("Receiver")}</label>
-                  <p className="text-sm">{client.shipping.receiver}</p>
+                  <label className="text-sm font-medium text-muted-foreground text-start block">{t("Receiver")}</label>
+                  <p className="text-sm text-start">{client.shipping.receiver}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 mt-3">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">{t("Shipping Date")}</label>
-                  <p className="text-sm">{new Date(client.shipping.shipping_date).toLocaleString()}</p>
+                  <label className="text-sm font-medium text-muted-foreground text-start block">{t("Shipping Date")}</label>
+                  <p className="text-sm text-start">{new Date(client.shipping.shipping_date).toLocaleString()}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">{t("Receiving Date")}</label>
-                  <p className="text-sm">{new Date(client.shipping.receiving_date).toLocaleString()}</p>
+                  <label className="text-sm font-medium text-muted-foreground text-start block">{t("Receiving Date")}</label>
+                  <p className="text-sm text-start">{new Date(client.shipping.receiving_date).toLocaleString()}</p>
                 </div>
               </div>
               {client.shipping.file_path && (
                 <div className="mt-3">
-                  <label className="text-sm font-medium text-muted-foreground">{t("File Path")}</label>
-                  <p className="text-sm text-blue-600 truncate">{client.shipping.file_path}</p>
+                  <label className="text-sm font-medium text-muted-foreground text-start block">{t("File Path")}</label>
+                  <p className="text-sm text-blue-600 truncate text-start">{client.shipping.file_path}</p>
                 </div>
               )}
             </div>

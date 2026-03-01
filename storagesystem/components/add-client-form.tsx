@@ -92,7 +92,7 @@ export function AddClientForm({ onSuccess }: AddClientFormProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Client Name")} *</label>
+          <label className="block text-sm font-medium text-foreground mb-2 text-start">{t("Client Name")} *</label>
           <input
             type="text"
             name="client_name"
@@ -105,7 +105,7 @@ export function AddClientForm({ onSuccess }: AddClientFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Phone Number")}</label>
+          <label className="block text-sm font-medium text-foreground mb-2 text-start">{t("Phone Number")}</label>
           <input
             type="text"
             name="phone_number"
@@ -117,7 +117,7 @@ export function AddClientForm({ onSuccess }: AddClientFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Shipping")}</label>
+          <label className="block text-sm font-medium text-foreground mb-2 text-start">{t("Shipping")}</label>
           <select
             name="shipping_id"
             value={formData.shipping_id || ""}
@@ -134,7 +134,7 @@ export function AddClientForm({ onSuccess }: AddClientFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">{t("Debt")}</label>
+          <label className="block text-sm font-medium text-foreground mb-2 text-start">{t("Debt")}</label>
           <input
             type="number"
             name="debt"
@@ -147,7 +147,7 @@ export function AddClientForm({ onSuccess }: AddClientFormProps) {
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-foreground mb-2">{t("History")}</label>
+          <label className="block text-sm font-medium text-foreground mb-2 text-start">{t("History")}</label>
           <textarea
             name="history"
             value={formData.history}

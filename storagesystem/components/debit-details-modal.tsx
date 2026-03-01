@@ -32,23 +32,23 @@ export function DebitDetailsModal({ debit, open, onOpenChange }: DebitDetailsMod
           {/* Basic Transaction Information */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Transaction ID")}</label>
-              <p className="text-sm font-semibold">#{debit.id}</p>
+              <label className="text-sm font-medium text-muted-foreground text-start block">{t("Transaction ID")}</label>
+              <p className="text-sm font-semibold text-start">#{debit.id}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Amount")}</label>
-              <p className="text-lg font-bold">{debit.amount.toFixed(2)} {t(debit.currency)}</p>
+              <label className="text-sm font-medium text-muted-foreground text-start block">{t("Amount")}</label>
+              <p className="text-lg font-bold text-start">{debit.amount.toFixed(2)} {t(debit.currency)}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Currency")}</label>
-              <p className="text-sm">{t(debit.currency)}</p>
+              <label className="text-sm font-medium text-muted-foreground text-start block">{t("Currency")}</label>
+              <p className="text-sm text-start">{t(debit.currency)}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Transaction Date")}</label>
-              <p className="text-sm">{new Date(debit.transaction_date).toLocaleDateString()}</p>
+              <label className="text-sm font-medium text-muted-foreground text-start block">{t("Transaction Date")}</label>
+              <p className="text-sm text-start">{new Date(debit.transaction_date).toLocaleDateString()}</p>
             </div>
           </div>
 
@@ -56,31 +56,31 @@ export function DebitDetailsModal({ debit, open, onOpenChange }: DebitDetailsMod
           {debit.sender ? (
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-muted-foreground">
+                <label className="text-sm font-medium text-muted-foreground text-start block">
                   {debit.total_debit && debit.total_debit < 0 ? t("Debtor") : t("Creditor")}
                 </label>
-                <p className="text-sm font-semibold">{debit.sender.client_name}</p>
+                <p className="text-sm font-semibold text-start">{debit.sender.client_name}</p>
                 {debit.sender.phone_number && (
-                  <p className="text-xs text-muted-foreground">{debit.sender.phone_number}</p>
+                  <p className="text-xs text-muted-foreground text-start">{debit.sender.phone_number}</p>
                 )}
               </div>
               <div>
-                <label className="text-sm font-medium text-muted-foreground">
+                <label className="text-sm font-medium text-muted-foreground text-start block">
                   {debit.total_debit && debit.total_debit < 0 ? t("Creditor") : t("Debtor")}
                 </label>
-                <p className="text-sm font-semibold">{debit.receiver.client_name}</p>
+                <p className="text-sm font-semibold text-start">{debit.receiver.client_name}</p>
                 {debit.receiver.phone_number && (
-                  <p className="text-xs text-muted-foreground">{debit.receiver.phone_number}</p>
+                  <p className="text-xs text-muted-foreground text-start">{debit.receiver.phone_number}</p>
                 )}
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4">
               <div>
-                <label className="text-sm font-medium text-muted-foreground">{t("Client")}</label>
-                <p className="text-sm font-semibold">{debit.receiver.client_name}</p>
+                <label className="text-sm font-medium text-muted-foreground text-start block">{t("Client")}</label>
+                <p className="text-sm font-semibold text-start">{debit.receiver.client_name}</p>
                 {debit.receiver.phone_number && (
-                  <p className="text-xs text-muted-foreground">{debit.receiver.phone_number}</p>
+                  <p className="text-xs text-muted-foreground text-start">{debit.receiver.phone_number}</p>
                 )}
               </div>
             </div>
@@ -88,12 +88,12 @@ export function DebitDetailsModal({ debit, open, onOpenChange }: DebitDetailsMod
 
           {/* Note */}
           <div>
-            <label className="text-sm font-medium text-muted-foreground">{t("Note")}</label>
+            <label className="text-sm font-medium text-muted-foreground text-start block">{t("Note")}</label>
             <div className="bg-muted p-3 rounded-lg min-h-[60px]">
               {debit.note ? (
-                <p className="text-sm whitespace-pre-wrap leading-relaxed">{debit.note}</p>
+                <p className="text-sm whitespace-pre-wrap leading-relaxed text-start">{debit.note}</p>
               ) : (
-                <p className="text-sm text-muted-foreground italic">{t("No note")}</p>
+                <p className="text-sm text-muted-foreground italic text-start">{t("No note")}</p>
               )}
             </div>
           </div>
@@ -104,28 +104,28 @@ export function DebitDetailsModal({ debit, open, onOpenChange }: DebitDetailsMod
               <h3 className="text-md font-semibold mb-3">{t("Related Shipping Information")}</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">{t("Shipping ID")}</label>
-                  <p className="text-sm font-semibold">#{debit.shipping.id}</p>
+                  <label className="text-sm font-medium text-muted-foreground text-start block">{t("Shipping ID")}</label>
+                  <p className="text-sm font-semibold text-start">#{debit.shipping.id}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">{t("Shipping Type")}</label>
-                  <p className="text-sm">{t(debit.shipping.type) || debit.shipping.type}</p>
+                  <label className="text-sm font-medium text-muted-foreground text-start block">{t("Shipping Type")}</label>
+                  <p className="text-sm text-start">{t(debit.shipping.type) || debit.shipping.type}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 mt-3">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">{t("Shipping Date")}</label>
-                  <p className="text-sm">{new Date(debit.shipping.shipping_date).toLocaleString()}</p>
+                  <label className="text-sm font-medium text-muted-foreground text-start block">{t("Shipping Date")}</label>
+                  <p className="text-sm text-start">{new Date(debit.shipping.shipping_date).toLocaleString()}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">{t("Receiver")}</label>
-                  <p className="text-sm">{debit.shipping.receiver?.client_name}</p>
+                  <label className="text-sm font-medium text-muted-foreground text-start block">{t("Receiver")}</label>
+                  <p className="text-sm text-start">{debit.shipping.receiver?.client_name}</p>
                 </div>
               </div>
               {debit.shipping.file_path && (
                 <div className="mt-3">
-                  <label className="text-sm font-medium text-muted-foreground">{t("File Path")}</label>
-                  <p className="text-sm text-blue-600 truncate">{debit.shipping.file_path}</p>
+                  <label className="text-sm font-medium text-muted-foreground text-start block">{t("File Path")}</label>
+                  <p className="text-sm text-blue-600 truncate text-start">{debit.shipping.file_path}</p>
                 </div>
               )}
             </div>
@@ -134,12 +134,12 @@ export function DebitDetailsModal({ debit, open, onOpenChange }: DebitDetailsMod
           {/* Timestamps */}
           <div className="border-t pt-4 grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Created At")}</label>
-              <p className="text-sm">{new Date(debit.created_at).toLocaleString()}</p>
+              <label className="text-sm font-medium text-muted-foreground text-start block">{t("Created At")}</label>
+              <p className="text-sm text-start">{new Date(debit.created_at).toLocaleString()}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">{t("Transaction Date")}</label>
-              <p className="text-sm">{new Date(debit.transaction_date).toLocaleString()}</p>
+              <label className="text-sm font-medium text-muted-foreground text-start block">{t("Transaction Date")}</label>
+              <p className="text-sm text-start">{new Date(debit.transaction_date).toLocaleString()}</p>
             </div>
           </div>
         </div>
