@@ -107,7 +107,7 @@ export function SetupPage({ onComplete }: SetupPageProps) {
                   variant="outline"
                   className="px-6"
                 >
-                  <FolderOpen className="w-4 h-4 mr-2" />
+                  <FolderOpen className="w-4 h-4 me-2" />
                   {isLoading ? t("Selecting...") : t("Browse")}
                 </Button>
               </div>
@@ -125,7 +125,7 @@ export function SetupPage({ onComplete }: SetupPageProps) {
               ) : (
                 <>
                   {t("Continue")}
-                  <ArrowRight className="w-5 h-5 ml-2" />
+                  <ArrowRight className="w-5 h-5 ms-2" />
                 </>
               )}
             </Button>

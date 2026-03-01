@@ -84,7 +84,7 @@ export default function Home() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Package className="inline w-4 h-4 mr-2" />
+            <Package className="inline w-4 h-4 me-2" />
             {t("Products")}
           </button>
           <button
@@ -95,7 +95,7 @@ export default function Home() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Truck className="inline w-4 h-4 mr-2" />
+            <Truck className="inline w-4 h-4 me-2" />
             {t("Shipping")}
           </button>
           <button
@@ -106,7 +106,7 @@ export default function Home() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Users className="inline w-4 h-4 mr-2" />
+            <Users className="inline w-4 h-4 me-2" />
             {t("Clients")}
           </button>
           <button
@@ -117,7 +117,7 @@ export default function Home() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <CreditCard className="inline w-4 h-4 mr-2" />
+            <CreditCard className="inline w-4 h-4 me-2" />
             {t("Debit")}
           </button>
         </div>
