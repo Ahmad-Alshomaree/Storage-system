@@ -21,6 +21,8 @@ pub fn run() {
       commands::create_shipping,
       commands::delete_shipping,
       commands::get_debits,
+      commands::create_debit,
+      commands::update_debit,
       commands::delete_debit,
       commands::get_rooms,
       commands::create_room,

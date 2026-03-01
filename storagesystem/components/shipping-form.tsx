@@ -157,15 +157,11 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
       setIsLoadingProducts(true)
       const fetchProducts = async () => {
         try {
-          const response = await fetch("/api/products")
-          if (response.ok) {
-            const products = await response.json()
-            // Filter products that have status 'available' (can be assigned to output shipping)
-            const availableProducts = products.filter((product: Product) =>
-              product.status === 'available'
-            )
-            setAvailableProducts(availableProducts)
-          }
+          const products = await tauriApi.getProducts()
+          const availableProducts = products.filter((product: Product) =>
+            product.status === 'available'
+          )
+          setAvailableProducts(availableProducts)
         } catch (error) {
           console.error("Failed to fetch products:", error)
         } finally {
@@ -370,17 +366,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         shipping_id: shippingId,
       }
 
-      const response = await fetch("/api/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(productData),
-      })
-
-      if (!response.ok) {
-        throw new Error(t("Failed to save product"))
-      }
-
-      const savedProduct = await response.json()
+      const savedProduct = await tauriApi.createProduct(productData)
 
       // Update the product in the list to mark it as saved
       setNewProducts(prev => prev.map(p =>
@@ -497,11 +483,7 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
       if (formData.receiver) {
         const existingClient = existingClients.find(client => client.client_name === formData.receiver)
         if (existingClient && !newlyAddedClients.has(existingClient.id)) {
-          await fetch(`/api/clients/${existingClient.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ shipping_id: newShipping.id }),
-          })
+          await tauriApi.updateClient(existingClient.id, { shipping_id: newShipping.id })
         }
       }
 
