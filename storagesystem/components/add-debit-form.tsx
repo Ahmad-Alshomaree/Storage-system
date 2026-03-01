@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import "../i18n.client"
+import { tauriApi } from "@/lib/tauri-api"
 
 interface Client {
   id: number
@@ -54,11 +55,8 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
 
   const fetchClients = async () => {
     try {
-      const response = await fetch("/api/clients")
-      if (response.ok) {
-        const data = await response.json()
-        setClients(data)
-      }
+      const data = await tauriApi.getClients()
+      setClients(data)
     } catch (error) {
       console.error("Error fetching clients:", error)
     }
@@ -66,11 +64,8 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
 
   const fetchShipping = async () => {
     try {
-      const response = await fetch("/api/shipping")
-      if (response.ok) {
-        const data = await response.json()
-        setShipping(data)
-      }
+      const data = await tauriApi.getShipping()
+      setShipping(data)
     } catch (error) {
       console.error("Error fetching shipping:", error)
     }
@@ -121,17 +116,7 @@ export function AddDebitForm({ onSuccess }: AddDebitFormProps) {
     }
 
     try {
-      const response = await fetch("/api/debits", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      })
-
-      if (!response.ok) {
-        throw new Error(t("Failed to add debit"))
-      }
-
-      const newDebit = await response.json()
+      const newDebit = await tauriApi.createDebit(formData)
       setFormData({
         sender_id: "",
         receiver_id: "",

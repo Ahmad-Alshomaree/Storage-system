@@ -371,6 +371,37 @@ pub async fn delete_shipping(
 
 // Debit commands
 #[tauri::command]
+pub async fn create_debit(
+    debit_data: serde_json::Value,
+    state: State<'_, DatabaseState>
+) -> Result<crate::database::Debit, String> {
+    let db = state.0.lock().unwrap();
+    let db = db.as_ref().ok_or("Database not initialized")?;
+
+    let debit = crate::database::Debit {
+        id: 0,
+        sender_id: debit_data.get("sender_id").and_then(|v| v.as_i64()),
+        receiver_id: debit_data.get("receiver_id").and_then(|v| v.as_i64()).ok_or("receiver_id is required")?,
+        shipping_id: debit_data.get("shipping_id").and_then(|v| v.as_i64()),
+        amount: debit_data.get("amount").and_then(|v| v.as_f64()).unwrap_or(0.0),
+        currency: debit_data
+            .get("currency")
+            .and_then(|v| v.as_str())
+            .unwrap_or("Dollar")
+            .to_string(),
+        note: debit_data.get("note").and_then(|v| v.as_str()).map(|s| s.to_string()),
+        transaction_date: debit_data
+            .get("transaction_date")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string()),
+        total_debit: debit_data.get("total_debit").and_then(|v| v.as_f64()),
+        created_at: chrono::Utc::now().to_rfc3339(),
+    };
+
+    db.create_debit(&debit).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub async fn get_debits(state: State<'_, DatabaseState>) -> Result<Vec<serde_json::Value>, String> {
     let db = state.0.lock().unwrap();
     let db = db.as_ref().ok_or("Database not initialized")?;

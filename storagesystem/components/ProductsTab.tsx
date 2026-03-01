@@ -1,11 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Upload as UploadIcon } from "lucide-react"
+import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ProductTable } from "@/components/product-table"
 import { AddProductForm } from "@/components/add-product-form"
-import { UploadExcelForm } from "@/components/upload-excel-form"
 import type { Product } from "@/lib/types"
 import { tauriApi } from "@/lib/tauri-api"
 import { useTranslation } from "react-i18next"
@@ -19,7 +18,6 @@ interface ProductsTabProps {
 
 export function ProductsTab({ products, isLoading, refetch }: ProductsTabProps) {
   const [showProductForm, setShowProductForm] = useState(false)
-  const [showUploadForm, setShowUploadForm] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const { t } = useTranslation()
 
@@ -56,10 +54,6 @@ export function ProductsTab({ products, isLoading, refetch }: ProductsTabProps) 
             <Plus className="w-4 h-4" />
             {showProductForm ? t("Cancel") : t("Add Product")}
           </Button>
-          <Button variant="outline" onClick={() => setShowUploadForm(!showUploadForm)} className="gap-2">
-            <UploadIcon className="w-4 h-4" />
-            {showUploadForm ? t("Cancel Upload") : t("Upload Excel")}
-          </Button>
         </div>
       </div>
 
@@ -74,14 +68,6 @@ export function ProductsTab({ products, isLoading, refetch }: ProductsTabProps) 
         </div>
       )}
 
-      {showUploadForm && (
-        <div className="mb-8">
-          <UploadExcelForm onSuccess={() => {
-            setShowUploadForm(false)
-            refetch()
-          }} />
-        </div>
-      )}
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">

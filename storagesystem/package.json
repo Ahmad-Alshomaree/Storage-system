@@ -5,8 +5,6 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:desktop": "[ -d app/api ] && cp -r app/api app/_api_backup && rm -rf app/api; pnpm run build; [ -d app/_api_backup ] && mv app/_api_backup app/api",
-    "start": "next start",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "ts-node lib/migrate.ts",
@@ -17,7 +15,6 @@
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-slot": "^1.2.4",
     "@tauri-apps/api": "^2.9.1",
-    "@vercel/analytics": "^1.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.44.7",

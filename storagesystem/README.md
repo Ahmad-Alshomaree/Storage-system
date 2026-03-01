@@ -1,6 +1,6 @@
 # Storage System
 
-A desktop application for managing storage, clients, products, and shipping records. Built with Tauri, React, Next.js, and SQLite.
+A desktop-only application for managing storage, clients, products, and shipping records. Built with Tauri, React, Next.js UI, and SQLite.
 
 ## Download and Installation
 
@@ -86,7 +86,7 @@ pnpm install
 # run migrations / seed database if necessary
 pnpm db:migrate
 
-# start development mode (web + Tauri)
+# start development mode (desktop app with embedded UI)
 pnpm tauri dev
 
 # create production packages:
