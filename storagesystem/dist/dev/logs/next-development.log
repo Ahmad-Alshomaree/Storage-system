@@ -1,3 +1,0 @@
-[00:00:01.233] Server  WARN     ⚠ Minimum recommended TypeScript version is v5.1.0, older versions can potentially be incompatible with Next.js. Detected: 5.0.2
-[00:00:01.512] Server  LOG      ✓ Ready in 986ms
-[00:00:06.898] Server  LOG      ○ Compiling / ...
