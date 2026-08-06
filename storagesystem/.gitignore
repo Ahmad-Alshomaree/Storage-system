@@ -45,5 +45,3 @@ dev.log
 next-env.d.ts
 
 # tauri
-src-tauri/target/
-src-tauri/gen/
