@@ -27,10 +27,14 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
   const { t } = useTranslation()
 
   const filteredProducts = products.filter(product => {
+    const totalPieces = product.Total_pices || (product.number_of_boxes * product.size_of_box)
+    const remainingPieces = totalPieces - (product.extracted_pieces || 0)
+    const isLowStock = product.status === "available" && (remainingPieces <= 10 || product.number_of_boxes <= 2)
+
     return (
       (filters.storage === '' || product.storage?.toLowerCase().includes(filters.storage.toLowerCase())) &&
       (filters.shippingId === '' || product.shipping_id?.toString().includes(filters.shippingId)) &&
-      (filters.status === '' || product.status === filters.status) &&
+      (filters.status === '' || (filters.status === 'low_stock' ? isLowStock : product.status === filters.status)) &&
       (filters.productName === '' || product.product_name?.toLowerCase().includes(filters.productName.toLowerCase()))
     )
   })
@@ -84,15 +88,30 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
           >
             <option value="">{t("All Status")}</option>
             <option value="available">{t("Available")}</option>
+            <option value="low_stock">{t("Low Stock")}</option>
             <option value="out_of_stock">{t("Out of Stock")}</option>
           </select>
         </div>
-        <button
-          className="mt-3 px-3 py-1 bg-black text-white text-xs rounded hover:bg-gray-800"
-          onClick={() => setFilters({ storage: '', shippingId: '', status: '', productName: '' })}
-        >
-          {t("Clear Filters")}
-        </button>
+        <div className="flex gap-2 mt-3">
+          <button
+            className="px-3 py-1 bg-primary text-primary-foreground text-xs font-medium rounded hover:bg-primary/90 transition-colors"
+            onClick={() => setFilters({ storage: '', shippingId: '', status: '', productName: '' })}
+          >
+            {t("Clear Filters")}
+          </button>
+          <button
+            className="px-3 py-1 bg-emerald-600 text-white text-xs font-medium rounded hover:bg-emerald-700 transition-colors flex items-center gap-1"
+            onClick={() => {
+              import("@/lib/export-utils").then(mod => {
+                const headers = ["Box Code", "Product Name", "Selling Price", "Group Price", "Storage", "Boxes", "Pieces/Box", "Extracted", "Status", "Shipping ID"]
+                const rows = filteredProducts.map(p => [p.box_code, p.product_name || "", p.selling_price, p.Grope_Item_price || 0, p.storage || "", p.number_of_boxes, p.pice_per_box || 0, p.extracted_pieces || 0, p.status, p.shipping_id || ""])
+                mod.exportToCSV("products_export", headers, rows)
+              })
+            }}
+          >
+            {t("Export CSV")}
+          </button>
+        </div>
       </div>
     <div className="overflow-x-auto border border-border rounded-lg">
       <table className="w-full text-sm">

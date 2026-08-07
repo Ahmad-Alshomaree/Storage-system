@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Database, Settings } from "lucide-react"
+import { Database, Settings, Search } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { LanguageSwitcher } from "./language-switcher"
 import { Button } from "./ui/button"
@@ -9,7 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { StorageSettings } from "./storage-settings"
 import "../i18n.client"
 
-export function Header() {
+interface HeaderProps {
+  onOpenSearch?: () => void
+}
+
+export function Header({ onOpenSearch }: HeaderProps) {
   const { t } = useTranslation()
   const [settingsOpen, setSettingsOpen] = useState(false)
 
@@ -21,6 +25,21 @@ export function Header() {
           <h1 className="text-xl font-bold text-foreground">{t("Product Store")}</h1>
         </div>
         <div className="flex items-center gap-2">
+          {onOpenSearch && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onOpenSearch}
+              className="flex items-center gap-2 text-muted-foreground me-1 border-border hover:text-foreground"
+            >
+              <Search className="w-4 h-4 text-primary" />
+              <span className="hidden sm:inline-block text-xs font-medium">{t("Search...")}</span>
+              <kbd className="hidden md:inline-block px-1.5 py-0.5 text-[10px] bg-muted border border-border rounded text-muted-foreground font-mono">
+                Ctrl K
+              </kbd>
+            </Button>
+          )}
+
           <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
             <DialogTrigger asChild>
               <Button variant="ghost" size="icon">

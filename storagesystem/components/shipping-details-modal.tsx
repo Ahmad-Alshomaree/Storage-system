@@ -587,13 +587,26 @@ ${t("Generated on")}: ${new Date().toLocaleString()}
                 {t("Delete")}
               </Button>
               <Button
-                variant="default"
+                variant="outline"
                 size="sm"
                 onClick={handleDownload}
                 className="flex items-center gap-2"
               >
                 <Download className="w-4 h-4" />
-                {t("Receipt")}
+                {t("Text Receipt")}
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => {
+                  import("@/lib/export-utils").then(mod => {
+                    mod.printShippingReceipt(shipping)
+                  })
+                }}
+                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <Download className="w-4 h-4" />
+                {t("Print PDF")}
               </Button>
             </>
           )}

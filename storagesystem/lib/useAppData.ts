@@ -50,21 +50,26 @@ export function useAppData(): UseAppDataReturn {
         storeProducts: storeProductsData?.length || 0
       })
 
-      // Process products
-      setProducts(Array.isArray(productsData) ? productsData.map((p: any) => {
-        // Ensure only Product properties are included, no nested objects
-        const { shipping, ...productData } = p
-        return productData
-      }) : [])
-
       // Process shipping - keep full objects for components that need them
-      setShipping(Array.isArray(shippingData)
+      const processedShipping = Array.isArray(shippingData)
         ? shippingData.map((s: any) => ({
             ...s,
             receiver: (s.receiver && typeof s.receiver === 'object') ? s.receiver : { client_name: '', id: 0 },
             sender: (s.sender && typeof s.sender === 'object') ? s.sender : { client_name: '', id: 0 },
           }))
-        : [])
+        : []
+
+      setShipping(processedShipping)
+
+      // Process products & associate matching shipping record
+      const shippingMap = new Map(processedShipping.map((s: any) => [s.id, s]))
+      setProducts(Array.isArray(productsData) ? productsData.map((p: any) => {
+        const matchedShipping = p.shipping || (p.shipping_id ? shippingMap.get(p.shipping_id) : undefined)
+        return {
+          ...p,
+          shipping: matchedShipping,
+        }
+      }) : [])
 
       // Process clients
       setClients(Array.isArray(clientsData) ? clientsData.map((c: any) => ({

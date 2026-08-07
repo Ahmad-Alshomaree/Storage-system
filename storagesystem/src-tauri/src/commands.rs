@@ -7,16 +7,7 @@ pub struct DatabaseState(pub Mutex<Option<Database>>);
 
 // Initialize database command (blocking version for setup)
 pub fn initialize_database_blocking(app_handle: AppHandle) -> Result<(), String> {
-    // Use current directory + database folder to avoid Tauri's file watcher
-    let db_path = std::env::current_dir()
-        .map_err(|e| format!("Failed to get current directory: {}", e))?
-        .join("database");
-    // Move out of src-tauri/ so file watcher doesn't trigger rebuilds
-    let db_path = db_path.parent().unwrap().parent().unwrap().join("database");
-
-    let db = Database::new_with_path(&app_handle, Some(db_path.to_str().unwrap())).map_err(|e| e.to_string())?;
-    // For now, just ensure database can be created
-    // In a real app, you'd store this in a global state
+    let db = Database::new_with_path(&app_handle, None).map_err(|e| e.to_string())?;
     drop(db); // Explicitly drop to avoid unused variable warning
     Ok(())
 }
@@ -28,17 +19,8 @@ pub async fn initialize_database(
     state: State<'_, DatabaseState>,
     storage_path: Option<String>
 ) -> Result<(), String> {
-    let db = if let Some(path) = storage_path {
-        Database::new_with_path(&app_handle, Some(&path)).map_err(|e| e.to_string())?
-    } else {
-        // Use current directory + database folder to avoid Tauri's file watcher
-        let db_path = std::env::current_dir()
-            .map_err(|e| format!("Failed to get current directory: {}", e))?
-            .join("database");
-        // Move out of src-tauri/ so file watcher doesn't trigger rebuilds
-        let db_path = db_path.parent().unwrap().parent().unwrap().join("database");
-        Database::new_with_path(&app_handle, Some(db_path.to_str().unwrap())).map_err(|e| e.to_string())?
-    };
+    let path_ref = storage_path.as_deref().filter(|s| !s.trim().is_empty());
+    let db = Database::new_with_path(&app_handle, path_ref).map_err(|e| e.to_string())?;
     *state.0.lock().unwrap() = Some(db);
     Ok(())
 }
@@ -324,60 +306,45 @@ pub async fn update_debit(
     id: i64,
     debit_data: serde_json::Value,
     state: State<'_, DatabaseState>
-) -> Result<serde_json::Value, String> {
+) -> Result<crate::database::Debit, String> {
     let db = state.0.lock().unwrap();
     let db = db.as_ref().ok_or("Database not initialized")?;
 
-    // Get existing debit
+    // Get existing debits
     let debits = db.get_debits().map_err(|e| e.to_string())?;
     let existing_debit = debits.iter()
         .find(|d| d.get("id").and_then(|v| v.as_i64()) == Some(id))
         .cloned()
         .ok_or("Debit not found")?;
 
-    // Parse update data
-    let updates: serde_json::Value = debit_data;
-
-    // Create updated debit by merging existing with updates
-    let mut updated_debit = existing_debit.clone();
-
-    if let Some(amount) = updates.get("amount").and_then(|v| v.as_f64()) {
-        updated_debit["amount"] = serde_json::json!(amount);
-    }
-    if let Some(currency) = updates.get("currency").and_then(|v| v.as_str()) {
-        updated_debit["currency"] = serde_json::json!(currency);
-    }
-    if let Some(note) = updates.get("note").and_then(|v| v.as_str()) {
-        updated_debit["note"] = serde_json::json!(Some(note));
-    }
-    if let Some(transaction_date) = updates.get("transaction_date").and_then(|v| v.as_str()) {
-        updated_debit["transaction_date"] = serde_json::json!(Some(transaction_date));
-    }
-
-    // For debit updates, we need to delete and recreate since we don't have a direct update method
-    // This is a workaround - in a real app, you'd add an update_debit method to the database
-
-    // Delete old debit
-    db.delete_debit(id).map_err(|e| e.to_string())?;
-
-    // Create new debit
-    let new_debit = crate::database::Debit {
-        id: 0, // Will be set by database
-        sender_id: updated_debit.get("sender_id").and_then(|v| v.as_i64()),
-        receiver_id: updated_debit.get("receiver_id").and_then(|v| v.as_i64()).unwrap_or(0),
-        shipping_id: updated_debit.get("shipping_id").and_then(|v| v.as_i64()),
-        amount: updated_debit.get("amount").and_then(|v| v.as_f64()).unwrap_or(0.0),
-        currency: updated_debit.get("currency").and_then(|v| v.as_str()).unwrap_or("Dollar").to_string(),
-        note: updated_debit.get("note").and_then(|v| v.as_str()).map(|s| s.to_string()),
-        transaction_date: updated_debit.get("transaction_date").and_then(|v| v.as_str()).map(|s| s.to_string()),
-        total_debit: updated_debit.get("total_debit").and_then(|v| v.as_f64()),
-        created_at: updated_debit.get("created_at").and_then(|v| v.as_str()).unwrap_or("").to_string(),
+    let debit = crate::database::Debit {
+        id,
+        sender_id: debit_data.get("sender_id").and_then(|v| v.as_i64())
+            .or_else(|| existing_debit.get("sender_id").and_then(|v| v.as_i64())),
+        receiver_id: debit_data.get("receiver_id").and_then(|v| v.as_i64())
+            .or_else(|| existing_debit.get("receiver_id").and_then(|v| v.as_i64()))
+            .unwrap_or(0),
+        shipping_id: debit_data.get("shipping_id").and_then(|v| v.as_i64())
+            .or_else(|| existing_debit.get("shipping_id").and_then(|v| v.as_i64())),
+        amount: debit_data.get("amount").and_then(|v| v.as_f64())
+            .or_else(|| existing_debit.get("amount").and_then(|v| v.as_f64()))
+            .unwrap_or(0.0),
+        currency: debit_data.get("currency").and_then(|v| v.as_str())
+            .or_else(|| existing_debit.get("currency").and_then(|v| v.as_str()))
+            .unwrap_or("Dollar")
+            .to_string(),
+        note: debit_data.get("note").and_then(|v| v.as_str())
+            .map(|s| s.to_string())
+            .or_else(|| existing_debit.get("note").and_then(|v| v.as_str()).map(|s| s.to_string())),
+        transaction_date: debit_data.get("transaction_date").and_then(|v| v.as_str())
+            .map(|s| s.to_string())
+            .or_else(|| existing_debit.get("transaction_date").and_then(|v| v.as_str()).map(|s| s.to_string())),
+        total_debit: debit_data.get("total_debit").and_then(|v| v.as_f64())
+            .or_else(|| existing_debit.get("total_debit").and_then(|v| v.as_f64())),
+        created_at: existing_debit.get("created_at").and_then(|v| v.as_str()).unwrap_or("").to_string(),
     };
 
-    db.create_debit(&new_debit).map_err(|e| e.to_string())?;
-
-    // Return the updated debit data
-    Ok(updated_debit)
+    db.update_debit(id, &debit).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -443,4 +410,16 @@ pub async fn select_storage_directory(app_handle: tauri::AppHandle) -> Result<St
         Some(path) => Ok(path.to_string()),
         None => Err("No directory selected".to_string()),
     }
+}
+
+#[tauri::command]
+pub async fn backup_database(
+    target_path: String,
+    state: State<'_, DatabaseState>
+) -> Result<String, String> {
+    let db = state.0.lock().unwrap();
+    let db = db.as_ref().ok_or("Database not initialized")?;
+
+    db.backup_to(&target_path).map_err(|e| e.to_string())?;
+    Ok("Backup created successfully".to_string())
 }

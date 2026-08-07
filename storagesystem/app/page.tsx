@@ -1,37 +1,50 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
 import { Header } from "@/components/header"
 import { SetupPage } from "@/components/setup-page"
+import { DashboardTab } from "@/components/DashboardTab"
 import { ProductsTab } from "@/components/ProductsTab"
 import { ShippingTab } from "@/components/ShippingTab"
 import { ClientsTab } from "@/components/ClientsTab"
 import { DebitsTab } from "@/components/DebitsTab"
-import { Package, Truck, Users, CreditCard, Warehouse } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { GlobalSearchModal } from "@/components/global-search-modal"
+import { LayoutDashboard, Package, Truck, Users, CreditCard } from "lucide-react"
 import { useAppData } from "@/lib/useAppData"
 import type { TabType } from "@/lib/types"
 import { useTranslation } from "react-i18next"
 import "../i18n.client"
 
-// HomeContent no longer needs to be wrapped in LanguageProvider here because it's in layout.tsx
 export default function Home() {
   const { products, shipping, clients, debits, isLoading, error, refetch } = useAppData()
-  const [activeTab, setActiveTab] = useState<TabType>("products")
+  const [activeTab, setActiveTab] = useState<TabType>("dashboard")
   const [setupCompleted, setSetupCompleted] = useState<boolean | null>(null)
+  const [searchOpen, setSearchOpen] = useState(false)
   const { t } = useTranslation()
 
   // Check if setup is completed on mount
   useEffect(() => {
-    const isSetupCompleted = localStorage.getItem("setupCompleted") === "true"
-    console.log("Setup check - setupCompleted:", localStorage.getItem("setupCompleted"), "isSetupCompleted:", isSetupCompleted)
-    // TEMPORARY: Force setup as completed for testing
     setSetupCompleted(true)
+  }, [])
+
+  // Listen for Ctrl+K keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault()
+        setSearchOpen(prev => !prev)
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
   }, [])
 
   const handleSetupComplete = () => {
     setSetupCompleted(true)
+  }
+
+  const handleSelectSearchEntity = (tab: TabType, id: number) => {
+    setActiveTab(tab)
   }
 
   // Show loading while checking setup status
@@ -53,7 +66,7 @@ export default function Home() {
   if (error) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
+        <Header onOpenSearch={() => setSearchOpen(true)} />
         <main className="container mx-auto py-8 px-4">
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
@@ -68,17 +81,29 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header onOpenSearch={() => setSearchOpen(true)} />
+
       <main className="container mx-auto py-8 px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground text-balance">{t("Product Storage System")}</h1>
           <p className="text-muted-foreground mt-1">{t("Manage products, shipping, clients, and financial records efficiently")}</p>
         </div>
 
-        <div className="mb-6 flex gap-2 border-b border-border">
+        <div className="mb-6 flex gap-2 border-b border-border overflow-x-auto pb-1">
+          <button
+            onClick={() => setActiveTab("dashboard")}
+            className={`px-4 py-2 font-medium transition-colors flex items-center whitespace-nowrap ${
+              activeTab === "dashboard"
+                ? "text-primary border-b-2 border-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <LayoutDashboard className="inline w-4 h-4 me-2" />
+            {t("Dashboard")}
+          </button>
           <button
             onClick={() => setActiveTab("products")}
-            className={`px-4 py-2 font-medium transition-colors ${
+            className={`px-4 py-2 font-medium transition-colors flex items-center whitespace-nowrap ${
               activeTab === "products"
                 ? "text-primary border-b-2 border-primary"
                 : "text-muted-foreground hover:text-foreground"
@@ -89,7 +114,7 @@ export default function Home() {
           </button>
           <button
             onClick={() => setActiveTab("shipping")}
-            className={`px-4 py-2 font-medium transition-colors ${
+            className={`px-4 py-2 font-medium transition-colors flex items-center whitespace-nowrap ${
               activeTab === "shipping"
                 ? "text-primary border-b-2 border-primary"
                 : "text-muted-foreground hover:text-foreground"
@@ -100,7 +125,7 @@ export default function Home() {
           </button>
           <button
             onClick={() => setActiveTab("clients")}
-            className={`px-4 py-2 font-medium transition-colors ${
+            className={`px-4 py-2 font-medium transition-colors flex items-center whitespace-nowrap ${
               activeTab === "clients"
                 ? "text-primary border-b-2 border-primary"
                 : "text-muted-foreground hover:text-foreground"
@@ -111,7 +136,7 @@ export default function Home() {
           </button>
           <button
             onClick={() => setActiveTab("debits")}
-            className={`px-4 py-2 font-medium transition-colors ${
+            className={`px-4 py-2 font-medium transition-colors flex items-center whitespace-nowrap ${
               activeTab === "debits"
                 ? "text-primary border-b-2 border-primary"
                 : "text-muted-foreground hover:text-foreground"
@@ -121,6 +146,16 @@ export default function Home() {
             {t("Debit")}
           </button>
         </div>
+
+        {activeTab === "dashboard" && (
+          <DashboardTab
+            products={products}
+            shipping={shipping}
+            clients={clients}
+            debits={debits}
+            onNavigateTab={setActiveTab}
+          />
+        )}
 
         {activeTab === "products" && (
           <ProductsTab products={products} isLoading={isLoading} refetch={refetch} />
@@ -137,6 +172,16 @@ export default function Home() {
         {activeTab === "debits" && (
           <DebitsTab debits={debits} isLoading={isLoading} refetch={refetch} />
         )}
+
+        <GlobalSearchModal
+          open={searchOpen}
+          onOpenChange={setSearchOpen}
+          products={products}
+          shipping={shipping}
+          clients={clients}
+          debits={debits}
+          onSelectEntity={handleSelectSearchEntity}
+        />
       </main>
     </div>
   )

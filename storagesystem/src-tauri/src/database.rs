@@ -139,14 +139,13 @@ impl Database {
         let db_dir = if let Some(path) = custom_path {
             std::path::PathBuf::from(path)
         } else {
-            let app_data_dir = app_handle
+            app_handle
                 .path()
                 .app_data_dir()
-                .expect("Failed to get app data directory");
-            app_data_dir
+                .map_err(|_| rusqlite::Error::QueryReturnedNoRows)?
         };
 
-        std::fs::create_dir_all(&db_dir).expect("Failed to create database directory");
+        std::fs::create_dir_all(&db_dir).map_err(|_| rusqlite::Error::QueryReturnedNoRows)?;
 
         let db_path = db_dir.join("storagesystem.db");
         let conn = Connection::open(db_path)?;
@@ -385,7 +384,7 @@ impl Database {
             })
         })?;
 
-        rows.next().unwrap()
+        rows.next().ok_or(rusqlite::Error::QueryReturnedNoRows)?
     }
 
     pub fn update_product(&self, id: i64, product: &Product) -> Result<Product> {
@@ -454,7 +453,7 @@ impl Database {
                 updated_at: row.get(22)?,
             })
         })?;
-        rows.next().unwrap()
+        rows.next().ok_or(rusqlite::Error::QueryReturnedNoRows)?
     }
 
     // Client operations
@@ -528,7 +527,7 @@ impl Database {
             })
         })?;
 
-        rows.next().unwrap()
+        rows.next().ok_or(rusqlite::Error::QueryReturnedNoRows)?
     }
 
     pub fn update_client(&self, id: i64, updates: &serde_json::Value) -> Result<Client> {
@@ -565,7 +564,7 @@ impl Database {
                 total_debts: None,
             })
         })?;
-        rows.next().unwrap()
+        rows.next().ok_or(rusqlite::Error::QueryReturnedNoRows)?
     }
     pub fn get_shipping(&self) -> Result<Vec<serde_json::Value>> {
         let mut stmt = self.conn.prepare(
@@ -678,7 +677,7 @@ impl Database {
             })
         })?;
 
-        rows.next().unwrap()
+        rows.next().ok_or(rusqlite::Error::QueryReturnedNoRows)?
     }
 
     pub fn update_shipping(&self, id: i64, updates: &serde_json::Value) -> Result<Shipping> {
@@ -742,7 +741,7 @@ impl Database {
                 created_at: row.get(11)?,
             })
         })?;
-        rows.next().unwrap()
+        rows.next().ok_or(rusqlite::Error::QueryReturnedNoRows)?
     }
     pub fn get_debits(&self) -> Result<Vec<serde_json::Value>> {
         let mut stmt = self.conn.prepare(
@@ -831,7 +830,43 @@ impl Database {
             })
         })?;
 
-        rows.next().unwrap()
+        rows.next().ok_or(rusqlite::Error::QueryReturnedNoRows)?
+    }
+
+    pub fn update_debit(&self, id: i64, debit: &Debit) -> Result<Debit> {
+        self.conn.execute(
+            "UPDATE debits SET sender_id=?, receiver_id=?, shipping_id=?, amount=?, currency=?,
+                                note=?, transaction_date=?, total_debit=? WHERE id=?",
+            params![
+                debit.sender_id,
+                debit.receiver_id,
+                debit.shipping_id,
+                debit.amount,
+                debit.currency,
+                debit.note,
+                debit.transaction_date,
+                debit.total_debit,
+                id,
+            ],
+        )?;
+
+        let mut stmt = self.conn.prepare("SELECT * FROM debits WHERE id = ?")?;
+        let mut rows = stmt.query_map([id], |row| {
+            Ok(Debit {
+                id: row.get(0)?,
+                sender_id: row.get(1)?,
+                receiver_id: row.get(2)?,
+                shipping_id: row.get(3)?,
+                amount: row.get(4)?,
+                currency: row.get(5)?,
+                note: row.get(6)?,
+                transaction_date: row.get(7)?,
+                total_debit: row.get(8)?,
+                created_at: row.get(9)?,
+            })
+        })?;
+
+        rows.next().ok_or(rusqlite::Error::QueryReturnedNoRows)?
     }
 
     // Delete operations
@@ -843,6 +878,16 @@ impl Database {
     pub fn delete_client(&self, id: i64) -> Result<()> {
         // First delete related debits
         self.conn.execute("DELETE FROM debits WHERE sender_id = ? OR receiver_id = ?", [id, id])?;
+
+        // Delete related shipping records (which also removes their products and debits)
+        let mut stmt = self.conn.prepare("SELECT id FROM shipping WHERE receiver_client_id = ? OR sender_client_id = ?")?;
+        let shipping_ids: Vec<i64> = stmt.query_map([id, id], |row| row.get(0))?
+            .filter_map(|r| r.ok())
+            .collect();
+        for ship_id in shipping_ids {
+            self.delete_shipping(ship_id)?;
+        }
+
         // Then delete the client
         self.conn.execute("DELETE FROM client WHERE id = ?", [id])?;
         Ok(())
@@ -891,7 +936,7 @@ impl Database {
             })
         })?;
 
-        rows.next().unwrap()
+        rows.next().ok_or(rusqlite::Error::QueryReturnedNoRows)?
     }
 
     // Store product operations
@@ -915,5 +960,11 @@ impl Database {
         })?;
 
         store_products.collect()
+    }
+
+    // Database backup operation
+    pub fn backup_to(&self, target_path: &str) -> Result<()> {
+        self.conn.execute("VACUUM INTO ?", [target_path])?;
+        Ok(())
     }
 }

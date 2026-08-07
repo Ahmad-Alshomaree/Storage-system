@@ -143,4 +143,4 @@ export interface Room {
   room_name: string
 }
 
-export type TabType = "products" | "shipping" | "clients" | "debits"
+export type TabType = "dashboard" | "products" | "shipping" | "clients" | "debits"

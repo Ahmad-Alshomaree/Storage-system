@@ -189,12 +189,26 @@ export function ShippingTable({ shipping, clients, onDelete, onUpdate }: Shippin
             onChange={(e) => setFilters({ ...filters, shippingDate: e.target.value })}
           />
         </div>
-        <button
-          className="mt-3 px-3 py-1 bg-black text-white text-xs rounded hover:bg-gray-800"
-          onClick={() => setFilters({ type: '', receiver: '', shippingDate: '' })}
-        >
-          {t("Clear Filters")}
-        </button>
+        <div className="flex gap-2 mt-3">
+          <button
+            className="px-3 py-1 bg-primary text-primary-foreground text-xs font-medium rounded hover:bg-primary/90 transition-colors"
+            onClick={() => setFilters({ type: '', receiver: '', shippingDate: '' })}
+          >
+            {t("Clear Filters")}
+          </button>
+          <button
+            className="px-3 py-1 bg-emerald-600 text-white text-xs font-medium rounded hover:bg-emerald-700 transition-colors flex items-center gap-1"
+            onClick={() => {
+              import("@/lib/export-utils").then(mod => {
+                const headers = ["ID", "Type", "Shipping Date", "Receiving Date", "Receiver", "Sender", "Paid", "Ship Price", "Currency", "Note"]
+                const rows = filteredShipping.map(s => [s.id, s.type, s.shipping_date, s.receiving_date, s.receiver?.client_name || "", s.sender?.client_name || "", s.paid || 0, s.ship_price || 0, s.currency || "Dollar", s.note || ""])
+                mod.exportToCSV("shipping_export", headers, rows)
+              })
+            }}
+          >
+            {t("Export CSV")}
+          </button>
+        </div>
       </div>
       <div className="overflow-x-auto border border-border rounded-lg">
         <table className="w-full text-sm min-w-[1200px]">

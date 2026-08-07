@@ -32,6 +32,7 @@ pub fn run() {
       commands::get_store_products,
       commands::upload_file,
       commands::select_storage_directory,
+      commands::backup_database,
     ])
     .setup(|app| {
       // Initialize database on app startup

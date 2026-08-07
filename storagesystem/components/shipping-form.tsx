@@ -7,27 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Loader2, Plus, Trash2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { tauriApi } from "@/lib/tauri-api"
-import "../i18n.client"
-
-interface Product {
-  id: number
-  box_code: string
-  product_name?: string
-  product_type?: string
-  original_price: number
-  selling_price: number
-  Total_pices?: number | null
-  total_original_price?: number | null
-  storage?: string
-  number_of_boxes: number
-  size_of_box: number
-  total_box_size: number
-  weight?: number | null
-  status: string
-  shipping_id?: number | null
-  currency?: string
-  note?: string | null
-}
+import type { Product } from "@/lib/types"
 
 interface ShippingFormProps {
   onSuccess: (shipping: any) => void
@@ -59,11 +39,11 @@ interface NewProductItem {
 interface Client {
   id: number
   client_name: string
-  phone_number?: string
-  shipping_id?: number
-  history?: string
-  debt: number
-  total_debts: number
+  phone_number?: string | null
+  shipping_id?: number | null
+  history?: string | null
+  debt?: number | null
+  total_debts?: number | null
 }
 
 interface NewClientData {
