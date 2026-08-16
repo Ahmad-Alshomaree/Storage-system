@@ -48,7 +48,7 @@ export function DebitDetailsModal({ debit, open, onOpenChange }: DebitDetailsMod
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground text-start block">{t("Transaction Date")}</label>
-              <p className="text-sm text-start">{new Date(debit.transaction_date).toLocaleDateString()}</p>
+              <p className="text-sm text-start">{debit.transaction_date ? new Date(debit.transaction_date).toLocaleDateString() : t("N/A")}</p>
             </div>
           </div>
 
@@ -139,7 +139,7 @@ export function DebitDetailsModal({ debit, open, onOpenChange }: DebitDetailsMod
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground text-start block">{t("Transaction Date")}</label>
-              <p className="text-sm text-start">{new Date(debit.transaction_date).toLocaleString()}</p>
+              <p className="text-sm text-start">{debit.transaction_date ? new Date(debit.transaction_date).toLocaleString() : t("N/A")}</p>
             </div>
           </div>
         </div>

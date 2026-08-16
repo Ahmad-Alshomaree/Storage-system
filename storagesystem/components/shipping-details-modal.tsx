@@ -11,63 +11,9 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { useTranslation } from "react-i18next"
+import type { Shipping, Product, Client, ShippingTableClient } from "@/lib/types"
+import { ProductImage } from "@/components/ui/product-image"
 import "../i18n.client"
-
-interface Client {
-  id: number
-  client_name: string
-  phone_number?: string | null
-}
-
-interface ShippingTableClient {
-  id: number
-  client_name: string
-  phone_number?: string | null
-}
-
-interface Product {
-  id: number
-  shipping_id?: number | null
-  item_no?: string | null
-  box_code: string
-  product_name?: string | null
-  cost: number
-  selling_price: number
-  storage?: string | null
-  weight?: number | null
-  image?: string | null
-  pice_per_box: number
-  total_pices: number
-  total_cost: number
-  size_of_box: number
-  total_box_size: number
-  number_of_boxes: number
-  extracted_pieces: number
-  status: string
-  grope_item_price?: number | null
-  currency: string
-  note?: string | null
-  created_at?: string | null
-  updated_at?: string | null
-}
-
-interface Shipping {
-  id: number
-  type: string
-  shipping_date: string
-  receiving_date: string
-  receiver_client_id?: number
-  sender_client_id?: number
-  receiver: Client
-  sender: Client
-  paid?: number
-  ship_price?: number
-  currency?: string
-  note?: string | null
-  created_at: string
-  file_path?: string | null
-  products?: Product[]
-}
 
 interface ShippingDetailsModalProps {
   shipping: Shipping | null
@@ -181,6 +127,20 @@ export function ShippingDetailsModal({ shipping, clients: propClients = [], open
 
   const handleDownload = () => {
     // Generate receipt content
+    const itemsSection = shipping.items && shipping.items.length > 0
+      ? `\n${t("Line Items")} (${shipping.items.length}):\n` +
+        shipping.items.map(it =>
+          `- ${it.product_name || it.box_code || `Product #${it.product_id}`}: ${it.quantity} ${it.quantity_type} @ $${it.unit_price.toFixed(2)} = $${it.total_price.toFixed(2)}`
+        ).join('\n')
+      : ''
+
+    const productsSection = shipping.products && shipping.products.length > 0
+      ? `\n${t("Products")} (${shipping.products.length}):\n` +
+        shipping.products.map(product =>
+          `- ${product.product_name || product.box_code} (${product.number_of_boxes} boxes, ${product.total_pices ?? 0} pcs)`
+        ).join('\n')
+      : (!itemsSection ? `\n${t("Products")}: ${t('No products')}` : '')
+
     const receiptContent = `
 ${t("SHIPPING RECEIPT")}
 
@@ -197,11 +157,7 @@ ${t("Financial Information")}:
 - ${t("Currency")}: ${shipping.currency || t("Dollar")}
 - ${t("Paid")}: ${shipping.paid ?? 0} ${shipping.currency || t("Dollar")}
 - ${t("Ship Price")}: ${shipping.ship_price ?? 0} ${shipping.currency || t("Dollar")}
-
-${t("Products")} (${shipping.products?.length || 0}):
-${shipping.products?.map(product =>
-      `- ${product.product_name || product.box_code} (${product.number_of_boxes} boxes, ${product.total_pices ?? 0} pcs)`
-    ).join('\n') || t('No products')}
+${itemsSection}${productsSection}
 
 ${t("Notes")}: ${shipping.note || t("No notes")}
 
@@ -466,6 +422,46 @@ ${t("Generated on")}: ${new Date().toLocaleString()}
             </div>
           )}
 
+          {/* Line Items Information (Output shipments or itemized loads) */}
+          {shipping.items && shipping.items.length > 0 && (
+            <div className="border-t pt-4">
+              <label className="text-sm font-medium text-muted-foreground block mb-3">
+                {t("Line Items in Shipment")} ({shipping.items.length})
+              </label>
+              <div className="space-y-3">
+                {shipping.items.map((item, idx) => (
+                  <div key={item.id || idx} className="bg-muted p-4 rounded-lg">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Product Name")}</label>
+                        <p className="text-sm font-medium">{item.product_name || item.box_code || `Product #${item.product_id}`}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Box Code")}</label>
+                        <p className="text-sm">{item.box_code || "—"}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4 mt-3">
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Quantity")}</label>
+                        <p className="text-sm font-bold">{item.quantity} {t(item.quantity_type)}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Unit Price")}</label>
+                        <p className="text-sm font-bold">${item.unit_price.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">{t("Total Price")}</label>
+                        <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">${item.total_price.toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Products Information */}
           {shipping.products && shipping.products.length > 0 && (
             <div className="border-t pt-4">
@@ -473,14 +469,25 @@ ${t("Generated on")}: ${new Date().toLocaleString()}
               <div className="space-y-3">
                 {shipping.products.map((product) => (
                   <div key={product.id} className="bg-muted p-4 rounded-lg">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">{t("Product Name")}</label>
-                        <p className="text-sm font-medium">{product.product_name || product.box_code}</p>
+                    <div className="flex gap-4 items-start">
+                      <div className="w-16 h-16 rounded-md overflow-hidden border border-border bg-background shrink-0">
+                        <ProductImage
+                          src={product.image}
+                          alt={product.product_name || product.box_code}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">{t("Box Code")}</label>
-                        <p className="text-sm">{product.box_code}</p>
+                      <div className="flex-1">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-medium text-muted-foreground">{t("Product Name")}</label>
+                            <p className="text-sm font-medium">{product.product_name || product.box_code}</p>
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-muted-foreground">{t("Box Code")}</label>
+                            <p className="text-sm">{product.box_code}</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
 

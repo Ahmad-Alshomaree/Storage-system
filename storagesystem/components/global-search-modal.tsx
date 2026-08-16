@@ -6,6 +6,7 @@ import { Search, Package, Truck, Users, CreditCard, ArrowRight } from "lucide-re
 import { useTranslation } from "react-i18next"
 import "../i18n.client"
 import type { Product, Shipping, Client, Debit, TabType } from "@/lib/types"
+import { ProductImage } from "@/components/ui/product-image"
 
 interface GlobalSearchModalProps {
   open: boolean
@@ -117,9 +118,18 @@ export function GlobalSearchModal({
                     onClick={() => handleSelect("products", p.id)}
                     className="w-full flex items-center justify-between p-2.5 rounded-lg hover:bg-accent/60 text-start group transition-colors"
                   >
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">{p.product_name || p.box_code}</p>
-                      <p className="text-xs text-muted-foreground">{t("Code")}: {p.box_code} • {p.number_of_boxes} {t("boxes")}</p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-md overflow-hidden border border-border bg-muted shrink-0">
+                        <ProductImage
+                          src={p.image}
+                          alt={p.product_name || "Product"}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{p.product_name || p.box_code}</p>
+                        <p className="text-xs text-muted-foreground">{t("Code")}: {p.box_code} • {p.number_of_boxes} {t("boxes")}</p>
+                      </div>
                     </div>
                     <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>

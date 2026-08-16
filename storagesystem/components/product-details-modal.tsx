@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Trash2, Edit2, Check, X } from "lucide-react"
 import type { Product } from "@/lib/types"
+import { ProductImage } from "@/components/ui/product-image"
 import { useTranslation } from "react-i18next"
 import "../i18n.client"
 
@@ -63,21 +64,16 @@ export function ProductDetailsModal({ product, open, onOpenChange, onEdit, onDel
         </DialogHeader>
 
         {/* Product Image */}
-        {product.image && product.image !== "" ? (
-          <div className="flex justify-center mb-4">
-            <img
+        <div className="flex justify-center mb-4">
+          <div className="w-full max-w-sm h-64 overflow-hidden rounded-lg border shadow-sm">
+            <ProductImage
               src={product.image}
               alt={product.product_name || "Product image"}
-              className="max-w-full max-h-64 object-cover rounded-lg border shadow-sm"
+              className="w-full h-full object-contain bg-background"
+              fallbackClassName="w-full h-full bg-muted flex items-center justify-center text-muted-foreground"
             />
           </div>
-        ) : (
-          <div className="flex justify-center mb-4">
-            <div className="w-full max-w-64 h-32 bg-muted rounded-lg border flex items-center justify-center">
-              <p className="text-muted-foreground text-sm">{t("No image available")}</p>
-            </div>
-          </div>
-        )}
+        </div>
 
         <div className="grid gap-6">
           {/* Basic Information */}

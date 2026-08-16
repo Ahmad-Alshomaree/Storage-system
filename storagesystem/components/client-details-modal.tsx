@@ -7,25 +7,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useTranslation } from "react-i18next"
+import type { Client } from "@/lib/types"
 import "../i18n.client"
-
-interface Client {
-  id: number
-  client_name: string
-  phone_number?: string | null
-  shipping_id?: number | null
-  history?: string | null
-  total_debts: number
-  shipping?: {
-    id: number
-    type: string
-    shipping_date: string
-    receiving_date: string
-    receiver: string
-    file_path?: string | null
-    created_at: string
-  }
-}
 
 interface ClientDetailsModalProps {
   client: Client | null

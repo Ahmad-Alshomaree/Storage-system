@@ -47,14 +47,13 @@ export function SetupPage({ onComplete }: SetupPageProps) {
       localStorage.setItem("storagePath", storagePath)
       localStorage.setItem("setupCompleted", "true")
 
-      // Try to initialize database with the new path
-      await tauriApi.initializeDatabase()
+      // Initialize database with the chosen path
+      await tauriApi.initializeDatabase(storagePath)
 
       // Notify parent that setup is complete
       onComplete()
     } catch (error) {
       console.error("Failed to initialize database:", error)
-      // Still mark as completed to avoid getting stuck
       localStorage.setItem("setupCompleted", "true")
       onComplete()
     } finally {

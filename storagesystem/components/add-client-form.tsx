@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { tauriApi } from "@/lib/tauri-api"
+import type { Client, Shipping } from "@/lib/types"
 import "../i18n.client"
 
 interface AddClientFormProps {
-  onSuccess: (client: any) => void
+  onSuccess: (client: Client) => void
 }
 
 export function AddClientForm({ onSuccess }: AddClientFormProps) {
@@ -22,7 +23,7 @@ export function AddClientForm({ onSuccess }: AddClientFormProps) {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [shippingOptions, setShippingOptions] = useState<any[]>([])
+  const [shippingOptions, setShippingOptions] = useState<Shipping[]>([])
   const { t } = useTranslation()
 
   useEffect(() => {

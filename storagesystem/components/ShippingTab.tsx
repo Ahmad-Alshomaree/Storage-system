@@ -3,39 +3,12 @@
 import { useState } from "react"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { ShippingTable, ShippingTableClient } from "@/components/shipping-table"
-
-interface Shipping {
-  id: number
-  type: string
-  shipping_date: string
-  receiving_date: string
-  receiver_client_id?: number
-  sender_client_id?: number
-  receiver: ShippingTableClient
-  sender: ShippingTableClient
-  paid?: number
-  ship_price?: number
-  currency?: string
-  note?: string | null
-  created_at: string
-  file_path?: string | null
-  products?: any[]
-}
+import { ShippingTable } from "@/components/shipping-table"
 import { ShippingForm } from "@/components/shipping-form"
 import { tauriApi } from "@/lib/tauri-api"
 import { useTranslation } from "react-i18next"
+import type { Shipping, Client } from "@/lib/types"
 import "../i18n.client"
-
-interface Client {
-  id: number
-  client_name: string
-  phone_number?: string | null
-  shipping_id?: number | null
-  history?: string | null
-  debt: number
-  total_debts: number
-}
 
 interface ShippingTabProps {
   shipping: Shipping[]

@@ -1,13 +1,31 @@
-(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["object"==typeof document?document.currentScript:void 0,68451,t=>{"use strict";function e(t,e,o){let d=t=>{if(null==t)return'""';let e=String(t).replace(/"/g,'""');return`"${e}"`},i=new Blob(["\uFEFF"+[e.map(d).join(","),...o.map(t=>t.map(d).join(","))].join("\n")],{type:"text/csv;charset=utf-8;"}),r=URL.createObjectURL(i),n=document.createElement("a");n.setAttribute("href",r),n.setAttribute("download",`${t}_${new Date().toISOString().slice(0,10)}.csv`),document.body.appendChild(n),n.click(),document.body.removeChild(n)}function o(t){let e=window.open("","_blank","width=800,height=900");if(!e)return;let o=t.products&&t.products.length>0?t.products.map((t,e)=>`
+(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["object"==typeof document?document.currentScript:void 0,68451,t=>{"use strict";function e(t,e,o){let d=t=>{if(null==t)return'""';let e=String(t).replace(/"/g,'""');return`"${e}"`},i=new Blob(["\uFEFF"+[e.map(d).join(","),...o.map(t=>t.map(d).join(","))].join("\n")],{type:"text/csv;charset=utf-8;"}),r=URL.createObjectURL(i),p=document.createElement("a");p.setAttribute("href",r),p.setAttribute("download",`${t}_${new Date().toISOString().slice(0,10)}.csv`),document.body.appendChild(p),p.click(),document.body.removeChild(p)}function o(t){let e=window.open("","_blank","width=800,height=900");if(!e)return;let o=t.items&&t.items.length>0,d=t.products&&t.products.length>0,i=`
+    <tr>
+      <th>#</th>
+      <th>Product / Code</th>
+      <th>Type / Boxes</th>
+      <th>Quantity</th>
+      <th>Unit Price</th>
+      <th>Total</th>
+    </tr>
+  `,r="";r=o?(t.items||[]).map((t,e)=>`
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">${e+1}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">${t.product_name||t.box_code||`Product #${t.product_id}`}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">${t.box_code||"N/A"}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">${t.quantity} ${t.quantity_type}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">$${t.unit_price.toFixed(2)}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">$${t.total_price.toFixed(2)}</td>
+      </tr>
+    `).join(""):d?(t.products||[]).map((t,e)=>`
       <tr>
         <td style="padding: 8px; border-bottom: 1px solid #eee;">${e+1}</td>
         <td style="padding: 8px; border-bottom: 1px solid #eee;">${t.product_name||t.box_code}</td>
         <td style="padding: 8px; border-bottom: 1px solid #eee;">${t.box_code}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee;">${t.number_of_boxes}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee;">${t.size_of_box}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee;">$${t.selling_price}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">${t.number_of_boxes} boxes (${t.total_pices??0} pcs)</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">$${t.selling_price.toFixed(2)}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">$${(t.total_cost??0).toFixed(2)}</td>
       </tr>
-    `).join(""):'<tr><td colspan="6" style="padding: 12px; text-align: center; color: #888;">No products attached</td></tr>';e.document.write(`
+    `).join(""):'<tr><td colspan="6" style="padding: 12px; text-align: center; color: #888;">No items or products attached</td></tr>',e.document.write(`
     <!DOCTYPE html>
     <html>
       <head>
@@ -39,20 +57,13 @@
           </div>
         </div>
 
-        <h3>Products in Shipment</h3>
+        <h3>${o?"Line Items in Shipment":"Products in Shipment"}</h3>
         <table>
           <thead>
-            <tr>
-              <th>#</th>
-              <th>Product Name</th>
-              <th>Box Code</th>
-              <th>Boxes</th>
-              <th>Size</th>
-              <th>Selling Price</th>
-            </tr>
+            ${i}
           </thead>
           <tbody>
-            ${o}
+            ${r}
           </tbody>
         </table>
 

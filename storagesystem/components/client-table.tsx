@@ -1,19 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Trash2, Edit2, Check, X, Eye } from "lucide-react"
+import { Trash2, Edit2, Check, X, Eye, Download } from "lucide-react"
 import { ClientDetailsModal } from "./client-details-modal"
 import { useTranslation } from "react-i18next"
+import type { Client } from "@/lib/types"
 import "../i18n.client"
-
-interface Client {
-  id: number
-  client_name: string
-  phone_number?: string | null
-  shipping_id?: number | null
-  history?: string | null
-  total_debts: number
-}
 
 interface ClientTableProps {
   clients: Client[]
@@ -29,6 +21,7 @@ export function ClientTable({ clients, onDelete, onUpdate }: ClientTableProps) {
   const [filters, setFilters] = useState({
     clientName: '',
     phoneNumber: '',
+    shippingId: '',
   })
   const { t } = useTranslation()
 
@@ -48,17 +41,46 @@ export function ClientTable({ clients, onDelete, onUpdate }: ClientTableProps) {
     setEditValues({})
   }
 
+  const exportToCsv = () => {
+    const headers = [t("Client Name"), t("Phone Number"), t("Shipping ID"), t("History"), t("Total Debts")]
+    const rows = filteredClients.map(c => [
+      `"${(c.client_name || '').replace(/"/g, '""')}"`,
+      `"${(c.phone_number || '').replace(/"/g, '""')}"`,
+      `"${c.shipping_id ?? ''}"`,
+      `"${(c.history || '').replace(/"/g, '""')}"`,
+      `"${c.total_debts ?? c.debt ?? 0}"`,
+    ])
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n")
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement("a")
+    link.setAttribute("href", encodedUri)
+    link.setAttribute("download", `clients_${new Date().toISOString().split('T')[0]}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   const filteredClients = clients.filter(client => {
     return (
       (filters.clientName === '' || client.client_name.toLowerCase().includes(filters.clientName.toLowerCase())) &&
-      (filters.phoneNumber === '' || (client.phone_number || '').toLowerCase().includes(filters.phoneNumber.toLowerCase()))
+      (filters.phoneNumber === '' || (client.phone_number || '').toLowerCase().includes(filters.phoneNumber.toLowerCase())) &&
+      (filters.shippingId === '' || (client.shipping_id?.toString() || '').includes(filters.shippingId))
     )
   })
 
   return (
     <>
       <div className="mb-4 p-4 bg-muted rounded-lg">
-        <h3 className="text-sm font-semibold mb-3">{t("Filter Clients")}</h3>
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-sm font-semibold">{t("Filter Clients")}</h3>
+          <button
+            onClick={exportToCsv}
+            className="flex items-center gap-1.5 px-3 py-1 bg-primary text-primary-foreground text-xs font-medium rounded hover:bg-primary/90 transition-colors"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>{t("Export CSV")}</span>
+          </button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           <input
             type="text"
@@ -74,10 +96,17 @@ export function ClientTable({ clients, onDelete, onUpdate }: ClientTableProps) {
             value={filters.phoneNumber}
             onChange={(e) => setFilters({ ...filters, phoneNumber: e.target.value })}
           />
+          <input
+            type="text"
+            placeholder={t("Shipping ID")}
+            className="w-full px-2 py-1 bg-input text-foreground text-xs rounded"
+            value={filters.shippingId}
+            onChange={(e) => setFilters({ ...filters, shippingId: e.target.value })}
+          />
         </div>
         <button
-          className="mt-3 px-3 py-1 bg-black text-white text-xs rounded hover:bg-gray-800"
-          onClick={() => setFilters({ clientName: '', phoneNumber: '' })}
+          className="mt-3 px-3 py-1 bg-secondary text-secondary-foreground text-xs font-medium rounded hover:bg-secondary/80 transition-colors"
+          onClick={() => setFilters({ clientName: '', phoneNumber: '', shippingId: '' })}
         >
           {t("Clear Filters")}
         </button>

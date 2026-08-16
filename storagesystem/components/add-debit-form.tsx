@@ -5,30 +5,12 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import type { Client, Shipping, Debit } from "@/lib/types"
 import "../i18n.client"
 import { tauriApi } from "@/lib/tauri-api"
 
-interface Client {
-  id: number
-  client_name: string
-  phone_number?: string | null
-}
-
-interface Shipping {
-  id: number
-  type: string
-  receiver: {
-    id: number
-    client_name: string
-    phone_number?: string | null
-    shipping_id?: number | null
-    history?: string | null
-  }
-  shipping_date: string
-}
-
 interface AddDebitFormProps {
-  onSuccess: (debit: any) => void
+  onSuccess: (debit: Debit) => void
 }
 
 export function AddDebitForm({ onSuccess }: AddDebitFormProps) {

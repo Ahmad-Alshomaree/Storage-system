@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Trash2, Edit2, Check, X, Eye, DollarSign } from "lucide-react"
+import { Trash2, Edit2, Check, X, Eye, DollarSign, Download } from "lucide-react"
 import type { Debit } from "@/lib/types"
 import { useTranslation } from "react-i18next"
 import "../i18n.client"
@@ -24,7 +24,6 @@ export function DebitTable({ debits, onDelete, onUpdate, onViewDetail }: DebitTa
   })
   const { t } = useTranslation()
 
-
   const startEdit = (debit: Debit) => {
     setEditingId(debit.id)
     setEditValues({ ...debit })
@@ -39,6 +38,26 @@ export function DebitTable({ debits, onDelete, onUpdate, onViewDetail }: DebitTa
   const cancelEdit = () => {
     setEditingId(null)
     setEditValues({})
+  }
+
+  const exportToCsv = () => {
+    const headers = [t("Creditor"), t("Debtor"), t("Amount"), t("Currency"), t("Transaction Date"), t("Note")]
+    const rows = filteredDebits.map(d => [
+      `"${(d.sender?.client_name || '').replace(/"/g, '""')}"`,
+      `"${(d.receiver?.client_name || '').replace(/"/g, '""')}"`,
+      `"${d.amount}"`,
+      `"${d.currency}"`,
+      `"${d.transaction_date || ''}"`,
+      `"${(d.note || '').replace(/"/g, '""')}"`,
+    ])
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n")
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement("a")
+    link.setAttribute("href", encodedUri)
+    link.setAttribute("download", `debits_${new Date().toISOString().split('T')[0]}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   // Calculate total debits for each sender-receiver pair
@@ -61,14 +80,23 @@ export function DebitTable({ debits, onDelete, onUpdate, onViewDetail }: DebitTa
       (filters.sender === '' || (debit.sender?.client_name || '').toLowerCase().includes(filters.sender.toLowerCase())) &&
       (filters.receiver === '' || (debit.receiver?.client_name || '').toLowerCase().includes(filters.receiver.toLowerCase())) &&
       (filters.currency === '' || debit.currency.toLowerCase().includes(filters.currency.toLowerCase())) &&
-      (filters.transactionDate === '' || new Date(debit.transaction_date).toLocaleDateString().toLowerCase().includes(filters.transactionDate.toLowerCase()))
+      (filters.transactionDate === '' || (debit.transaction_date ? new Date(debit.transaction_date).toLocaleDateString().toLowerCase().includes(filters.transactionDate.toLowerCase()) : false))
     )
   })
 
   return (
     <>
       <div className="mb-4 p-4 bg-muted rounded-lg">
-        <h3 className="text-sm font-semibold mb-3">{t("Filter Debits")}</h3>
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-sm font-semibold">{t("Filter Debits")}</h3>
+          <button
+            onClick={exportToCsv}
+            className="flex items-center gap-1.5 px-3 py-1 bg-primary text-primary-foreground text-xs font-medium rounded hover:bg-primary/90 transition-colors"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>{t("Export CSV")}</span>
+          </button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           <input
             type="text"
@@ -102,7 +130,7 @@ export function DebitTable({ debits, onDelete, onUpdate, onViewDetail }: DebitTa
           />
         </div>
         <button
-          className="mt-3 px-3 py-1 bg-black text-white text-xs rounded hover:bg-gray-800"
+          className="mt-3 px-3 py-1 bg-secondary text-secondary-foreground text-xs font-medium rounded hover:bg-secondary/80 transition-colors"
           onClick={() => setFilters({ sender: '', receiver: '', currency: '', transactionDate: '' })}
         >
           {t("Clear Filters")}
@@ -228,7 +256,7 @@ export function DebitTable({ debits, onDelete, onUpdate, onViewDetail }: DebitTa
                           {debit.note || t("No note")}
                         </td>
                         <td className="px-4 py-3 text-foreground text-xs">
-                          {new Date(debit.transaction_date).toLocaleDateString()}
+                          {debit.transaction_date ? new Date(debit.transaction_date).toLocaleDateString() : t("N/A")}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex gap-2">

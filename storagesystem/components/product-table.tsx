@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Trash2, Edit2, Check, X, Eye } from "lucide-react"
 import { ProductDetailsModal } from "./product-details-modal"
 import type { Product } from "@/lib/types"
+import { ProductImage } from "@/components/ui/product-image"
 import { useTranslation } from "react-i18next"
 import "../i18n.client"
 
@@ -27,7 +28,7 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
   const { t } = useTranslation()
 
   const filteredProducts = products.filter(product => {
-    const totalPieces = product.Total_pices || (product.number_of_boxes * product.size_of_box)
+    const totalPieces = product.total_pieces ?? product.total_pices ?? product.Total_pices ?? (product.number_of_boxes * product.size_of_box)
     const remainingPieces = totalPieces - (product.extracted_pieces || 0)
     const isLowStock = product.status === "available" && (remainingPieces <= 10 || product.number_of_boxes <= 2)
 
@@ -89,6 +90,7 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
             <option value="">{t("All Status")}</option>
             <option value="available">{t("Available")}</option>
             <option value="low_stock">{t("Low Stock")}</option>
+            <option value="depleted">{t("Depleted")}</option>
             <option value="out_of_stock">{t("Out of Stock")}</option>
           </select>
         </div>
@@ -117,6 +119,7 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border bg-muted">
+            <th className="px-3 py-3 text-start text-xs font-semibold text-foreground">{t("Image")}</th>
             <th className="px-3 py-3 text-start text-xs font-semibold text-foreground">{t("Box Code")}</th>
             <th className="px-3 py-3 text-start text-xs font-semibold text-foreground">{t("Product Name")}</th>
             <th className="px-3 py-3 text-start text-xs font-semibold text-foreground">{t("Selling Price")}</th>
@@ -135,6 +138,15 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
             <tr key={product.id} className="border-b border-border hover:bg-muted/50 transition-colors">
               {editingId === product.id ? (
                 <>
+                  <td className="px-3 py-3">
+                    <div className="w-10 h-10 rounded overflow-hidden border border-border bg-muted shrink-0">
+                      <ProductImage
+                        src={editValues.image || product.image}
+                        alt={product.product_name || "Product"}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </td>
                   <td className="px-3 py-3">
                     <input
                       type="text"
@@ -234,6 +246,21 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
                 </>
               ) : (
                 <>
+                  <td className="px-3 py-3">
+                    <div
+                      className="w-10 h-10 rounded overflow-hidden border border-border bg-muted shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => {
+                        setSelectedProduct(product)
+                        setShowDetailsModal(true)
+                      }}
+                    >
+                      <ProductImage
+                        src={product.image}
+                        alt={product.product_name || "Product"}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </td>
                   <td className="px-3 py-3 font-medium text-foreground text-xs">{product.box_code}</td>
                   <td className="px-3 py-3 text-foreground text-xs">{product.product_name}</td>
                   <td className="px-3 py-3 text-foreground text-xs font-medium">{product.selling_price ? product.selling_price.toFixed(2) : "0.00"}</td>
@@ -246,9 +273,11 @@ export function ProductTable({ products, onDelete, onUpdate }: ProductTableProps
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       product.status === 'available'
                         ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                        : product.status === 'depleted'
+                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
                         : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                     }`}>
-                      {product.status === 'available' ? t('Available') : t('Out of Stock')}
+                      {product.status === 'available' ? t('Available') : product.status === 'depleted' ? t('Depleted') : t('Out of Stock')}
                     </span>
                   </td>
                   <td className="px-3 py-3 text-xs text-muted-foreground">{product.shipping_id || t("None")}</td>

@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Loader2, X, Upload, Truck, Link } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { tauriApi } from "@/lib/tauri-api"
+import type { Product, Client } from "@/lib/types"
 import "../i18n.client"
 
 interface AddProductFormProps {
-  onSuccess: (product: any) => void
+  onSuccess: (product: Product) => void
 }
 
 export function AddProductForm({ onSuccess }: AddProductFormProps) {
@@ -35,7 +36,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
   })
 
   // Clients and shipping data
-  const [clients, setClients] = useState<any[]>([])
+  const [clients, setClients] = useState<Client[]>([])
   const [shippingData, setShippingData] = useState({
     type: "coming",
     shippingDate: "",
@@ -168,13 +169,17 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
   }
 
   const uploadImage = async (): Promise<string | null> => {
-    // For now, return the image preview URL or null
-    // Image upload functionality would need to be implemented in Tauri backend
     if (!selectedImage) return null
-
-    // Return the object URL for preview (this won't persist after app restart)
-    // In a full implementation, you'd upload to a proper storage location
-    return imagePreview || null
+    try {
+      const arrayBuffer = await selectedImage.arrayBuffer()
+      const bytes = new Uint8Array(arrayBuffer)
+      const ext = selectedImage.name.split('.').pop() || 'jpg'
+      const relativePath = await tauriApi.saveImageFile(bytes, ext)
+      return relativePath
+    } catch (err) {
+      console.error("Failed to save image file:", err)
+      throw err
+    }
   }
 
   const handleProductDataChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -191,11 +196,7 @@ export function AddProductForm({ onSuccess }: AddProductFormProps) {
     const file = e.target.files?.[0]
     if (file) {
       setSelectedImage(file)
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string)
-      }
-      reader.readAsDataURL(file)
+      setImagePreview(URL.createObjectURL(file))
     }
   }
 

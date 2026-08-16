@@ -4,57 +4,9 @@ import { useState, useEffect } from "react"
 import { Trash2, Edit2, Check, X, Eye } from "lucide-react"
 import { ShippingDetailsModal } from "./shipping-details-modal"
 import { useTranslation } from "react-i18next"
+import type { Shipping, Product, ShippingTableClient } from "@/lib/types"
+export type { ShippingTableClient }
 import "../i18n.client"
-
-export interface ShippingTableClient {
-  id: number
-  client_name: string
-  phone_number?: string | null
-}
-
-interface Product {
-  id: number
-  shipping_id?: number | null
-  item_no?: string | null
-  box_code: string
-  product_name?: string | null
-  cost: number
-  selling_price: number
-  storage?: string | null
-  weight?: number | null
-  image?: string | null
-  pice_per_box: number
-  total_pices: number
-  total_cost: number
-  size_of_box: number
-  total_box_size: number
-  number_of_boxes: number
-  extracted_pieces: number
-  status: string
-  grope_item_price?: number | null
-  currency: string
-  note?: string | null
-  created_at?: string | null
-  updated_at?: string | null
-}
-
-interface Shipping {
-  id: number
-  type: string
-  shipping_date: string
-  receiving_date: string
-  receiver_client_id?: number
-  sender_client_id?: number
-  receiver: ShippingTableClient
-  sender: ShippingTableClient
-  paid?: number
-  ship_price?: number
-  currency?: string
-  note?: string | null
-  created_at: string
-  file_path?: string | null
-  products?: Product[]
-}
 
 interface ShippingTableProps {
   shipping: Shipping[]

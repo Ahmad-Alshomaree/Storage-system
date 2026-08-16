@@ -65,8 +65,17 @@ export function useAppData(): UseAppDataReturn {
       const shippingMap = new Map(processedShipping.map((s: any) => [s.id, s]))
       setProducts(Array.isArray(productsData) ? productsData.map((p: any) => {
         const matchedShipping = p.shipping || (p.shipping_id ? shippingMap.get(p.shipping_id) : undefined)
+        const totalPcs = p.total_pieces ?? p.total_pices ?? p.Total_pices ?? (p.number_of_boxes * p.size_of_box)
+        const piecePerBox = p.piece_per_box ?? p.pice_per_box
+        const grpPrice = p.group_item_price ?? p.grope_item_price ?? p.Grope_Item_price
         return {
           ...p,
+          total_pieces: totalPcs,
+          total_pices: totalPcs,
+          piece_per_box: piecePerBox,
+          pice_per_box: piecePerBox,
+          group_item_price: grpPrice,
+          grope_item_price: grpPrice,
           shipping: matchedShipping,
         }
       }) : [])

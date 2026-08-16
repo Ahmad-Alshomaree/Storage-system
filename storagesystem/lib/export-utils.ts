@@ -32,18 +32,47 @@ export function printShippingReceipt(shipping: Shipping) {
   const printWin = window.open("", "_blank", "width=800,height=900")
   if (!printWin) return
 
-  const productsHtml = shipping.products && shipping.products.length > 0
-    ? shipping.products.map((p: Product, i: number) => `
+  const hasItems = shipping.items && shipping.items.length > 0
+  const hasProducts = shipping.products && shipping.products.length > 0
+
+  let tableHeaderHtml = `
+    <tr>
+      <th>#</th>
+      <th>Product / Code</th>
+      <th>Type / Boxes</th>
+      <th>Quantity</th>
+      <th>Unit Price</th>
+      <th>Total</th>
+    </tr>
+  `
+
+  let tableBodyHtml = ""
+
+  if (hasItems) {
+    tableBodyHtml = (shipping.items || []).map((it, i) => `
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">${i + 1}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">${it.product_name || it.box_code || `Product #${it.product_id}`}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">${it.box_code || 'N/A'}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">${it.quantity} ${it.quantity_type}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">$${it.unit_price.toFixed(2)}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">$${it.total_price.toFixed(2)}</td>
+      </tr>
+    `).join("")
+  } else if (hasProducts) {
+    tableBodyHtml = (shipping.products || []).map((p: Product, i: number) => `
       <tr>
         <td style="padding: 8px; border-bottom: 1px solid #eee;">${i + 1}</td>
         <td style="padding: 8px; border-bottom: 1px solid #eee;">${p.product_name || p.box_code}</td>
         <td style="padding: 8px; border-bottom: 1px solid #eee;">${p.box_code}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee;">${p.number_of_boxes}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee;">${p.size_of_box}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee;">$${p.selling_price}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">${p.number_of_boxes} boxes (${p.total_pices ?? 0} pcs)</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">$${p.selling_price.toFixed(2)}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">$${((p.total_cost ?? 0)).toFixed(2)}</td>
       </tr>
     `).join("")
-    : `<tr><td colspan="6" style="padding: 12px; text-align: center; color: #888;">No products attached</td></tr>`
+  } else {
+    tableBodyHtml = `<tr><td colspan="6" style="padding: 12px; text-align: center; color: #888;">No items or products attached</td></tr>`
+  }
 
   printWin.document.write(`
     <!DOCTYPE html>
@@ -77,20 +106,13 @@ export function printShippingReceipt(shipping: Shipping) {
           </div>
         </div>
 
-        <h3>Products in Shipment</h3>
+        <h3>${hasItems ? 'Line Items in Shipment' : 'Products in Shipment'}</h3>
         <table>
           <thead>
-            <tr>
-              <th>#</th>
-              <th>Product Name</th>
-              <th>Box Code</th>
-              <th>Boxes</th>
-              <th>Size</th>
-              <th>Selling Price</th>
-            </tr>
+            ${tableHeaderHtml}
           </thead>
           <tbody>
-            ${productsHtml}
+            ${tableBodyHtml}
           </tbody>
         </table>
 

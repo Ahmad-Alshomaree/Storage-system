@@ -4,19 +4,20 @@ import React from "react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Loader2, Plus, Trash2 } from "lucide-react"
+import { Loader2, Plus, Trash2, Upload } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { tauriApi } from "@/lib/tauri-api"
-import type { Product } from "@/lib/types"
+import type { Product, Client, Shipping } from "@/lib/types"
 
 interface ShippingFormProps {
-  onSuccess: (shipping: any) => void
+  onSuccess: (shipping: Shipping) => void
 }
 
 interface NewProductItem {
   id: string
   product_name: string
   product_type: string
+  item_no?: string
   box_code: string
   original_price: number
   selling_price: number
@@ -34,16 +35,6 @@ interface NewProductItem {
   note: string
   isSaved?: boolean
   savedProductId?: number
-}
-
-interface Client {
-  id: number
-  client_name: string
-  phone_number?: string | null
-  shipping_id?: number | null
-  history?: string | null
-  debt?: number | null
-  total_debts?: number | null
 }
 
 interface NewClientData {
@@ -457,7 +448,40 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
         note: formData.note || null,
       }
 
-      const newShipping = await tauriApi.createShipping(shippingData)
+      let newShipping: Shipping
+
+      if (formData.type === 'output load' && selectedOutputProducts.length > 0) {
+        const items = selectedOutputProducts.map(p => ({
+          product_id: p.productId,
+          quantity: p.quantity,
+          quantity_type: p.quantityType,
+          unit_price: p.sellingPrice,
+        }))
+        newShipping = await tauriApi.createShippingWithItems(shippingData, items)
+      } else if (formData.type === 'input load' && newProducts.length > 0) {
+        const productsPayload = newProducts.map(product => ({
+          box_code: product.box_code,
+          product_name: product.product_name || null,
+          item_no: product.item_no || null,
+          cost: product.original_price || 0,
+          selling_price: product.selling_price || 0,
+          storage: product.storage || null,
+          weight: product.weight || null,
+          pice_per_box: product.pice_per_box || 1,
+          total_pices: product.Total_pices || (product.number_of_boxes * product.pice_per_box),
+          total_cost: product.total_original_price || (product.original_price * product.number_of_boxes),
+          size_of_box: product.size_of_box || 0,
+          total_box_size: product.total_box_size || (product.size_of_box * product.number_of_boxes),
+          number_of_boxes: product.number_of_boxes || 1,
+          grope_item_price: product.grope_item_price || null,
+          image: product.image || null,
+          currency: product.currency || "Dollar",
+          note: product.note || null,
+        }))
+        newShipping = await tauriApi.createShippingWithProducts(shippingData, productsPayload)
+      } else {
+        newShipping = await tauriApi.createShipping(shippingData)
+      }
 
       // Handle client assignment - only link existing clients, not newly added ones
       if (formData.receiver) {
@@ -858,14 +882,39 @@ export function ShippingForm({ onSuccess }: ShippingFormProps) {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">{t("Or enter Image URL")}</label>
-                      <input
-                        type="text"
-                        placeholder={t("Or enter Image URL")}
-                        value={product.image}
-                        onChange={(e) => updateNewProduct(product.id, 'image', e.target.value)}
-                        className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full"
-                      />
+                      <label className="block text-xs font-medium text-foreground mb-1">{t("Product Image")}</label>
+                      <div className="flex gap-2 items-center">
+                        <input
+                          type="text"
+                          placeholder={t("Image URL or Path")}
+                          value={product.image}
+                          onChange={(e) => updateNewProduct(product.id, 'image', e.target.value)}
+                          className="px-3 py-2 border border-input rounded bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary flex-1"
+                        />
+                        <label className="px-2.5 py-2 bg-muted hover:bg-muted/80 text-foreground text-xs rounded border border-border cursor-pointer flex items-center gap-1 shrink-0">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>{t("Upload")}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0]
+                              if (file) {
+                                try {
+                                  const arrayBuffer = await file.arrayBuffer()
+                                  const bytes = new Uint8Array(arrayBuffer)
+                                  const ext = file.name.split('.').pop() || 'jpg'
+                                  const savedPath = await tauriApi.saveImageFile(bytes, ext)
+                                  updateNewProduct(product.id, 'image', savedPath)
+                                } catch (err) {
+                                  console.error("Failed to upload image:", err)
+                                }
+                              }
+                            }}
+                          />
+                        </label>
+                      </div>
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-foreground mb-1">{t("Weight")}</label>

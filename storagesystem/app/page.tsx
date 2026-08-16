@@ -15,6 +15,8 @@ import type { TabType } from "@/lib/types"
 import { useTranslation } from "react-i18next"
 import "../i18n.client"
 
+import { tauriApi } from "@/lib/tauri-api"
+
 export default function Home() {
   const { products, shipping, clients, debits, isLoading, error, refetch } = useAppData()
   const [activeTab, setActiveTab] = useState<TabType>("dashboard")
@@ -24,7 +26,19 @@ export default function Home() {
 
   // Check if setup is completed on mount
   useEffect(() => {
-    setSetupCompleted(true)
+    let mounted = true
+    tauriApi.checkSetupStatus().then((isReady) => {
+      if (mounted) {
+        setSetupCompleted(isReady)
+      }
+    }).catch(() => {
+      if (mounted) {
+        setSetupCompleted(false)
+      }
+    })
+    return () => {
+      mounted = false
+    }
   }, [])
 
   // Listen for Ctrl+K keyboard shortcut
@@ -41,6 +55,7 @@ export default function Home() {
 
   const handleSetupComplete = () => {
     setSetupCompleted(true)
+    refetch()
   }
 
   const handleSelectSearchEntity = (tab: TabType, id: number) => {

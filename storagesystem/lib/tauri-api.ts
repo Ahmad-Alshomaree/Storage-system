@@ -1,16 +1,40 @@
-import type { Product, Client, Shipping, Debit, Room, StoreProduct } from "./types"
+import type { Product, Client, Shipping, ShippingItem, CreateShippingItemInput, Debit, Room, StoreProduct } from "./types"
 
 function isTauriEnvironment(): boolean {
   return typeof window !== 'undefined' && !!(window as any).__TAURI_INTERNALS__
 }
 
+export class TauriApiError extends Error {
+  code: string
+  details?: string
+
+  constructor(payload: { code?: string; message?: string; details?: string } | string) {
+    if (typeof payload === 'string') {
+      super(payload)
+      this.code = 'UNKNOWN'
+    } else {
+      super(payload.message || 'An unexpected error occurred')
+      this.code = payload.code || 'UNKNOWN'
+      this.details = payload.details
+    }
+    this.name = 'TauriApiError'
+  }
+}
+
 async function invokeTauri<T>(command: string, payload?: Record<string, unknown>): Promise<T> {
   if (!isTauriEnvironment()) {
-    throw new Error('Not in Tauri environment')
+    throw new TauriApiError('Not in Tauri environment')
   }
-  // @ts-ignore
-  const { invoke } = await import('@tauri-apps/api/core')
-  return invoke(command, payload)
+  try {
+    // @ts-ignore
+    const { invoke } = await import('@tauri-apps/api/core')
+    return await invoke(command, payload)
+  } catch (err: any) {
+    if (typeof err === 'object' && err !== null && ('code' in err || 'message' in err)) {
+      throw new TauriApiError(err)
+    }
+    throw new TauriApiError(typeof err === 'string' ? err : 'Operation failed')
+  }
 }
 
 function getStorageItem<T>(key: string, defaultVal: T): T {
@@ -35,9 +59,20 @@ function setStorageItem<T>(key: string, val: T): void {
 export const tauriApi = {
   isTauri: isTauriEnvironment,
 
-  initializeDatabase: async (): Promise<void> => {
+  checkSetupStatus: async (): Promise<boolean> => {
     if (isTauriEnvironment()) {
-      const storagePath = localStorage.getItem('storagePath')
+      try {
+        return await invokeTauri<boolean>('check_setup_status')
+      } catch {
+        return false
+      }
+    }
+    return !!localStorage.getItem('setupCompleted')
+  },
+
+  initializeDatabase: async (customPath?: string): Promise<void> => {
+    if (isTauriEnvironment()) {
+      const storagePath = customPath || localStorage.getItem('storagePath')
       return invokeTauri('initialize_database', { storagePath })
     }
     if (!localStorage.getItem('app_products')) setStorageItem('products', [])
@@ -151,6 +186,65 @@ export const tauriApi = {
     return newShipping
   },
 
+  getShippingItems: async (shippingId: number): Promise<ShippingItem[]> => {
+    if (isTauriEnvironment()) return invokeTauri('get_shipping_items', { shippingId })
+    return []
+  },
+
+  createShippingWithItems: async (shipping: any, items: CreateShippingItemInput[]): Promise<Shipping> => {
+    if (isTauriEnvironment()) return invokeTauri('create_shipping_with_items', { shippingData: shipping, items })
+    const list = getStorageItem<Shipping[]>('shipping', [])
+    const clients = getStorageItem<Client[]>('clients', [])
+    const receiver = clients.find(c => c.id === shipping.receiver_client_id)
+    const sender = clients.find(c => c.id === shipping.sender_client_id)
+
+    const newShipping: Shipping = {
+      ...shipping,
+      id: Date.now(),
+      receiver: receiver ? { id: receiver.id, client_name: receiver.client_name, phone_number: receiver.phone_number } : { id: shipping.receiver_client_id, client_name: '' },
+      sender: sender ? { id: sender.id, client_name: sender.client_name, phone_number: sender.phone_number } : { id: shipping.sender_client_id, client_name: '' },
+      items: items.map((it, idx) => ({
+        ...it,
+        id: Date.now() + idx,
+        shipping_id: Date.now(),
+        total_price: it.quantity * it.unit_price,
+        created_at: new Date().toISOString(),
+      })),
+      created_at: new Date().toISOString()
+    }
+    setStorageItem('shipping', [newShipping, ...list])
+    return newShipping
+  },
+
+  createShippingWithProducts: async (shipping: any, products: any[]): Promise<Shipping> => {
+    if (isTauriEnvironment()) return invokeTauri('create_shipping_with_products', { shippingData: shipping, products })
+    const list = getStorageItem<Shipping[]>('shipping', [])
+    const clients = getStorageItem<Client[]>('clients', [])
+    const receiver = clients.find(c => c.id === shipping.receiver_client_id)
+    const sender = clients.find(c => c.id === shipping.sender_client_id)
+
+    const newShippingId = Date.now()
+    const newShipping: Shipping = {
+      ...shipping,
+      id: newShippingId,
+      receiver: receiver ? { id: receiver.id, client_name: receiver.client_name, phone_number: receiver.phone_number } : { id: shipping.receiver_client_id, client_name: '' },
+      sender: sender ? { id: sender.id, client_name: sender.client_name, phone_number: sender.phone_number } : { id: shipping.sender_client_id, client_name: '' },
+      created_at: new Date().toISOString()
+    }
+    setStorageItem('shipping', [newShipping, ...list])
+
+    const currentProducts = getStorageItem<Product[]>('products', [])
+    const newProds = products.map((p, idx) => ({
+      ...p,
+      id: Date.now() + idx + 1,
+      shipping_id: newShippingId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }))
+    setStorageItem('products', [...newProds, ...currentProducts])
+    return newShipping
+  },
+
   updateShipping: async (id: number, updates: any): Promise<Shipping> => {
     if (isTauriEnvironment()) return invokeTauri('update_shipping', { id, shippingData: updates })
     const list = getStorageItem<Shipping[]>('shipping', [])
@@ -253,4 +347,36 @@ export const tauriApi = {
     if (isTauriEnvironment()) return invokeTauri('backup_database', { targetPath })
     return "Backup completed (web fallback)"
   },
+
+  saveImageFile: async (fileBytes: number[] | Uint8Array, extension: string): Promise<string> => {
+    if (isTauriEnvironment()) {
+      const bytesArray = fileBytes instanceof Uint8Array ? Array.from(fileBytes) : fileBytes
+      return invokeTauri<string>('save_image_file', { fileBytes: bytesArray, extension })
+    }
+    return `product_images/web_${Date.now()}.${extension.replace(/^\./, '')}`
+  },
+
+  resolveImageSrc: async (src?: string | null): Promise<string | null> => {
+    if (!src || src.trim() === '') return null
+    if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:') || src.startsWith('blob:')) {
+      return src
+    }
+
+    if (isTauriEnvironment()) {
+      try {
+        const fullPath = await invokeTauri<string>('resolve_image_path', { imagePath: src })
+        // @ts-ignore
+        const { convertFileSrc } = await import('@tauri-apps/api/core')
+        return convertFileSrc(fullPath)
+      } catch {
+        try {
+          return await invokeTauri<string>('get_image_data_url', { imagePath: src })
+        } catch {
+          return null
+        }
+      }
+    }
+    return src
+  },
 }
+
